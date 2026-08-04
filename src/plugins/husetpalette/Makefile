@@ -15,7 +15,7 @@ OBJS = husetpalette.o resource.o
 
 LIBS =
 
-LDFLAGS += -Wl,-Bstatic -Wl,-subsystem,windows
+LDFLAGS += -Wl,-Bstatic -Wl,-subsystem,windows -Wl,-Bdynamic
 
 EXE  = husetpalette$(EXESUFFIX)
 

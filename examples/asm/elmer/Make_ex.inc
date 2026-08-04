@@ -43,7 +43,11 @@ VPATH = ../include:../font:../data:../../../../include/hucc
 # PCE_INCLUDE needs platform-specific path separators.
 
 ifeq ($(OS),Windows_NT)
+ifeq ($(findstring ;,$(PATH)),;)
 export PCE_INCLUDE = $(subst :,;,$(subst /,\,$(VPATH)))
+else
+export PCE_INCLUDE = $(VPATH)
+endif
 else
 export PCE_INCLUDE = $(VPATH)
 endif

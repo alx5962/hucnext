@@ -15,7 +15,7 @@ OBJS = huzerozero.o
 
 LIBS =
 
-LDFLAGS += -Wl,-Bstatic -Wl,-subsystem,windows
+LDFLAGS += -Wl,-Bstatic -Wl,-subsystem,windows -Wl,-Bdynamic
 
 EXE  = huzerozero$(EXESUFFIX)
 

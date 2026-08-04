@@ -55,8 +55,13 @@ VPATH = $(INCDIR)
 # PCE_INCLUDE needs platform-specific path separators.
 
 ifeq ($(OS),Windows_NT)
+ifeq ($(findstring ;,$(PATH)),;)
 export PCE_INCLUDE = $(subst :,;,$(subst /,\,$(VPATH)))
 export PCE_PCEAS   = $(subst /,\,$(AS))
+else
+export PCE_INCLUDE = $(VPATH)
+export PCE_PCEAS   = $(AS)
+endif
 else
 export PCE_INCLUDE = $(VPATH)
 export PCE_PCEAS   = $(AS)
