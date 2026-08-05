@@ -1,0 +1,137 @@
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  StyledMobileOverlayClose,
+  StyledMobileOverlayContainer,
+  StyledMobileOverlayContent,
+  StyledMobileOverlayHandle,
+  StyledMobileOverlayWrapper,
+} from "gbs-music-web/components/ui/style";
+import { elasticDrag } from "gbs-music-web/components/ui/helpers";
+
+const MOBILE_OVERLAY_DRAG_CLOSE_THRESHOLD_PX = 30;
+const MOBILE_OVERLAY_MAX_DRAG_UP_PX = 250;
+const MOBILE_OVERLAY_ELASTIC_DRAG_UP_PX = 50;
+
+interface MobileOverlayProps {
+  open: boolean;
+  fullHeight?: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+}
+
+export const MobileOverlay = ({
+  open,
+  fullHeight,
+  onClose,
+  children,
+}: MobileOverlayProps) => {
+  const [offsetY, setOffsetY] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleStartY = useRef(-1);
+  const suppressNextClick = useCallback(() => {
+    let timeoutId = 0;
+
+    const onClickCapture = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      window.clearTimeout(timeoutId);
+      window.removeEventListener("click", onClickCapture, true);
+    };
+
+    timeoutId = window.setTimeout(() => {
+      window.removeEventListener("click", onClickCapture, true);
+    }, 100);
+
+    window.addEventListener("click", onClickCapture, {
+      capture: true,
+    });
+  }, []);
+
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (e.currentTarget.hasPointerCapture?.(e.pointerId) === false) {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+    handleStartY.current = e.clientY;
+    setIsDragging(true);
+  }, []);
+
+  const onPointerMove = useCallback((e: PointerEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const elasticDiffY = elasticDrag(
+      -(e.pageY - handleStartY.current),
+      MOBILE_OVERLAY_ELASTIC_DRAG_UP_PX,
+      MOBILE_OVERLAY_MAX_DRAG_UP_PX,
+    );
+    setOffsetY(-elasticDiffY);
+  }, []);
+
+  const onPointerUp = useCallback(
+    (e: PointerEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      const diffY = e.pageY - handleStartY.current;
+      if (diffY > MOBILE_OVERLAY_DRAG_CLOSE_THRESHOLD_PX) {
+        suppressNextClick();
+        onClose();
+      } else {
+        setOffsetY(0);
+      }
+      setIsDragging(false);
+    },
+    [onClose, suppressNextClick],
+  );
+
+  const onHandleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      e.stopPropagation();
+      e.preventDefault();
+      onClose();
+    },
+    [onClose],
+  );
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener("pointermove", onPointerMove, { passive: false });
+      window.addEventListener("pointerup", onPointerUp, { passive: false });
+    }
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", onPointerUp);
+    };
+  });
+
+  useEffect(() => {
+    if (open) {
+      setIsDragging(false);
+      setOffsetY(0);
+    }
+  }, [open]);
+
+  return (
+    <StyledMobileOverlayWrapper $open={open} $fullHeight={fullHeight}>
+      <StyledMobileOverlayContainer
+        style={{
+          transform: `translateY(${offsetY}px)`,
+        }}
+        $open={open}
+        $fullHeight={fullHeight}
+        $isDragging={isDragging}
+      >
+        {open && <StyledMobileOverlayClose onClick={onClose} />}
+        {open && (
+          <StyledMobileOverlayHandle
+            onPointerDown={onPointerDown}
+            onClick={onHandleClick}
+          />
+        )}
+        <StyledMobileOverlayContent>{children}</StyledMobileOverlayContent>
+      </StyledMobileOverlayContainer>
+    </StyledMobileOverlayWrapper>
+  );
+};

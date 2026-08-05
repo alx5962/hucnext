@@ -1,0 +1,577 @@
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import {
+  DragSourceMonitor,
+  DropTargetMonitor,
+  useDrag,
+  useDrop,
+} from "react-dnd";
+import entitiesActions from "store/features/entities/entitiesActions";
+import {
+  actorSelectors,
+  scriptEventSelectors,
+  triggerSelectors,
+} from "store/features/entities/entitiesSelectors";
+import editorActions from "store/features/editor/editorActions";
+import {
+  ScriptEventNormalized,
+  ScriptEventParentType,
+  ScriptEventsRef,
+} from "shared/lib/entities/entitiesTypes";
+import {
+  ScriptEventFormWrapper,
+  ScriptEventHeader,
+  ScriptEventWrapper,
+  ScriptEventPlaceholder,
+  ScriptEventRenameInput,
+  ScriptEventRenameInputCompleteButton,
+} from "ui/scripting/ScriptEvents";
+import { CheckIcon } from "ui/icons/Icons";
+import ScriptEventForm from "./ScriptEventForm";
+import l10n from "shared/lib/lang/l10n";
+import { ScriptEditorEventHelper } from "./ScriptEditorEventHelper";
+import ItemTypes from "renderer/lib/dnd/itemTypes";
+import { MenuOverlay } from "ui/menu/Menu";
+import clipboardActions from "store/features/clipboard/clipboardActions";
+import { RelativePortal } from "ui/layout/RelativePortal";
+import AddScriptEventMenu from "components/script/menus/AddScriptEventMenu";
+import ScriptEventTitle from "./ScriptEventTitle";
+import useOnScreen from "ui/hooks/use-on-screen";
+import { ScriptEventSymbolsEditor } from "components/forms/symbols/ScriptEventSymbolsEditor";
+import { ScriptEventSymbolEditorWrapper } from "components/forms/symbols/SymbolEditorWrapper";
+import { EVENT_COMMENT, EVENT_END } from "consts";
+import { selectScriptEventDefs } from "store/features/scriptEventDefs/scriptEventDefsState";
+import { useAppDispatch, useAppSelector } from "store/hooks";
+import { ScriptEditorContext } from "components/script/context/ScriptEditorContext";
+import { getSettings } from "store/features/settings/settingsState";
+import renderScriptEventContextMenu from "components/script/contextMenus/renderScriptEventContextMenu";
+import { ScriptEventChildren } from "components/script/events/ScriptEventChildren";
+import { Identifier } from "dnd-core";
+import { useContextMenu } from "ui/hooks/use-context-menu";
+
+interface ScriptEditorEventProps {
+  id: string;
+  index: number;
+  nestLevel?: number;
+  parentType: ScriptEventParentType;
+  parentId: string;
+  parentKey: string;
+  entityId: string;
+}
+
+const ScriptEditorEvent = React.memo(
+  ({
+    id,
+    index,
+    parentType,
+    parentId,
+    parentKey,
+    entityId,
+    nestLevel = 0,
+  }: ScriptEditorEventProps) => {
+    const dispatch = useAppDispatch();
+    const context = useContext(ScriptEditorContext);
+    const dragRef = useRef<HTMLDivElement>(null);
+    const dropRef = useRef<HTMLDivElement>(null);
+    const headerRef = useRef<HTMLDivElement>(null);
+    const isVisible = useOnScreen(headerRef);
+
+    const [rename, setRename] = useState(false);
+    const [isAddOpen, setAddOpen] = useState(false);
+    const [insertBefore, setInsertBefore] = useState(false);
+    const [showSymbols, setShowSymbols] = useState(false);
+
+    const overrides = useAppSelector((state) => {
+      if (context.entityType === "actorPrefab" && context.instanceId) {
+        const instance = actorSelectors.selectById(state, context.instanceId);
+        return instance?.prefabScriptOverrides?.[id];
+      } else if (context.entityType === "triggerPrefab" && context.instanceId) {
+        const instance = triggerSelectors.selectById(state, context.instanceId);
+        return instance?.prefabScriptOverrides?.[id];
+      }
+    });
+
+    const clipboardFormat = useAppSelector(
+      (state) => state.clipboard.data?.format,
+    );
+    const scriptEventData = useAppSelector((state) =>
+      scriptEventSelectors.selectById(state, id),
+    );
+    const scriptEvent: ScriptEventNormalized | undefined = useMemo(
+      () =>
+        scriptEventData
+          ? {
+              ...scriptEventData,
+              args: {
+                ...scriptEventData.args,
+                ...overrides?.args,
+              },
+            }
+          : undefined,
+      [overrides, scriptEventData],
+    );
+
+    const scriptEventDefs = useAppSelector((state) =>
+      selectScriptEventDefs(state),
+    );
+    const scriptEventSelectionIds = useAppSelector(
+      (state) => state.editor.scriptEventSelectionIds,
+    );
+
+    const breakpointEnabled = useAppSelector(
+      (state) =>
+        getSettings(state).debuggerBreakpoints.findIndex(
+          (b) => b.scriptEventId === id,
+        ) > -1,
+    );
+
+    const onSelect = useCallback(
+      (shiftPressed: boolean) => {
+        if (shiftPressed) {
+          dispatch(
+            editorActions.toggleScriptEventSelectedId({
+              scriptEventId: id,
+              parentId,
+              parentKey,
+              parentType,
+            }),
+          );
+          return true;
+        } else if (
+          scriptEventSelectionIds.length > 0 &&
+          !scriptEventSelectionIds.includes(id)
+        ) {
+          dispatch(editorActions.clearScriptEventSelectionIds());
+          return true;
+        }
+        return false;
+      },
+      [dispatch, id, parentId, parentKey, parentType, scriptEventSelectionIds],
+    );
+
+    const onToggleSelection = useCallback(() => {
+      dispatch(
+        editorActions.toggleScriptEventSelectedId({
+          scriptEventId: id,
+          parentId,
+          parentKey,
+          parentType,
+        }),
+      );
+    }, [dispatch, id, parentId, parentKey, parentType]);
+
+    const onFetchClipboard = useCallback(
+      (e: React.MouseEvent) => {
+        onSelect(e.shiftKey);
+        dispatch(clipboardActions.fetchClipboard());
+      },
+      [dispatch, onSelect],
+    );
+
+    const toggleRename = useCallback(() => {
+      setRename(!rename);
+    }, [rename]);
+
+    const [{ handlerId, isOverCurrent }, drop] = useDrop<
+      ScriptEventsRef,
+      void,
+      { isOverCurrent: boolean; handlerId: Identifier | null }
+    >({
+      accept: ItemTypes.SCRIPT_EVENT,
+      collect(monitor) {
+        return {
+          handlerId: monitor.getHandlerId(),
+          isOverCurrent: monitor.isOver({ shallow: true }),
+        };
+      },
+      drop(item: ScriptEventsRef, monitor: DropTargetMonitor) {
+        const didDrop = monitor.didDrop();
+        if (didDrop) {
+          return;
+        }
+
+        if (!dropRef.current) {
+          return;
+        }
+
+        //  Don't replace items with themselves
+        if (id === item.scriptEventId) {
+          return;
+        }
+
+        // Can't become as child of self
+        if (parentId === item.scriptEventId) {
+          return;
+        }
+
+        dispatch(
+          entitiesActions.moveScriptEvent({
+            to: {
+              scriptEventId: id,
+              parentType,
+              parentKey,
+              parentId,
+            },
+            from: item,
+            additionalScriptEventIds: scriptEventSelectionIds,
+          }),
+        );
+
+        item.parentType = parentType;
+        item.parentKey = parentKey;
+        item.parentId = parentId;
+      },
+    });
+
+    const [{ isDragging }, drag] = useDrag({
+      type: ItemTypes.SCRIPT_EVENT,
+      item: (): ScriptEventsRef => {
+        return {
+          scriptEventId: id,
+          parentType,
+          parentId,
+          parentKey,
+        };
+      },
+      collect: (monitor: DragSourceMonitor) => ({
+        isDragging: monitor.isDragging(),
+      }),
+      canDrag: () => !rename,
+    });
+
+    const toggleOpen = useCallback(
+      (e: React.MouseEvent<HTMLDivElement>) => {
+        if (onSelect(e.shiftKey)) {
+          return;
+        }
+        dispatch(entitiesActions.toggleScriptEventOpen({ scriptEventId: id }));
+      },
+      [dispatch, id, onSelect],
+    );
+
+    const onRename = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        dispatch(
+          entitiesActions.editScriptEventLabel({
+            scriptEventId: id,
+            value: e.currentTarget.value,
+          }),
+        );
+      },
+      [dispatch, id],
+    );
+
+    const onRenameFocus = useCallback(
+      (e: React.FocusEvent<HTMLInputElement>) => {
+        e.currentTarget.select();
+      },
+      [],
+    );
+
+    const onRenameComplete = useCallback(() => {
+      setRename(false);
+    }, []);
+
+    const onDetectRenameComplete = useCallback(
+      (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+          setRename(false);
+        }
+      },
+      [],
+    );
+
+    drag(dragRef);
+    drop(dropRef);
+
+    const command = scriptEvent?.command ?? "";
+    const isComment = command === EVENT_COMMENT;
+    const isDisabled = Boolean(
+      scriptEvent?.args && scriptEvent?.args.__comment,
+    );
+    const hasElse =
+      (scriptEvent?.children && !!scriptEvent.children.false) ?? false;
+    const disabledElse =
+      (scriptEvent?.args && scriptEvent?.args.__disableElse) ?? false;
+    const labelName =
+      (scriptEvent?.args?.__label
+        ? scriptEvent.args.__label
+        : isComment && scriptEvent?.args?.text) || undefined;
+    const isOpen = (scriptEvent?.args && !scriptEvent.args.__collapse) ?? false;
+    const isConditional = scriptEventDefs[command]?.isConditional ?? false;
+    const editableSymbol = scriptEventDefs[command]?.editableSymbol ?? false;
+    const description = scriptEventDefs[command]?.description;
+
+    const onOpenAddMenu = useCallback((before: boolean) => {
+      setInsertBefore(before);
+      setAddOpen(true);
+    }, []);
+
+    const onCloseAddMenu = useCallback(() => {
+      setAddOpen(false);
+    }, []);
+
+    const onApplyOverrides = useCallback(() => {
+      if (context.entityType === "actorPrefab" && context.instanceId) {
+        dispatch(
+          entitiesActions.applyActorPrefabScriptEventOverride({
+            actorId: context.instanceId,
+            scriptEventId: id,
+          }),
+        );
+      } else if (context.entityType === "triggerPrefab" && context.instanceId) {
+        dispatch(
+          entitiesActions.applyTriggerPrefabScriptEventOverride({
+            triggerId: context.instanceId,
+            scriptEventId: id,
+          }),
+        );
+      }
+    }, [context.entityType, context.instanceId, dispatch, id]);
+
+    const onRevertOverrides = useCallback(() => {
+      if (context.entityType === "actorPrefab" && context.instanceId) {
+        dispatch(
+          entitiesActions.revertActorPrefabScriptEventOverride({
+            actorId: context.instanceId,
+            scriptEventId: id,
+          }),
+        );
+      } else if (context.entityType === "triggerPrefab" && context.instanceId) {
+        dispatch(
+          entitiesActions.revertTriggerPrefabScriptEventOverride({
+            triggerId: context.instanceId,
+            scriptEventId: id,
+          }),
+        );
+      }
+    }, [context.entityType, context.instanceId, dispatch, id]);
+
+    const contextMenuItems = useMemo(
+      () =>
+        scriptEvent
+          ? renderScriptEventContextMenu({
+              scriptEventId: scriptEvent.id,
+              additionalScriptEventIds: scriptEventSelectionIds,
+              command,
+              args: scriptEvent.args,
+              dispatch,
+              parentId,
+              parentKey,
+              parentType,
+              context,
+              breakpointEnabled,
+              isDisabled,
+              hasElse,
+              hasOverride: !!overrides,
+              disabledElse: !!disabledElse,
+              clipboardFormat,
+              onRename: toggleRename,
+              onViewSymbols: editableSymbol
+                ? () => setShowSymbols(true)
+                : undefined,
+              onInsert: onOpenAddMenu,
+              onApplyOverrides: onApplyOverrides,
+              onRevertOverrides: onRevertOverrides,
+            })
+          : [],
+      [
+        breakpointEnabled,
+        clipboardFormat,
+        command,
+        isDisabled,
+        context,
+        disabledElse,
+        dispatch,
+        editableSymbol,
+        hasElse,
+        onApplyOverrides,
+        onOpenAddMenu,
+        onRevertOverrides,
+        overrides,
+        parentId,
+        parentKey,
+        parentType,
+        scriptEvent,
+        scriptEventSelectionIds,
+        toggleRename,
+      ],
+    );
+
+    //#region Context Menu
+
+    const getContextMenu = useCallback(
+      ({ event }: { event: React.MouseEvent }) => {
+        onFetchClipboard(event);
+        return contextMenuItems;
+      },
+      [onFetchClipboard, contextMenuItems],
+    );
+
+    const { onContextMenu, contextMenuElement } = useContextMenu({
+      getMenu: getContextMenu,
+    });
+
+    //#endregion Context Menu
+
+    const renderEvents = useCallback(
+      (key: string, label: string) => {
+        return (
+          <ScriptEventChildren
+            key={key}
+            label={label}
+            nestLevel={nestLevel}
+            entityId={entityId}
+            parentId={id}
+            parentKey={key}
+            scriptEvent={scriptEvent}
+          />
+        );
+      },
+      [nestLevel, scriptEvent, id, entityId],
+    );
+
+    const onMouseEnter = useCallback(() => {
+      dispatch(
+        editorActions.selectScriptEvent({
+          eventId: id,
+          parentId,
+          parentKey,
+          parentType,
+        }),
+      );
+    }, [dispatch, id, parentId, parentKey, parentType]);
+
+    const onMouseLeave = useCallback(() => {
+      dispatch(editorActions.clearScriptEvent());
+    }, [dispatch]);
+
+    const isExecuting = scriptEvent?.id === context.executingId;
+
+    useEffect(() => {
+      if (isExecuting && headerRef.current) {
+        headerRef.current.scrollIntoView();
+      }
+    }, [isExecuting]);
+
+    if (!scriptEvent) {
+      return null;
+    }
+
+    if (scriptEvent.command === EVENT_END) {
+      return null;
+    }
+
+    return (
+      <ScriptEventWrapper
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        style={{
+          height: isDragging ? 0 : "auto",
+          display: isDragging ? "none" : "block",
+        }}
+      >
+        {isAddOpen && (
+          <>
+            <MenuOverlay onClick={onCloseAddMenu} />
+            <RelativePortal pin={"top-right"} offsetX={40} offsetY={20}>
+              <AddScriptEventMenu
+                onBlur={onCloseAddMenu}
+                parentId={parentId}
+                parentKey={parentKey}
+                parentType={parentType}
+                insertId={id}
+                before={insertBefore}
+              />
+            </RelativePortal>
+          </>
+        )}
+
+        <div ref={dropRef}>
+          {isOverCurrent && <ScriptEventPlaceholder />}
+          <div ref={dragRef} title={description}>
+            <ScriptEventHeader
+              ref={headerRef}
+              scriptEventId={scriptEvent.id}
+              isConditional={isConditional}
+              isComment={Boolean(isComment)}
+              isDisabled={Boolean(isDisabled)}
+              nestLevel={nestLevel}
+              altBg={index % 2 === 0}
+              isOpen={isOpen}
+              isSelected={scriptEventSelectionIds.includes(scriptEvent.id)}
+              isExecuting={isExecuting}
+              isBreakpoint={breakpointEnabled}
+              isMultiSelectable
+              breakpointTitle={l10n("FIELD_BREAKPOINT")}
+              menuItems={contextMenuItems}
+              onOpenMenu={onFetchClipboard}
+              onContextMenu={onContextMenu}
+              onToggle={!rename ? toggleOpen : undefined}
+              onToggleSelection={onToggleSelection}
+              onMouseEnter={onMouseEnter}
+            >
+              {isVisible && (
+                <>
+                  {rename ? (
+                    <>
+                      <ScriptEventRenameInput
+                        autoFocus
+                        value={String(labelName || "")}
+                        onChange={onRename}
+                        onFocus={onRenameFocus}
+                        onBlur={onRenameComplete}
+                        onKeyDown={onDetectRenameComplete}
+                        placeholder={l10n("FIELD_RENAME")}
+                      />
+                      <ScriptEventRenameInputCompleteButton
+                        onClick={onRenameComplete}
+                        title={l10n("FIELD_RENAME")}
+                      >
+                        <CheckIcon />
+                      </ScriptEventRenameInputCompleteButton>
+                    </>
+                  ) : (
+                    <ScriptEventTitle
+                      command={scriptEvent.command}
+                      args={scriptEvent.args}
+                    />
+                  )}
+                </>
+              )}
+            </ScriptEventHeader>
+          </div>
+          {isOpen && !isDisabled && (
+            <ScriptEventFormWrapper data-handler-id={handlerId}>
+              <ScriptEditorEventHelper event={scriptEvent} />
+              {showSymbols && (
+                <ScriptEventSymbolEditorWrapper>
+                  <ScriptEventSymbolsEditor id={id} />
+                </ScriptEventSymbolEditorWrapper>
+              )}
+              <ScriptEventForm
+                scriptEvent={scriptEvent}
+                entityId={entityId}
+                renderEvents={renderEvents}
+                nestLevel={nestLevel}
+                altBg={index % 2 === 0}
+                parentId={parentId}
+                parentKey={parentKey}
+                parentType={parentType}
+              />
+            </ScriptEventFormWrapper>
+          )}
+        </div>
+        {contextMenuElement}
+      </ScriptEventWrapper>
+    );
+  },
+);
+
+export default ScriptEditorEvent;

@@ -1,0 +1,24 @@
+import fs from "fs-extra";
+import { rimraf as rmdir } from "rimraf";
+import { defaultEngineMetaPath, defaultEngineRoot } from "consts";
+import copy from "lib/helpers/fsCopy";
+
+const ejectEngineToDir = async (ejectPath: string) => {
+  const engineSrcPath = `${defaultEngineRoot}/src`;
+  const engineIncludePath = `${defaultEngineRoot}/include`;
+  const ejectSrcPath = `${ejectPath}/src`;
+  const ejectIncludePath = `${ejectPath}/include`;
+  const ejectMetaPath = `${ejectPath}/engine.json`;
+
+  await rmdir(ejectPath);
+
+  await fs.ensureDir(ejectPath);
+  await fs.ensureDir(ejectSrcPath);
+  await fs.ensureDir(ejectIncludePath);
+
+  await copy(engineSrcPath, ejectSrcPath);
+  await copy(engineIncludePath, ejectIncludePath);
+  await copy(defaultEngineMetaPath, ejectMetaPath);
+};
+
+export default ejectEngineToDir;

@@ -1,0 +1,129 @@
+import type {
+  Song,
+  DutyInstrument,
+  NoiseInstrument,
+  WaveInstrument,
+} from "shared/lib/uge/types";
+
+export type InstrumentType = "duty" | "wave" | "noise";
+
+export type MusicExportFormat = "wav" | "mp3" | "flac";
+
+export interface MusicPosition {
+  sequence: number;
+  row: number;
+}
+
+export interface MusicPlaybackState {
+  sequence: number;
+  row: number;
+  tick: number;
+  ticksPerRow: number;
+}
+
+export interface MusicPlaybackUpdate extends MusicPlaybackState {
+  source: "playback" | "position";
+}
+
+export type MusicDataPacket =
+  | {
+      action: "load-song";
+      song: Song;
+    }
+  | {
+      action: "load-sound";
+      sound: string;
+    }
+  | {
+      action: "play";
+      song: Song;
+      position?: MusicPosition;
+      metronomeEnabled?: boolean;
+      loopSequenceId?: number;
+    }
+  | {
+      action: "stop";
+      position?: MusicPosition;
+    }
+  | {
+      action: "set-metronome-enabled";
+      enabled: boolean;
+    }
+  | {
+      action: "position";
+      position: MusicPosition;
+    }
+  | {
+      action: "preview";
+      type: "duty";
+      note: number;
+      instrument: DutyInstrument;
+      channel: 0 | 1;
+      effectCode: number;
+      effectParam: number;
+    }
+  | {
+      action: "preview";
+      type: "wave";
+      note: number;
+      instrument: WaveInstrument;
+      waveForm: Uint8Array;
+      effectCode: number;
+      effectParam: number;
+    }
+  | {
+      action: "preview";
+      type: "noise";
+      note: number;
+      instrument: NoiseInstrument;
+      effectCode: number;
+      effectParam: number;
+    }
+  | {
+      action: "export-song";
+      requestId: string;
+      song: Song;
+      format: MusicExportFormat;
+      loopCount: number;
+    }
+  | {
+      action: "set-mute";
+      channel: number;
+      muted: boolean;
+    }
+  | {
+      action: "set-solo";
+      channel: number;
+      enabled: boolean;
+    };
+
+export type MusicDataReceivePacket =
+  | {
+      action: "initialized";
+    }
+  | {
+      action: "log";
+      message: string;
+    }
+  | {
+      action: "loaded";
+    }
+  | {
+      action: "update";
+      update: MusicPlaybackUpdate;
+    }
+  | {
+      action: "muted";
+      channels: [boolean, boolean, boolean, boolean];
+    }
+  | {
+      action: "exported-song";
+      requestId: string;
+      format: MusicExportFormat;
+      data: Uint8Array;
+    }
+  | {
+      action: "export-failed";
+      requestId: string;
+      message: string;
+    };

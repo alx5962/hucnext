@@ -1,0 +1,69 @@
+import React, { memo, useMemo } from "react";
+import { components, SingleValue } from "react-select";
+import l10n from "shared/lib/lang/l10n";
+import { Select, SelectCommonProps } from "ui/form/Select";
+import { FlexRow, FlexGrow } from "ui/spacing/Spacing";
+
+interface OperatorSelectProps extends SelectCommonProps {
+  name: string;
+  value?: string | null;
+  onChange?: (newValue: string | null) => void;
+}
+
+interface OperatorOption {
+  value: string;
+  label: string;
+}
+
+const OperatorSelectComponent = ({
+  name,
+  value = "==",
+  onChange,
+  ...selectProps
+}: OperatorSelectProps) => {
+  const options: OperatorOption[] = useMemo(
+    () => [
+      { value: "==", label: l10n("FIELD_EQ") },
+      { value: "!=", label: l10n("FIELD_NE") },
+      { value: "<", label: l10n("FIELD_LT") },
+      { value: ">", label: l10n("FIELD_GT") },
+      { value: "<=", label: l10n("FIELD_LTE") },
+      { value: ">=", label: l10n("FIELD_GTE") },
+    ],
+    [],
+  );
+
+  const currentValue = options.find((o) => o.value === value);
+  return (
+    <Select
+      name={name}
+      value={currentValue}
+      options={options}
+      onChange={(newValue: SingleValue<OperatorOption>) => {
+        if (newValue) {
+          onChange?.(newValue.value);
+        }
+      }}
+      formatOptionLabel={(option: OperatorOption) => {
+        return (
+          <FlexRow>
+            <FlexGrow>{option.label}</FlexGrow>
+            {option.value}
+          </FlexRow>
+        );
+      }}
+      components={{
+        SingleValue: (props) => (
+          <components.SingleValue {...props}>
+            {currentValue?.value}
+          </components.SingleValue>
+        ),
+      }}
+      {...selectProps}
+    />
+  );
+};
+
+export const OperatorSelect = memo<OperatorSelectProps>(
+  OperatorSelectComponent,
+);

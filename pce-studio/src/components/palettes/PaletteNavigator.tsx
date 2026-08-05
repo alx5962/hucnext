@@ -1,0 +1,333 @@
+import React, { useCallback, useMemo, useState } from "react";
+import { paletteSelectors } from "store/features/entities/entitiesSelectors";
+import { FlatList } from "ui/lists/FlatList";
+import l10n from "shared/lib/lang/l10n";
+import { SplitPaneHeader } from "ui/splitpane/SplitPaneHeader";
+import styled from "styled-components";
+import navigationActions from "store/features/navigation/navigationActions";
+import { Button } from "ui/buttons/Button";
+import { PlusIcon, SearchIcon } from "ui/icons/Icons";
+import entitiesActions from "store/features/entities/entitiesActions";
+import { FixedSpacer, FlexGrow, FlexRow } from "ui/spacing/Spacing";
+import PaletteBlock from "components/forms/PaletteBlock";
+import { useAppDispatch, useAppSelector } from "store/hooks";
+import { EntityListItemDnD } from "ui/lists/EntityListItemDnD";
+import { EntityListSearch } from "ui/lists/EntityListItem";
+import { MenuDivider, MenuItem } from "ui/menu/Menu";
+import useToggleableList from "ui/hooks/use-toggleable-list";
+import {
+  EntityNavigatorItem,
+  buildEntityNavigatorItems,
+} from "shared/lib/entities/buildEntityNavigatorItems";
+import { paletteName } from "shared/lib/entities/entitiesHelpers";
+import { Palette } from "shared/lib/resources/types";
+import { DropdownButton } from "ui/buttons/DropdownButton";
+import { useFlatListReparentDnD } from "ui/hooks/use-flatlist-reparent-dnd";
+import { assertUnreachable } from "shared/lib/helpers/assert";
+import ItemTypes from "renderer/lib/dnd/itemTypes";
+import { getParentPath } from "shared/lib/helpers/virtualFilesystem";
+import { FlatListOuterDropTarget } from "ui/lists/FlatListOuterDropTarget";
+import { FlatListOuterDropProvider } from "ui/lists/FlatListOuterDropContext";
+import { useNavigatorSearch } from "store/features/editor/hooks/useNavigatorSearch";
+
+interface PaletteNavigatorProps {
+  height: number;
+  selectedId: string;
+}
+
+const ACCEPT_TYPES = [ItemTypes.PALETTE, ItemTypes.PALETTE_FOLDER];
+
+const collator = new Intl.Collator(undefined, {
+  numeric: true,
+  sensitivity: "base",
+});
+
+const sortByName = (
+  a: { id: string; name: string },
+  b: { id: string; name: string },
+) => {
+  // Push default palettes to top of list
+  const aName = a.id.startsWith("default") ? `_${a.name}` : a.name;
+  const bName = b.id.startsWith("default") ? `_${b.name}` : b.name;
+  return collator.compare(aName, bName);
+};
+
+const Pane = styled.div`
+  overflow: hidden;
+`;
+
+export const PaletteNavigator = ({
+  height,
+  selectedId,
+}: PaletteNavigatorProps) => {
+  const allPalettes = useAppSelector((state) =>
+    paletteSelectors.selectAll(state),
+  );
+
+  const {
+    values: openFolders,
+    isSet: isFolderOpen,
+    toggle: toggleFolderOpen,
+    set: openFolder,
+    unset: closeFolder,
+  } = useToggleableList<string>([], "paletteNavigator");
+
+  const {
+    searchEnabled: palettesSearchEnabled,
+    searchTerm: palettesSearchTerm,
+    setSearchTerm: setPalettesSearchTerm,
+    toggleSearchEnabled: togglePalettesSearchEnabled,
+  } = useNavigatorSearch("palettes");
+
+  const nestedPaletteItems = useMemo(
+    () =>
+      buildEntityNavigatorItems(
+        allPalettes.map((palette, index) => ({
+          ...palette,
+          name: paletteName(palette, index),
+        })),
+        openFolders,
+        palettesSearchTerm,
+        sortByName,
+      ),
+    [allPalettes, openFolders, palettesSearchTerm],
+  );
+
+  const dispatch = useAppDispatch();
+
+  const setSelectedId = useCallback(
+    (id: string) => {
+      dispatch(navigationActions.setNavigationId(id));
+    },
+    [dispatch],
+  );
+
+  const addNewPalette = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      e.stopPropagation();
+      dispatch(entitiesActions.addPalette());
+    },
+    [dispatch],
+  );
+
+  const removeUnusedPalettes = useCallback(() => {
+    dispatch(entitiesActions.removeUnusedPalettes());
+  }, [dispatch]);
+
+  const [renameId, setRenameId] = useState("");
+
+  const listenForRenameStart = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        setRenameId(selectedId);
+      }
+    },
+    [selectedId],
+  );
+
+  const onRenamePaletteComplete = useCallback(
+    (name: string) => {
+      if (renameId) {
+        dispatch(
+          entitiesActions.editPalette({
+            paletteId: renameId,
+            changes: {
+              name,
+            },
+          }),
+        );
+      }
+      setRenameId("");
+    },
+    [dispatch, renameId],
+  );
+
+  const onRenameCancel = useCallback(() => {
+    setRenameId("");
+  }, []);
+
+  const renderContextMenu = useCallback(
+    (item: EntityNavigatorItem<Palette>) => {
+      return [
+        <MenuItem key="rename" onClick={() => setRenameId(item.id)}>
+          {l10n("FIELD_RENAME")}
+        </MenuItem>,
+        <MenuItem
+          key="duplicate"
+          onClick={(e) => {
+            dispatch(entitiesActions.duplicatePalette({ paletteId: item.id }));
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+        >
+          {l10n("FIELD_DUPLICATE")}
+        </MenuItem>,
+        ...(!item.entity?.defaultColors
+          ? [
+              <MenuDivider key="div-delete" />,
+              <MenuItem
+                key="delete"
+                onClick={() =>
+                  dispatch(
+                    entitiesActions.removePalette({
+                      paletteId: item.id,
+                    }),
+                  )
+                }
+              >
+                {l10n("MENU_DELETE_PALETTE")}
+              </MenuItem>,
+            ]
+          : []),
+      ];
+    },
+    [dispatch],
+  );
+
+  const renderLabel = useCallback(
+    (item: EntityNavigatorItem<Palette>) => {
+      if (item.type === "folder") {
+        return (
+          <div onClick={() => toggleFolderOpen(item.id)}>{item.filename}</div>
+        );
+      }
+      return (
+        <FlexRow>
+          {item.filename}
+          <FlexGrow />
+          <PaletteBlock colors={item.entity?.colors ?? []} size={16} />
+        </FlexRow>
+      );
+    },
+    [toggleFolderOpen],
+  );
+
+  const showPalettesSearch = palettesSearchEnabled && height > 60;
+
+  const { onDropOntoItem, flatListDropProviderValue } = useFlatListReparentDnD<
+    EntityNavigatorItem<Palette>
+  >({
+    onReparent: (item, { dropFolder }) => {
+      if (item.type === "folder") {
+        dispatch(
+          entitiesActions.reparentPalettesFolder({
+            fromPath: item.name,
+            toPath: dropFolder,
+          }),
+        );
+      } else if (item.type === "entity") {
+        dispatch(
+          entitiesActions.reparentPalette({
+            paletteId: item.id,
+            toPath: dropFolder,
+          }),
+        );
+      } else {
+        assertUnreachable(item.type);
+      }
+    },
+    acceptTypes: ACCEPT_TYPES,
+    getName: (item) => item.name,
+    getDropFolder: (target) =>
+      target.type === "folder" ? target.name : getParentPath(target.name),
+  });
+
+  return (
+    <Pane style={{ height }}>
+      <SplitPaneHeader
+        collapsed={false}
+        buttons={
+          <>
+            <Button
+              variant="transparent"
+              size="small"
+              title={l10n("FIELD_ADD_PALETTE")}
+              onClick={addNewPalette}
+            >
+              <PlusIcon />
+            </Button>
+            <FixedSpacer width={5} />
+            <Button
+              variant={palettesSearchEnabled ? "primary" : "transparent"}
+              size="small"
+              title={l10n("TOOLBAR_SEARCH")}
+              onClick={togglePalettesSearchEnabled}
+            >
+              <SearchIcon />
+            </Button>
+            <FixedSpacer width={5} />
+            <DropdownButton size="small" variant="transparent">
+              <MenuItem onClick={removeUnusedPalettes}>
+                {l10n("FIELD_REMOVE_UNUSED")}
+              </MenuItem>
+            </DropdownButton>
+          </>
+        }
+      >
+        {l10n("NAV_PALETTES")}
+      </SplitPaneHeader>
+
+      {showPalettesSearch && (
+        <EntityListSearch
+          type="search"
+          value={palettesSearchTerm}
+          onChange={(e) => setPalettesSearchTerm(e.currentTarget.value)}
+          placeholder={l10n("TOOLBAR_SEARCH")}
+          autoFocus
+        />
+      )}
+
+      <FlatListOuterDropProvider value={flatListDropProviderValue}>
+        <FlatList
+          selectedId={selectedId}
+          items={nestedPaletteItems}
+          setSelectedId={setSelectedId}
+          cacheKey="paletteNavigator"
+          height={height - (showPalettesSearch ? 60 : 30)}
+          outerElementType={FlatListOuterDropTarget}
+          onKeyDown={(e: KeyboardEvent, item) => {
+            listenForRenameStart(e);
+            if (item?.type === "folder") {
+              if (e.key === "ArrowRight") {
+                openFolder(selectedId);
+              } else if (e.key === "ArrowLeft") {
+                closeFolder(selectedId);
+              }
+            }
+          }}
+        >
+          {({ item }) => (
+            <EntityListItemDnD
+              item={item}
+              type={item.type === "folder" ? "folder" : "palette"}
+              rename={
+                item.type === "entity" &&
+                renameId === item.id &&
+                !renameId.startsWith("default")
+              }
+              onRename={onRenamePaletteComplete}
+              onRenameCancel={onRenameCancel}
+              renderContextMenu={
+                item.type === "entity" && !item.id.startsWith("default")
+                  ? renderContextMenu
+                  : undefined
+              }
+              collapsable={item.type === "folder"}
+              collapsed={!isFolderOpen(item.name)}
+              onToggleCollapse={() => toggleFolderOpen(item.name)}
+              nestLevel={item.nestLevel}
+              renderLabel={renderLabel}
+              dragType={
+                item.type === "folder"
+                  ? ItemTypes.PALETTE_FOLDER
+                  : ItemTypes.PALETTE
+              }
+              acceptTypes={ACCEPT_TYPES}
+              onDrop={onDropOntoItem}
+            />
+          )}
+        </FlatList>
+      </FlatListOuterDropProvider>
+    </Pane>
+  );
+};

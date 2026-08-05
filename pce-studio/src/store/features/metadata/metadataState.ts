@@ -1,0 +1,51 @@
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { RootState } from "store/storeTypes";
+import projectActions from "store/features/project/projectActions";
+
+export interface MetadataState {
+  name: string;
+  author: string;
+  notes: string;
+  _version: string;
+  _release: string;
+}
+
+export const initialState: MetadataState = {
+  name: "",
+  author: "",
+  notes: "",
+  _version: "",
+  _release: "",
+};
+
+const metadataSlice = createSlice({
+  name: "metadata",
+  initialState,
+  reducers: {
+    editMetadata: (state, action: PayloadAction<Partial<MetadataState>>) => {
+      return {
+        ...state,
+        ...action.payload,
+      };
+    },
+  },
+  extraReducers: (builder) =>
+    builder.addCase(projectActions.loadProject.fulfilled, (state, action) => {
+      const { name, author, notes, _version, _release } =
+        action.payload.resources.metadata;
+      return {
+        ...state,
+        name,
+        author,
+        notes,
+        _version,
+        _release,
+      };
+    }),
+});
+
+export const getMetadata = (state: RootState) => state.project.present.metadata;
+
+export const { actions } = metadataSlice;
+
+export default metadataSlice.reducer;

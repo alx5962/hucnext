@@ -1,0 +1,135 @@
+{
+  "_resourceType": "trigger",
+  "id": "e19d8501-e57b-487a-a6be-a1d1ce5accb4",
+  "name": "",
+  "prefabId": "",
+  "_index": 9,
+  "symbol": "trigger_52",
+  "x": 34,
+  "y": 29,
+  "width": 10,
+  "height": 1,
+  "prefabScriptOverrides": {},
+  "script": [
+    {
+      "id": "3a81758b-51ec-42b8-9d1b-5cac94e794ca",
+      "command": "EVENT_IF",
+      "args": {
+        "variable": "10",
+        "__collapseElse": false,
+        "condition": {
+          "type": "eq",
+          "valueA": {
+            "type": "variable",
+            "value": "10"
+          },
+          "valueB": {
+            "type": "false"
+          }
+        }
+      },
+      "children": {
+        "true": [
+          {
+            "id": "62d5d001-898e-4ba2-9b8a-6f2869972d6c",
+            "command": "EVENT_IF_ACTOR_AT_POSITION",
+            "args": {
+              "actorId": "4348bd46-83d5-4efc-8cc5-daf3c40f4552",
+              "x": {
+                "type": "number",
+                "value": 47
+              },
+              "y": {
+                "type": "number",
+                "value": 25
+              },
+              "__collapseElse": false,
+              "__collapse": false
+            },
+            "children": {
+              "true": [],
+              "false": [
+                {
+                  "id": "15ea5d43-5035-44e4-a4be-03db24f8082c",
+                  "command": "EVENT_ACTOR_SET_DIRECTION",
+                  "args": {
+                    "actorId": "4348bd46-83d5-4efc-8cc5-daf3c40f4552",
+                    "direction": {
+                      "type": "direction",
+                      "value": "down"
+                    }
+                  }
+                },
+                {
+                  "id": "c6a9603b-da00-4f00-8ab6-b782dde77fff",
+                  "command": "EVENT_ACTOR_EMOTE",
+                  "args": {
+                    "actorId": "4348bd46-83d5-4efc-8cc5-daf3c40f4552",
+                    "emoteId": "c8d5eadd-dced-43df-8367-1e4d9bfc7923"
+                  }
+                },
+                {
+                  "id": "d4899576-817b-42fc-a803-cb1f8db8521b",
+                  "command": "EVENT_ACTOR_MOVE_TO",
+                  "args": {
+                    "actorId": "4348bd46-83d5-4efc-8cc5-daf3c40f4552",
+                    "x": {
+                      "type": "number",
+                      "value": 38
+                    },
+                    "y": {
+                      "type": "number",
+                      "value": 21
+                    },
+                    "moveType": "vertical",
+                    "useCollisions": false,
+                    "collideWith": []
+                  }
+                },
+                {
+                  "id": "cc2d40fe-03c8-43d3-a1f5-13272891ea99",
+                  "command": "EVENT_ACTOR_MOVE_TO",
+                  "args": {
+                    "actorId": "4348bd46-83d5-4efc-8cc5-daf3c40f4552",
+                    "x": {
+                      "type": "number",
+                      "value": 44
+                    },
+                    "y": {
+                      "type": "number",
+                      "value": 19
+                    },
+                    "moveType": "vertical",
+                    "useCollisions": false,
+                    "collideWith": []
+                  }
+                },
+                {
+                  "id": "8ad16802-c58d-4674-9523-f8f9cf3b14c5",
+                  "command": "EVENT_ACTOR_MOVE_TO",
+                  "args": {
+                    "actorId": "4348bd46-83d5-4efc-8cc5-daf3c40f4552",
+                    "x": {
+                      "type": "number",
+                      "value": 47
+                    },
+                    "y": {
+                      "type": "number",
+                      "value": 25
+                    },
+                    "moveType": "horizontal",
+                    "useCollisions": false,
+                    "__collapse": false,
+                    "collideWith": []
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "false": []
+      }
+    }
+  ],
+  "leaveScript": []
+}

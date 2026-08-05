@@ -1,0 +1,1116 @@
+import { Type, Static } from "@sinclair/typebox";
+
+export type ExtractResource<T> = Omit<T, "_resourceType" | "_index">;
+
+export const ActorDirection = Type.Union(
+  [
+    Type.Literal("up"),
+    Type.Literal("down"),
+    Type.Literal("left"),
+    Type.Literal("right"),
+  ],
+  { default: "down" },
+);
+
+export type ActorDirection = Static<typeof ActorDirection>;
+
+export const CoordinateType = Type.Union(
+  [Type.Literal("tiles"), Type.Literal("pixels")],
+  { default: "tiles" },
+);
+
+export type CoordinateType = Static<typeof CoordinateType>;
+
+export const SceneParallaxLayer = Type.Object({
+  height: Type.Number(),
+  speed: Type.Number(),
+});
+
+export type SceneParallaxLayer = Static<typeof SceneParallaxLayer>;
+
+export const SceneBoundsRect = Type.Object({
+  x: Type.Number(),
+  y: Type.Number(),
+  width: Type.Number(),
+  height: Type.Number(),
+});
+
+export type SceneBoundsRect = Static<typeof SceneBoundsRect>;
+
+export const CollisionGroup = Type.Union(
+  [
+    Type.Literal(""),
+    Type.Literal("1"),
+    Type.Literal("2"),
+    Type.Literal("3"),
+    Type.Literal("player"),
+  ],
+  { default: "" },
+);
+
+export type CollisionGroup = Static<typeof CollisionGroup>;
+
+export const CollisionExtraFlag = Type.Union(
+  [
+    Type.Literal("1"),
+    Type.Literal("2"),
+    Type.Literal("3"),
+    Type.Literal("4"),
+    Type.Literal("solid"),
+    Type.Literal("platform"),
+  ],
+  { default: "" },
+);
+
+export type CollisionExtraFlag = Static<typeof CollisionExtraFlag>;
+
+export const ColorModeSetting = Type.Union([
+  Type.Literal("mono"),
+  Type.Literal("mixed"),
+  Type.Literal("color"),
+]);
+
+export type ColorModeSetting = Static<typeof ColorModeSetting>;
+
+export const ColorModeOverrideSetting = Type.Union([
+  Type.Literal("none"),
+  Type.Literal("mixed"),
+  Type.Literal("color"),
+]);
+
+export type ColorModeOverrideSetting = Static<typeof ColorModeOverrideSetting>;
+
+export const MonoColorIndex = Type.Union([
+  Type.Literal(0),
+  Type.Literal(1),
+  Type.Literal(2),
+  Type.Literal(3),
+]);
+
+export type MonoColorIndex = Static<typeof MonoColorIndex>;
+
+export const MonoBGPPalette = Type.Tuple([
+  MonoColorIndex,
+  MonoColorIndex,
+  MonoColorIndex,
+  MonoColorIndex,
+]);
+
+export type MonoBGPPalette = Static<typeof MonoBGPPalette>;
+
+export const MonoOBJPalette = Type.Tuple([
+  MonoColorIndex,
+  MonoColorIndex,
+  MonoColorIndex,
+]);
+
+export type MonoOBJPalette = Static<typeof MonoOBJPalette>;
+
+export const MinimalResource = Type.Object({
+  _resourceType: Type.String(),
+});
+
+export type MinimalResource = Static<typeof MinimalResource>;
+
+export const SpriteModeSetting = Type.Union([
+  Type.Literal("8x8"),
+  Type.Literal("8x16"),
+]);
+
+export type SpriteModeSetting = Static<typeof SpriteModeSetting>;
+
+export const ScriptEventArgs = Type.Record(Type.String(), Type.Unknown());
+
+export type ScriptEventArgs = Static<typeof ScriptEventArgs>;
+
+export const ScriptEvent = Type.Recursive((This) =>
+  Type.Object({
+    id: Type.String(),
+    command: Type.String(),
+    args: Type.Optional(ScriptEventArgs), // Matches ScriptEventArgs
+    children: Type.Optional(
+      Type.Record(
+        Type.String(),
+        Type.Union([Type.Array(This), Type.Undefined()]),
+      ),
+    ),
+  }),
+);
+export type ScriptEvent = Static<typeof ScriptEvent>;
+
+const ScriptEventArgsOverride = Type.Object({
+  id: Type.String(),
+  args: Type.Record(Type.String(), Type.Unknown()),
+});
+
+export type ScriptEventArgsOverride = Static<typeof ScriptEventArgsOverride>;
+
+export const LabelColor = Type.Union([
+  Type.Literal("red"),
+  Type.Literal("orange"),
+  Type.Literal("yellow"),
+  Type.Literal("green"),
+  Type.Literal("blue"),
+  Type.Literal("purple"),
+  Type.Literal("gray"),
+]);
+
+export type LabelColor = Static<typeof LabelColor>;
+
+export const labelColorValues: LabelColor[] = LabelColor.anyOf.map(
+  (schema) => schema.const,
+);
+
+export const ActorResource = Type.Object({
+  _resourceType: Type.Literal("actor"),
+  _index: Type.Number(),
+  id: Type.String(),
+  symbol: Type.String(),
+  prefabId: Type.String(),
+  name: Type.String(),
+  notes: Type.Optional(Type.String()),
+  coordinateType: CoordinateType,
+  x: Type.Number(),
+  y: Type.Number(),
+  frame: Type.Number(),
+  animate: Type.Boolean(),
+  spriteSheetId: Type.String(),
+  paletteId: Type.String(),
+  direction: ActorDirection,
+  moveSpeed: Type.Number({ default: 1 }),
+  animSpeed: Type.Number({ default: 15 }),
+  isPinned: Type.Boolean(),
+  persistent: Type.Boolean(),
+  collisionGroup: CollisionGroup,
+  collisionExtraFlags: Type.Array(CollisionExtraFlag),
+  prefabScriptOverrides: Type.Record(Type.String(), ScriptEventArgsOverride),
+  script: Type.Array(ScriptEvent),
+  startScript: Type.Array(ScriptEvent),
+  updateScript: Type.Array(ScriptEvent),
+  hit1Script: Type.Array(ScriptEvent),
+  hit2Script: Type.Array(ScriptEvent),
+  hit3Script: Type.Array(ScriptEvent),
+});
+
+export type ActorResource = Static<typeof ActorResource>;
+
+export type Actor = ExtractResource<ActorResource>;
+
+export const ActorPrefabResource = Type.Composite([
+  Type.Omit(ActorResource, [
+    "_resourceType",
+    "_index",
+    "prefabId",
+    "coordinateType",
+    "x",
+    "y",
+    "direction",
+    "isPinned",
+    "symbol",
+    "prefabScriptOverrides",
+  ]),
+  Type.Object({
+    _resourceType: Type.Literal("actorPrefab"),
+  }),
+]);
+
+export type ActorPrefabResource = Static<typeof ActorPrefabResource>;
+
+export const TriggerResource = Type.Object({
+  _resourceType: Type.Literal("trigger"),
+  _index: Type.Number(),
+  id: Type.String(),
+  symbol: Type.String(),
+  prefabId: Type.String(),
+  name: Type.String(),
+  notes: Type.Optional(Type.String()),
+  x: Type.Number(),
+  y: Type.Number(),
+  width: Type.Number(),
+  height: Type.Number(),
+  prefabScriptOverrides: Type.Record(Type.String(), ScriptEventArgsOverride),
+  script: Type.Array(ScriptEvent),
+  leaveScript: Type.Array(ScriptEvent),
+});
+
+export type TriggerResource = Static<typeof TriggerResource>;
+
+export type Trigger = ExtractResource<TriggerResource>;
+
+export const TriggerPrefabResource = Type.Composite([
+  Type.Omit(TriggerResource, [
+    "_resourceType",
+    "_index",
+    "prefabId",
+    "x",
+    "y",
+    "width",
+    "height",
+    "symbol",
+    "prefabScriptOverrides",
+  ]),
+  Type.Object({
+    _resourceType: Type.Literal("triggerPrefab"),
+  }),
+]);
+
+export type TriggerPrefabResource = Static<typeof TriggerPrefabResource>;
+
+export const AutotileDefinition = Type.Union([
+  Type.Object({
+    type: Type.Literal("2x2"),
+    startTile: Type.Number(),
+  }),
+  Type.Object({
+    type: Type.Literal("9slice"),
+    startTile: Type.Number(),
+  }),
+]);
+
+export type AutotileDefinition = Static<typeof AutotileDefinition>;
+export type AutotileType = AutotileDefinition["type"];
+
+export const CompressedSceneTilemapLayer = Type.Object({
+  id: Type.String(),
+  name: Type.String(),
+  visible: Type.Boolean(),
+  tiles: Type.String(),
+  autotiles: Type.Optional(Type.String()),
+});
+
+export type CompressedSceneTilemapLayer = Static<
+  typeof CompressedSceneTilemapLayer
+>;
+
+export const TilesetSnapshot = Type.Object({
+  id: Type.String(),
+  width: Type.Integer({ minimum: 0 }),
+  height: Type.Integer({ minimum: 0 }),
+});
+
+export type TilesetSnapshot = Static<typeof TilesetSnapshot>;
+
+export const CompressedSceneTilemapData = Type.Object({
+  tilesets: Type.Array(TilesetSnapshot),
+  autotiles: Type.Optional(Type.Array(AutotileDefinition)),
+  tileColors: Type.Optional(Type.String()),
+  layers: Type.Array(CompressedSceneTilemapLayer),
+});
+
+export type CompressedSceneTilemapData = Static<
+  typeof CompressedSceneTilemapData
+>;
+
+export const SceneTilemapLayer = Type.Composite([
+  Type.Omit(CompressedSceneTilemapLayer, ["tiles", "autotiles"]),
+  Type.Object({
+    tiles: Type.Array(Type.Number()),
+    autotiles: Type.Optional(Type.Array(Type.Number())),
+  }),
+]);
+
+export type SceneTilemapLayer = Static<typeof SceneTilemapLayer>;
+
+export const SceneTilemapData = Type.Object({
+  tilesets: Type.Array(TilesetSnapshot),
+  autotiles: Type.Optional(Type.Array(AutotileDefinition)),
+  tileColors: Type.Optional(Type.Array(Type.Number())),
+  layers: Type.Array(SceneTilemapLayer),
+});
+
+export type SceneTilemapData = Static<typeof SceneTilemapData>;
+
+export const CompressedSceneResource = Type.Object({
+  _resourceType: Type.Literal("scene"),
+  _index: Type.Number(),
+  id: Type.String(),
+  type: Type.String(),
+  name: Type.String(),
+  symbol: Type.String(),
+  notes: Type.Optional(Type.String()),
+  labelColor: Type.Optional(LabelColor),
+  x: Type.Number(),
+  y: Type.Number(),
+  width: Type.Number(),
+  height: Type.Number(),
+  backgroundId: Type.String(),
+  tilemap: Type.Optional(CompressedSceneTilemapData),
+  tilesetId: Type.String(),
+  colorModeOverride: ColorModeOverrideSetting,
+  paletteIds: Type.Array(Type.String()),
+  spritePaletteIds: Type.Array(Type.String()),
+  monoBGP: Type.Optional(MonoBGPPalette),
+  monoOBP0: Type.Optional(MonoOBJPalette),
+  monoOBP1: Type.Optional(MonoOBJPalette),
+  spriteMode: Type.Optional(SpriteModeSetting),
+  autoFadeSpeed: Type.Union([Type.Number(), Type.Null()], { default: 1 }),
+  autoFadeEventCollapse: Type.Optional(Type.Boolean()),
+  parallax: Type.Optional(Type.Array(SceneParallaxLayer)),
+  playerSpriteSheetId: Type.Optional(Type.String()),
+  script: Type.Array(ScriptEvent),
+  playerHit1Script: Type.Array(ScriptEvent),
+  playerHit2Script: Type.Array(ScriptEvent),
+  playerHit3Script: Type.Array(ScriptEvent),
+  collisions: Type.String(),
+  scrollBounds: Type.Optional(
+    Type.Object({
+      x: Type.Number(),
+      y: Type.Number(),
+      width: Type.Number(),
+      height: Type.Number(),
+    }),
+  ),
+});
+
+export type CompressedSceneResource = Static<typeof CompressedSceneResource>;
+
+export const NoteResource = Type.Object({
+  _resourceType: Type.Literal("note"),
+  id: Type.String(),
+  labelColor: Type.Optional(LabelColor),
+  name: Type.String(),
+  content: Type.String(),
+  x: Type.Number(),
+  y: Type.Number(),
+  width: Type.Number(),
+  height: Type.Number(),
+});
+
+export type NoteResource = Static<typeof NoteResource>;
+
+export type Note = ExtractResource<NoteResource>;
+
+export const ProjectMetadataResource = Type.Object({
+  _resourceType: Type.Literal("project"),
+  name: Type.String(),
+  author: Type.String(),
+  notes: Type.String(),
+  _version: Type.String(),
+  _release: Type.String(),
+});
+
+export type ProjectMetadataResource = Static<typeof ProjectMetadataResource>;
+
+export const CompressedSceneResourceWithChildren = Type.Composite([
+  CompressedSceneResource,
+  Type.Object({
+    actors: Type.Array(ActorResource),
+    triggers: Type.Array(TriggerResource),
+  }),
+]);
+
+export type CompressedSceneResourceWithChildren = Static<
+  typeof CompressedSceneResourceWithChildren
+>;
+
+export const SceneResource = Type.Composite([
+  Type.Omit(CompressedSceneResourceWithChildren, ["collisions", "tilemap"]),
+  Type.Object({
+    collisions: Type.Array(Type.Number()),
+    tilemap: Type.Optional(SceneTilemapData),
+  }),
+]);
+
+export type SceneResource = Static<typeof SceneResource>;
+
+export type Scene = Omit<
+  ExtractResource<SceneResource>,
+  "actors" | "triggers"
+> & {
+  actors: Actor[];
+  triggers: Trigger[];
+};
+
+export const ScriptVariable = Type.Object({
+  id: Type.String(),
+  name: Type.String(),
+  passByReference: Type.Boolean(),
+});
+
+export type ScriptVariable = Static<typeof ScriptVariable>;
+
+export const ScriptActor = Type.Object({
+  id: Type.String(),
+  name: Type.String(),
+});
+
+export type ScriptActor = Static<typeof ScriptActor>;
+
+export const ScriptResource = Type.Object({
+  _resourceType: Type.Literal("script"),
+  id: Type.String(),
+  name: Type.String(),
+  symbol: Type.String(),
+  description: Type.String(),
+  variables: Type.Record(Type.String(), ScriptVariable),
+  actors: Type.Record(Type.String(), ScriptActor),
+  script: Type.Array(ScriptEvent),
+});
+
+export type ScriptResource = Static<typeof ScriptResource>;
+
+export type Script = ExtractResource<ScriptResource>;
+
+export const CompressedBackgroundResource = Type.Object({
+  _resourceType: Type.Literal("background"),
+  id: Type.String(),
+  name: Type.String(),
+  symbol: Type.String(),
+  filename: Type.String(),
+  width: Type.Number(),
+  height: Type.Number(),
+  imageWidth: Type.Number(),
+  imageHeight: Type.Number(),
+  monoOverrideId: Type.Optional(Type.String()),
+  autoColor: Type.Optional(Type.Boolean()),
+  plugin: Type.Optional(Type.String()),
+  tileColors: Type.String(),
+  autoTileFlipOverride: Type.Optional(Type.Boolean()),
+});
+
+export type CompressedBackgroundResource = Static<
+  typeof CompressedBackgroundResource
+>;
+
+export type CompressedBackgroundResourceAsset = CompressedBackgroundResource &
+  AssetMetadata;
+
+export const BackgroundResource = Type.Composite([
+  Type.Omit(CompressedBackgroundResource, ["tileColors"]),
+  Type.Object({
+    tileColors: Type.Array(Type.Number()),
+  }),
+]);
+
+export type BackgroundResource = Static<typeof BackgroundResource>;
+
+export type Background = ExtractResource<BackgroundResource>;
+
+export type BackgroundResourceAsset = BackgroundResource & AssetMetadata;
+
+export type BackgroundAsset = ExtractResource<BackgroundResourceAsset>;
+
+export const CompressedTilesetResource = Type.Object({
+  _resourceType: Type.Literal("tileset"),
+  id: Type.String(),
+  name: Type.String(),
+  symbol: Type.String(),
+  filename: Type.String(),
+  width: Type.Number(),
+  height: Type.Number(),
+  imageWidth: Type.Number(),
+  imageHeight: Type.Number(),
+  tileColors: Type.Optional(Type.String()),
+  tileCollisions: Type.Optional(Type.String()),
+  autotiles: Type.Optional(Type.Array(AutotileDefinition)),
+  plugin: Type.Optional(Type.String()),
+});
+
+export type CompressedTilesetResource = Static<
+  typeof CompressedTilesetResource
+>;
+
+export type CompressedTilesetResourceAsset = CompressedTilesetResource &
+  AssetMetadata;
+
+export const TilesetResource = Type.Composite([
+  Type.Omit(CompressedTilesetResource, ["tileColors", "tileCollisions"]),
+  Type.Object({
+    tileColors: Type.Array(Type.Number()),
+    tileCollisions: Type.Array(Type.Number()),
+  }),
+]);
+
+export type TilesetResource = Static<typeof TilesetResource>;
+
+export type Tileset = ExtractResource<TilesetResource>;
+
+export type TilesetResourceAsset = TilesetResource & AssetMetadata;
+
+export type TilesetAsset = ExtractResource<TilesetResourceAsset>;
+
+export const ObjPalette = Type.Union([
+  Type.Literal("OBP0"),
+  Type.Literal("OBP1"),
+]);
+
+export type ObjPalette = Static<typeof ObjPalette>;
+
+export const MetaspriteTile = Type.Object({
+  id: Type.String(),
+  x: Type.Number(),
+  y: Type.Number(),
+  sliceX: Type.Number(),
+  sliceY: Type.Number(),
+  palette: Type.Number(),
+  flipX: Type.Boolean(),
+  flipY: Type.Boolean(),
+  objPalette: ObjPalette,
+  paletteIndex: Type.Number(),
+  priority: Type.Boolean(),
+});
+
+export type MetaspriteTile = Static<typeof MetaspriteTile>;
+
+export const Metasprite = Type.Object({
+  id: Type.String(),
+  tiles: Type.Array(MetaspriteTile),
+});
+
+export type Metasprite = Static<typeof Metasprite>;
+
+export const SpriteAnimationType = Type.Union([
+  Type.Literal("fixed"),
+  Type.Literal("fixed_movement"),
+  Type.Literal("multi"),
+  Type.Literal("multi_movement"),
+  Type.Literal("horizontal"),
+  Type.Literal("horizontal_movement"),
+  Type.Literal("platform_player"),
+  Type.Literal("cursor"),
+]);
+
+export type SpriteAnimationType = Static<typeof SpriteAnimationType>;
+
+export const SpriteAnimation = Type.Object({
+  id: Type.String(),
+  frames: Type.Array(Metasprite),
+});
+
+export type SpriteAnimation = Static<typeof SpriteAnimation>;
+
+export const SpriteState = Type.Object({
+  id: Type.String(),
+  name: Type.String(),
+  animationType: SpriteAnimationType,
+  flipLeft: Type.Boolean(),
+  animations: Type.Array(SpriteAnimation),
+});
+
+export type SpriteState = Static<typeof SpriteState>;
+
+export const SpriteResource = Type.Object({
+  _resourceType: Type.Literal("sprite"),
+  id: Type.String(),
+  name: Type.String(),
+  symbol: Type.String(),
+  filename: Type.String(),
+  numTiles: Type.Number(),
+  plugin: Type.Optional(Type.String()),
+  checksum: Type.String(),
+  notes: Type.Optional(Type.String()),
+  width: Type.Number(),
+  height: Type.Number(),
+  canvasOriginX: Type.Number(),
+  canvasOriginY: Type.Number(),
+  canvasWidth: Type.Number(),
+  canvasHeight: Type.Number(),
+  boundsX: Type.Number(),
+  boundsY: Type.Number(),
+  boundsWidth: Type.Number(),
+  boundsHeight: Type.Number(),
+  animSpeed: Type.Union([Type.Number(), Type.Null()]),
+  states: Type.Array(SpriteState),
+  spriteMode: Type.Optional(SpriteModeSetting),
+});
+
+export type SpriteResource = Static<typeof SpriteResource>;
+
+export type Sprite = ExtractResource<SpriteResource>;
+
+export const AssetMetadata = Type.Object({
+  _v: Type.Number(),
+  inode: Type.String(),
+});
+
+export type AssetMetadata = Static<typeof AssetMetadata>;
+
+export type SpriteResourceAsset = SpriteResource & AssetMetadata;
+
+export type SpriteAsset = ExtractResource<SpriteResourceAsset>;
+
+export const EmoteResource = Type.Object({
+  _resourceType: Type.Literal("emote"),
+  id: Type.String(),
+  name: Type.String(),
+  symbol: Type.String(),
+  filename: Type.String(),
+  width: Type.Number(),
+  height: Type.Number(),
+  plugin: Type.Optional(Type.String()),
+});
+
+export type EmoteResource = Static<typeof EmoteResource>;
+
+export type Emote = ExtractResource<EmoteResource>;
+
+export type EmoteResourceAsset = EmoteResource & AssetMetadata;
+
+export type EmoteAsset = ExtractResource<EmoteResourceAsset>;
+
+export const AvatarResource = Type.Object({
+  _resourceType: Type.Literal("avatar"),
+  id: Type.String(),
+  name: Type.String(),
+  filename: Type.String(),
+  width: Type.Number(),
+  height: Type.Number(),
+  plugin: Type.Optional(Type.String()),
+});
+
+export type AvatarResource = Static<typeof AvatarResource>;
+
+export type Avatar = ExtractResource<AvatarResource>;
+
+export type AvatarResourceAsset = AvatarResource & AssetMetadata;
+
+export type AvatarAsset = ExtractResource<AvatarResourceAsset>;
+
+export const FontResource = Type.Object({
+  _resourceType: Type.Literal("font"),
+  id: Type.String(),
+  name: Type.String(),
+  symbol: Type.String(),
+  filename: Type.String(),
+  width: Type.Number(),
+  height: Type.Number(),
+  plugin: Type.Optional(Type.String()),
+});
+
+export type FontResource = Static<typeof FontResource>;
+
+export const FontMetadata = Type.Object({
+  mapping: Type.Record(
+    Type.String(),
+    Type.Union([Type.Number(), Type.Array(Type.Number())]),
+  ),
+  table: Type.Array(Type.Number()),
+});
+
+export type FontMetadata = Static<typeof FontMetadata>;
+
+export type Font = ExtractResource<FontResource>;
+
+export type FontResourceAsset = FontResource & AssetMetadata & FontMetadata;
+
+export type FontAsset = ExtractResource<FontResourceAsset>;
+
+export const SoundType = Type.Union([
+  Type.Literal("wav"),
+  Type.Literal("vgm"),
+  Type.Literal("fxhammer"),
+]);
+
+export const SoundResource = Type.Object({
+  _resourceType: Type.Literal("sound"),
+  id: Type.String(),
+  name: Type.String(),
+  symbol: Type.String(),
+  filename: Type.String(),
+  plugin: Type.Optional(Type.String()),
+  type: SoundType,
+  numEffects: Type.Optional(Type.Number()),
+});
+
+export type SoundResource = Static<typeof SoundResource>;
+
+export type Sound = ExtractResource<SoundResource>;
+
+export type SoundResourceAsset = SoundResource & AssetMetadata;
+
+export type SoundAsset = ExtractResource<SoundResourceAsset>;
+
+export const MusicSettings = Type.Object({
+  disableSpeedConversion: Type.Optional(Type.Boolean()),
+});
+
+export type MusicSettings = Static<typeof MusicSettings>;
+
+export const MusicResource = Type.Object({
+  _resourceType: Type.Literal("music"),
+  id: Type.String(),
+  name: Type.String(),
+  symbol: Type.String(),
+  filename: Type.String(),
+  plugin: Type.Optional(Type.String()),
+  settings: MusicSettings,
+  type: Type.Optional(Type.String()),
+});
+
+export type MusicResource = Static<typeof MusicResource>;
+
+export type Music = ExtractResource<MusicResource>;
+
+export type MusicResourceAsset = MusicResource & AssetMetadata;
+
+export type MusicAsset = ExtractResource<MusicResourceAsset>;
+
+export const PaletteResource = Type.Object({
+  _resourceType: Type.Literal("palette"),
+  id: Type.String(),
+  name: Type.String(),
+  colors: Type.Tuple([
+    Type.String(),
+    Type.String(),
+    Type.String(),
+    Type.String(),
+  ]),
+  defaultName: Type.Optional(Type.String()),
+  defaultColors: Type.Optional(
+    Type.Tuple([Type.String(), Type.String(), Type.String(), Type.String()]),
+  ),
+});
+
+export type PaletteResource = Static<typeof PaletteResource>;
+
+export type Palette = ExtractResource<PaletteResource>;
+
+export const ColorCorrectionSetting = Type.Union([
+  Type.Literal("none"),
+  Type.Literal("default"),
+]);
+
+export type ColorCorrectionSetting = Static<typeof ColorCorrectionSetting>;
+
+export const AutoTileFlipSetting = Type.Union([
+  Type.Literal("disabled"),
+  Type.Literal("ask"),
+  Type.Literal("enabled"),
+]);
+
+export type AutoTileFlipSetting = Static<typeof AutoTileFlipSetting>;
+
+export const ShowConnectionsSetting = Type.Union([
+  Type.Literal("all"),
+  Type.Literal("selected"),
+  Type.Literal(true),
+  Type.Literal(false),
+]);
+
+export type ShowConnectionsSetting = Static<typeof ShowConnectionsSetting>;
+
+export const ShowSceneScreenGridSetting = Type.Union([
+  Type.Literal("topLeft"),
+  Type.Literal("bottomLeft"),
+  Type.Literal("topRight"),
+  Type.Literal("bottomRight"),
+  Type.Literal(false),
+]);
+
+export type ShowSceneScreenGridSetting = Static<
+  typeof ShowSceneScreenGridSetting
+>;
+
+export const CartType = Type.Union([
+  Type.Literal("mbc5"),
+  Type.Literal("mbc3"),
+]);
+
+export type CartType = Static<typeof CartType>;
+
+export const ScriptEditorCtxType = Type.Union([
+  Type.Literal("entity"),
+  Type.Literal("script"),
+  Type.Literal("prefab"),
+  Type.Literal("global"),
+]);
+
+export type ScriptEditorCtxType = Static<typeof ScriptEditorCtxType>;
+
+export const EntityType = Type.Union([
+  Type.Literal("scene"),
+  Type.Literal("actor"),
+  Type.Literal("trigger"),
+  Type.Literal("customEvent"),
+  Type.Literal("actorPrefab"),
+  Type.Literal("triggerPrefab"),
+]);
+
+export const DebuggerScriptType = Type.Union([
+  Type.Literal("editor"),
+  Type.Literal("gbvm"),
+]);
+
+export type DebuggerScriptType = Static<typeof DebuggerScriptType>;
+
+export const DebuggerVariablesFilterType = Type.Union([
+  Type.Literal("all"),
+  Type.Literal("watched"),
+]);
+
+export type DebuggerVariablesFilterType = Static<
+  typeof DebuggerVariablesFilterType
+>;
+
+export type EntityType = Static<typeof EntityType>;
+
+export const ScriptEditorCtx = Type.Object({
+  type: ScriptEditorCtxType,
+  sceneId: Type.String(),
+  entityId: Type.String(),
+  entityType: EntityType,
+  scriptKey: Type.String(),
+  executingId: Type.Optional(Type.String()),
+});
+
+export type ScriptEditorCtx = Static<typeof ScriptEditorCtx>;
+
+export const BreakpointData = Type.Object({
+  scriptEventId: Type.String(),
+  context: ScriptEditorCtx,
+});
+
+export type BreakpointData = Static<typeof BreakpointData>;
+
+export const ScriptEventPreset = Type.Object({
+  id: Type.String(),
+  name: Type.String(),
+  groups: Type.Array(Type.String()),
+  args: ScriptEventArgs,
+});
+
+export type ScriptEventPreset = Static<typeof ScriptEventPreset>;
+
+export const CollisionTileDef = Type.Object({
+  key: Type.String(),
+  name: Type.Optional(Type.String()),
+  color: Type.String(),
+  icon: Type.Optional(Type.String()),
+  flag: Type.Number(),
+  mask: Type.Optional(Type.Number()),
+  extra: Type.Optional(Type.Number()),
+  multi: Type.Optional(Type.Boolean()),
+  group: Type.Optional(Type.String()),
+});
+
+export type CollisionTileDef = Static<typeof CollisionTileDef>;
+
+export const SettingsResource = Type.Object({
+  _resourceType: Type.Literal("settings"),
+  startSceneId: Type.String(),
+  startX: Type.Number(),
+  startY: Type.Number(),
+  startMoveSpeed: Type.Number(),
+  startAnimSpeed: Type.Union([Type.Number(), Type.Null()]),
+  startDirection: ActorDirection,
+  showCollisions: Type.Boolean(),
+  showConnections: ShowConnectionsSetting,
+  showCollisionSlopeTiles: Type.Boolean(),
+  showCollisionExtraTiles: Type.Boolean(),
+  showCollisionTileValues: Type.Boolean(),
+  showSceneScreenGrid: ShowSceneScreenGridSetting,
+  collisionLayerOpacity: Type.Number(),
+  worldScrollX: Type.Number(),
+  worldScrollY: Type.Number(),
+  zoom: Type.Number(),
+  sgbEnabled: Type.Boolean(),
+  customHead: Type.String(),
+  defaultBackgroundPaletteIds: Type.Tuple([
+    Type.String(),
+    Type.String(),
+    Type.String(),
+    Type.String(),
+    Type.String(),
+    Type.String(),
+    Type.String(),
+    Type.String(),
+  ]),
+  defaultSpritePaletteIds: Type.Tuple([
+    Type.String(),
+    Type.String(),
+    Type.String(),
+    Type.String(),
+    Type.String(),
+    Type.String(),
+    Type.String(),
+    Type.String(),
+  ]),
+  defaultSpritePaletteId: Type.String(),
+  defaultUIPaletteId: Type.String(),
+  playerPaletteId: Type.String(),
+  defaultMonoBGP: MonoBGPPalette,
+  defaultMonoOBP0: MonoOBJPalette,
+  defaultMonoOBP1: MonoOBJPalette,
+  navigatorSplitSizes: Type.Array(Type.Number()),
+  showNavigator: Type.Boolean(),
+  defaultFontId: Type.String(),
+  defaultCharacterEncoding: Type.String(),
+  defaultPlayerSprites: Type.Record(Type.String(), Type.String()),
+  cartType: CartType,
+  batterylessEnabled: Type.Boolean(),
+  favoriteEvents: Type.Array(Type.String()),
+  customColorsWhite: Type.String(),
+  customColorsLight: Type.String(),
+  customColorsDark: Type.String(),
+  customColorsBlack: Type.String(),
+  customControlsUp: Type.Array(Type.String()),
+  customControlsDown: Type.Array(Type.String()),
+  customControlsLeft: Type.Array(Type.String()),
+  customControlsRight: Type.Array(Type.String()),
+  customControlsA: Type.Array(Type.String()),
+  customControlsB: Type.Array(Type.String()),
+  customControlsStart: Type.Array(Type.String()),
+  customControlsSelect: Type.Array(Type.String()),
+  debuggerEnabled: Type.Boolean(),
+  debuggerScriptType: DebuggerScriptType,
+  debuggerVariablesFilter: DebuggerVariablesFilterType,
+  debuggerCollapsedPanes: Type.Array(Type.String()),
+  debuggerPauseOnScriptChanged: Type.Boolean(),
+  debuggerPauseOnWatchedVariableChanged: Type.Boolean(),
+  debuggerBreakpoints: Type.Array(BreakpointData),
+  debuggerWatchedVariables: Type.Array(Type.String()),
+  colorMode: ColorModeSetting,
+  colorCorrection: ColorCorrectionSetting,
+  previewAsMono: Type.Boolean(),
+  openBuildLogOnWarnings: Type.Boolean(),
+  generateDebugFilesEnabled: Type.Boolean(),
+  compilerPreset: Type.Number({ default: 3000 }),
+  scriptEventPresets: Type.Record(
+    Type.String(),
+    Type.Record(Type.String(), ScriptEventPreset),
+  ),
+  scriptEventDefaultPresets: Type.Record(Type.String(), Type.String()),
+  runSceneSelectionOnly: Type.Boolean(),
+  spriteMode: SpriteModeSetting,
+  openBuildFolderOnExport: Type.Boolean(),
+  showRomUsageAfterBuild: Type.Boolean(),
+  romFilename: Type.String(),
+  defaultSceneTypeId: Type.String(),
+  disabledSceneTypeIds: Type.Array(Type.String()),
+  autoTileFlipEnabled: Type.Boolean(),
+  webTemplate: Type.String(),
+  selectedSceneTilesetId: Type.String(),
+});
+
+export type SettingsResource = Static<typeof SettingsResource>;
+
+export type Settings = ExtractResource<SettingsResource>;
+
+export const Variable = Type.Object({
+  id: Type.String(),
+  name: Type.String(),
+  symbol: Type.String(),
+  flags: Type.Optional(Type.Record(Type.String(), Type.String())),
+});
+
+export type Variable = Static<typeof Variable>;
+
+export const ConstantData = Type.Object({
+  id: Type.String(),
+  name: Type.String(),
+  symbol: Type.String(),
+  value: Type.Number(),
+});
+
+export type ConstantData = Static<typeof ConstantData>;
+
+export type Constant = ExtractResource<ConstantData>;
+
+export const VariablesResource = Type.Object({
+  _resourceType: Type.Literal("variables"),
+  variables: Type.Array(Variable),
+  constants: Type.Array(ConstantData),
+});
+
+export type VariablesResource = Static<typeof VariablesResource>;
+
+export const EngineFieldValue = Type.Object({
+  id: Type.String(),
+  value: Type.Optional(Type.Union([Type.String(), Type.Number()])),
+});
+
+export type EngineFieldValue = Static<typeof EngineFieldValue>;
+
+export const EngineFieldValuesResource = Type.Object({
+  _resourceType: Type.Literal("engineFieldValues"),
+  engineFieldValues: Type.Array(EngineFieldValue),
+});
+
+export type EngineFieldValuesResource = Static<
+  typeof EngineFieldValuesResource
+>;
+
+export type CompressedResource =
+  | CompressedSceneResourceWithChildren
+  | ScriptResource
+  | SpriteResource
+  | CompressedBackgroundResource
+  | EmoteResource
+  | AvatarResource
+  | FontResource
+  | CompressedTilesetResource
+  | SoundResource
+  | MusicResource
+  | PaletteResource
+  | VariablesResource
+  | EngineFieldValuesResource
+  | SettingsResource
+  | NoteResource
+  | ProjectMetadataResource;
+
+export type Resource =
+  | BackgroundResource
+  | CompressedBackgroundResource
+  | SpriteResource
+  | EmoteResource
+  | AvatarResource
+  | FontResource
+  | TilesetResource
+  | SoundResource
+  | MusicResource
+  | PaletteResource
+  | ScriptResource;
+
+export type CompressedProjectResources = {
+  scenes: CompressedSceneResourceWithChildren[];
+  actorPrefabs: ActorPrefabResource[];
+  triggerPrefabs: TriggerPrefabResource[];
+  scripts: ScriptResource[];
+  sprites: SpriteResource[];
+  backgrounds: CompressedBackgroundResource[];
+  emotes: EmoteResource[];
+  avatars: AvatarResource[];
+  fonts: FontResource[];
+  tilesets: CompressedTilesetResource[];
+  sounds: SoundResource[];
+  music: MusicResource[];
+  palettes: PaletteResource[];
+  variables: VariablesResource;
+  engineFieldValues: EngineFieldValuesResource;
+  settings: SettingsResource;
+  notes: NoteResource[];
+  metadata: ProjectMetadataResource;
+};
+
+export type ProjectResources = Omit<
+  CompressedProjectResources,
+  "scenes" | "backgrounds" | "tilesets"
+> & {
+  scenes: SceneResource[];
+  backgrounds: BackgroundResource[];
+  tilesets: TilesetResource[];
+};
+
+export type ProjectEntityResources = Omit<
+  ProjectResources,
+  "settings" | "metadata"
+>;
+
+export type WriteFile = { path: string; checksum: string; data: string };
+
+export type WriteResourcesPatch = {
+  data: WriteFile[];
+  paths: string[];
+  metadata: ProjectMetadataResource;
+};
+
+export const isProjectMetadataResource = (
+  x: unknown,
+): x is ProjectMetadataResource => {
+  return (
+    x !== null &&
+    typeof x === "object" &&
+    "_resourceType" in x &&
+    (x as { _resourceType: string })._resourceType === "project"
+  );
+};

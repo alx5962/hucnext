@@ -1,0 +1,538 @@
+import { createSlice, PayloadAction, UnknownAction } from "@reduxjs/toolkit";
+import type {
+  InstrumentType,
+  MusicExportFormat,
+  MusicPosition,
+} from "shared/lib/music/types";
+import clamp from "shared/lib/helpers/clamp";
+import { MAX_EXPORT_LOOPS, MIN_EXPORT_LOOPS } from "shared/lib/music/constants";
+import {
+  addNewSongFile,
+  loadSongFile,
+  saveSongFile,
+} from "store/features/trackerDocument/trackerDocumentState";
+import trackerDocumentActions from "store/features/trackerDocument/trackerDocumentActions";
+import type { PatternCell } from "shared/lib/uge/types";
+import { AppThunk } from "store/storeTypes";
+import API from "renderer/lib/api";
+import { parseClipboardToPattern } from "shared/lib/uge/clipboard";
+import { PatternCellAddress } from "shared/lib/uge/editor/types";
+import { defaultMusicMidiState, MusicMidiState } from "shared/lib/music/midi";
+import {
+  applyTrackerGridState,
+  applyTrackerGridToSequenceStart,
+  TrackerSelectionOrigin,
+  TrackerSelectionRect,
+} from "./trackerHelpers";
+
+export type PianoRollToolType = "pencil" | "eraser" | "selection" | null;
+
+export type TrackerViewType = "tracker" | "roll";
+
+export type TrackerSidebarViewType = "instrument" | "cell";
+
+export type SubpatternEditorMode = "script" | "tracker";
+
+export type QuantizeSnapSetting = "none" | "beat" | "halfbeat";
+
+export type MobileOverlayView =
+  | "none"
+  | "notes"
+  | "channels"
+  | "instrumentsList"
+  | "instrument"
+  | "settings"
+  | "sequence";
+
+interface SelectedInstrument {
+  id: string;
+  type: InstrumentType;
+}
+
+interface CellAddress {
+  sequenceId: number;
+  patternId: number;
+  rowId: number;
+  channelId: number;
+}
+
+const pasteAbsoluteCells = (): AppThunk<Promise<void>> => async (dispatch) => {
+  const clipboardText = await API.clipboard.readText();
+  const pastedPattern = parseClipboardToPattern(clipboardText);
+
+  if (!pastedPattern || pastedPattern.length === 0) {
+    return;
+  }
+
+  dispatch(
+    actions.setPastedPattern({
+      pattern: pastedPattern,
+    }),
+  );
+  dispatch(actions.setSelectedPatternCells([]));
+};
+
+export interface TrackerState {
+  status: "loading" | "error" | "loaded" | "init";
+  error?: string;
+  modified: boolean;
+
+  playing: boolean;
+  exporting: boolean;
+  playerReady: boolean;
+
+  octaveOffset: number;
+  editStep: number;
+
+  view: TrackerViewType;
+  tool: PianoRollToolType;
+  selectedInstrumentId: number;
+  selectedChannel: 0 | 1 | 2 | 3;
+  visibleChannels: number[];
+  hoverNote: number | null;
+  hoverColumn: number | null;
+  hoverSequence: number | null;
+  playbackSequence: number;
+  playbackRow: number;
+  playbackCurrentTick: number;
+  playbackTicksPerRow: number;
+  playbackFollowScrollRevision: number;
+  defaultStartPlaybackSequence: number;
+  defaultStartPlaybackRow: number;
+  selectedSongId: string;
+  selectedInstrument: SelectedInstrument;
+  selectedSequence: number;
+  trackerActiveField?: number;
+  trackerSelectionOrigin?: TrackerSelectionOrigin;
+  trackerSelectionRect?: TrackerSelectionRect;
+  selectedTrackerFields: number[];
+  selectedPatternCells: PatternCellAddress[];
+  selection: [number, number, number, number];
+  selectedEffectCell: CellAddress | null;
+  subpatternEditorFocus: boolean;
+  subpatternEditorMode: SubpatternEditorMode;
+  exportFormat: MusicExportFormat;
+  exportLoopCount: number;
+  channelStatus: [boolean, boolean, boolean, boolean];
+  pastedPattern: PatternCell[][] | null;
+  sidebarView: TrackerSidebarViewType;
+  showVirtualKeyboard: boolean;
+  mobileOverlayView: MobileOverlayView;
+  midiInput: MusicMidiState;
+  metronomeEnabled: boolean;
+  quantizeSnap: QuantizeSnapSetting;
+  loopSequenceId?: number;
+  globalSplitPattern: boolean;
+}
+
+export const initialState: TrackerState = {
+  // status: null,
+  status: "init",
+  error: "",
+  modified: false,
+
+  playing: false,
+  exporting: false,
+  playerReady: false,
+  // song: null,
+  octaveOffset: 0,
+  editStep: 1,
+  // modified: false,
+  view: "roll",
+  tool: "pencil",
+  selectedInstrumentId: 0,
+  selectedChannel: 0,
+  visibleChannels: [0, 1, 2, 3],
+  hoverNote: null,
+  hoverColumn: null,
+  hoverSequence: null,
+  playbackSequence: 0,
+  playbackRow: 0,
+  playbackCurrentTick: 0,
+  playbackTicksPerRow: 0,
+  playbackFollowScrollRevision: 0,
+  defaultStartPlaybackSequence: 0,
+  defaultStartPlaybackRow: 0,
+  selectedSongId: "",
+  selectedInstrument: {
+    id: "0",
+    type: "duty",
+  },
+  selectedSequence: 0,
+  trackerActiveField: undefined,
+  trackerSelectionOrigin: undefined,
+  trackerSelectionRect: undefined,
+  selectedTrackerFields: [],
+  selectedPatternCells: [],
+  selection: [-1, -1, -1, -1],
+  selectedEffectCell: null,
+  subpatternEditorFocus: false,
+  subpatternEditorMode: "script",
+  exportFormat: "mp3",
+  exportLoopCount: 1,
+  channelStatus: [false, false, false, false],
+  pastedPattern: null,
+  sidebarView: "instrument",
+  showVirtualKeyboard: false,
+  mobileOverlayView: "none",
+  midiInput: defaultMusicMidiState,
+  metronomeEnabled: false,
+  quantizeSnap: "none",
+  loopSequenceId: undefined,
+  globalSplitPattern: false,
+};
+
+const trackerSlice = createSlice({
+  name: "tracker",
+  initialState,
+  reducers: {
+    reset: (state) => ({
+      ...initialState,
+      view: state.view,
+      subpatternEditorMode: state.subpatternEditorMode,
+      midiInput: state.midiInput,
+      metronomeEnabled: state.metronomeEnabled,
+    }),
+    playTracker: (state, _action: PayloadAction<void>) => {
+      state.playing = true;
+    },
+    pauseTracker: (state, _action: PayloadAction<void>) => {
+      state.playing = false;
+    },
+    stopTracker: (state, _action: PayloadAction<void>) => {
+      state.playing = false;
+      state.playbackSequence = state.defaultStartPlaybackSequence;
+      state.playbackRow = state.defaultStartPlaybackRow;
+      state.playbackCurrentTick = 0;
+      state.playbackTicksPerRow = 0;
+      state.playbackFollowScrollRevision = 0;
+    },
+    setExporting: (state, action: PayloadAction<boolean>) => {
+      state.exporting = action.payload;
+      if (action.payload) {
+        state.playing = false;
+      }
+    },
+    playerReady: (state, action: PayloadAction<boolean>) => {
+      state.playerReady = action.payload;
+    },
+    setView: (state, action: PayloadAction<TrackerViewType>) => {
+      state.view = action.payload;
+      state.tool = "pencil";
+      state.selectedPatternCells = [];
+    },
+    setHover: (
+      state,
+      action: PayloadAction<{
+        note: number | null;
+        column: number | null;
+        sequenceId: number | null;
+      }>,
+    ) => {
+      state.hoverNote = action.payload.note;
+      state.hoverColumn = action.payload.column;
+      state.hoverSequence = action.payload.sequenceId;
+    },
+    setTool: (state, _action: PayloadAction<PianoRollToolType>) => {
+      state.tool = _action.payload;
+    },
+    setSelectedInstrumentId: (state, action: PayloadAction<number>) => {
+      state.selectedInstrumentId = clamp(action.payload, 0, 15);
+      state.sidebarView = "instrument";
+    },
+    setSelectedChannel: (state, action: PayloadAction<0 | 1 | 2 | 3>) => {
+      if (state.selectedChannel !== action.payload) {
+        state.selectedEffectCell = null;
+        state.selectedChannel = action.payload;
+      }
+    },
+    setVisibleChannels: (state, _action: PayloadAction<number[]>) => {
+      state.visibleChannels = _action.payload;
+    },
+    setOctaveOffset: (state, _action: PayloadAction<number>) => {
+      state.octaveOffset = _action.payload;
+    },
+    setEditStep: (state, _action: PayloadAction<number>) => {
+      state.editStep = _action.payload;
+    },
+    setDefaultStartPlaybackPosition: (
+      state,
+      action: PayloadAction<MusicPosition>,
+    ) => {
+      state.playbackSequence = action.payload.sequence;
+      state.playbackRow = action.payload.row;
+      state.playbackCurrentTick = 0;
+      state.playbackTicksPerRow = 0;
+      state.defaultStartPlaybackSequence = action.payload.sequence;
+      state.defaultStartPlaybackRow = action.payload.row;
+      if (state.loopSequenceId !== action.payload.sequence) {
+        state.loopSequenceId = undefined;
+      }
+    },
+    setPlaybackState: (
+      state,
+      action: PayloadAction<{
+        sequence: number;
+        row: number;
+        tick: number;
+        ticksPerRow: number;
+        source: "playback" | "position";
+      }>,
+    ) => {
+      const { sequence, row, tick, ticksPerRow, source } = action.payload;
+      state.playbackSequence = sequence;
+      state.playbackRow = row;
+      state.playbackCurrentTick = tick;
+      state.playbackTicksPerRow = ticksPerRow;
+      if (source === "playback") {
+        state.playbackFollowScrollRevision += 1;
+      }
+    },
+    resetPlaybackPosition: (state) => {
+      state.playbackSequence = 0;
+      state.playbackRow = 0;
+      state.playbackCurrentTick = 0;
+      state.playbackTicksPerRow = 0;
+      state.playbackFollowScrollRevision = 0;
+    },
+    setSelectedSongId: (state, action: PayloadAction<string>) => {
+      state.selectedSongId = action.payload;
+    },
+    setSelectedInstrument: (
+      state,
+      action: PayloadAction<SelectedInstrument>,
+    ) => {
+      state.selectedInstrument = action.payload;
+    },
+    setSelectedSequence: (state, action: PayloadAction<number>) => {
+      state.selectedSequence = action.payload;
+      if (!state.playing) {
+        applyTrackerGridToSequenceStart(state, action.payload);
+      }
+    },
+    setTrackerGridState: (
+      state,
+      action: PayloadAction<{
+        activeField?: number;
+        selectionOrigin?: TrackerSelectionOrigin;
+        selectionRect?: TrackerSelectionRect;
+      }>,
+    ) => {
+      applyTrackerGridState(
+        state,
+        action.payload.activeField,
+        action.payload.selectionOrigin,
+        action.payload.selectionRect,
+      );
+    },
+    setSelectedPatternCells: (
+      state,
+      action: PayloadAction<PatternCellAddress[]>,
+    ) => {
+      const next = action.payload;
+      const prev = state.selectedPatternCells;
+
+      if (prev.length === 0 && next.length === 0) {
+        return;
+      }
+
+      state.selectedPatternCells = next;
+
+      if (next.length > 0) {
+        state.sidebarView = "cell";
+      }
+    },
+    setSelectedEffectCell: (
+      state,
+      action: PayloadAction<CellAddress | null>,
+    ) => {
+      if (state.selectedEffectCell !== action.payload) {
+        state.selectedEffectCell = action.payload;
+        state.mobileOverlayView = "notes";
+      }
+    },
+    setSubpatternEditorFocus: (state, _action: PayloadAction<boolean>) => {
+      state.subpatternEditorFocus = _action.payload;
+    },
+    setSubpatternEditorMode: (
+      state,
+      action: PayloadAction<SubpatternEditorMode>,
+    ) => {
+      state.subpatternEditorMode = action.payload;
+    },
+    setExportSettings: (
+      state,
+      action: PayloadAction<{
+        format: MusicExportFormat;
+        loopCount: number;
+      }>,
+    ) => {
+      state.exportFormat = action.payload.format;
+      state.exportLoopCount = clamp(
+        Math.floor(action.payload.loopCount),
+        MIN_EXPORT_LOOPS,
+        MAX_EXPORT_LOOPS,
+      );
+    },
+    setChannelStatus: (
+      state,
+      action: PayloadAction<[boolean, boolean, boolean, boolean]>,
+    ) => {
+      state.channelStatus = action.payload;
+    },
+    setPastedPattern: (
+      state,
+      action: PayloadAction<{
+        pattern: PatternCell[][];
+      }>,
+    ) => {
+      state.pastedPattern = action.payload.pattern;
+    },
+
+    clearPastedPattern: (state) => {
+      state.pastedPattern = null;
+    },
+
+    setSidebarView: (state, action: PayloadAction<TrackerSidebarViewType>) => {
+      state.sidebarView = action.payload;
+    },
+
+    setShowVirtualKeyboard: (state, action: PayloadAction<boolean>) => {
+      state.showVirtualKeyboard = action.payload;
+    },
+
+    setMobileOverlayView: (state, action: PayloadAction<MobileOverlayView>) => {
+      state.mobileOverlayView = action.payload;
+    },
+
+    setMidiState: (state, action: PayloadAction<MusicMidiState>) => {
+      state.midiInput = action.payload;
+    },
+    setMetronomeEnabled: (state, action: PayloadAction<boolean>) => {
+      state.metronomeEnabled = action.payload;
+    },
+    setQuantizeSnap: (state, action: PayloadAction<QuantizeSnapSetting>) => {
+      state.quantizeSnap = action.payload;
+    },
+    setLoopSequenceId: (state, action: PayloadAction<number | undefined>) => {
+      state.loopSequenceId = action.payload;
+      if (action.payload !== undefined) {
+        state.defaultStartPlaybackSequence = action.payload;
+        state.defaultStartPlaybackRow = 0;
+      }
+    },
+    setglobalSplitPattern: (state, action: PayloadAction<boolean>) => {
+      state.globalSplitPattern = action.payload;
+    },
+  },
+  extraReducers: (builder) =>
+    builder
+      .addCase(loadSongFile.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(loadSongFile.rejected, (state, action) => {
+        state.status = "error";
+        state.error = action.error.message;
+      })
+      .addCase(loadSongFile.fulfilled, (state) => {
+        return {
+          ...initialState,
+          selectedSongId: state.selectedSongId,
+          view: state.view,
+          subpatternEditorMode: state.subpatternEditorMode,
+          showVirtualKeyboard: state.showVirtualKeyboard,
+          midiInput: state.midiInput,
+          metronomeEnabled: state.metronomeEnabled,
+          quantizeSnap: state.quantizeSnap,
+          status: "loaded",
+          modified: false,
+        };
+      })
+      .addCase(saveSongFile.fulfilled, (state) => {
+        state.modified = false;
+      })
+      .addCase(trackerDocumentActions.unloadSong, (state) => {
+        state.modified = false;
+        state.status = "init";
+        state.playerReady = false;
+        state.playbackSequence = 0;
+        state.playbackRow = 0;
+        state.playbackCurrentTick = 0;
+        state.playbackTicksPerRow = 0;
+        state.playbackFollowScrollRevision = 0;
+      })
+      .addCase(trackerDocumentActions.moveSequence, (state, action) => {
+        state.selectedSequence = action.payload.toIndex;
+        state.loopSequenceId = undefined;
+        if (!state.playing) {
+          applyTrackerGridToSequenceStart(state, action.payload.toIndex);
+        }
+      })
+      // When adding a new song file jump to it in navigator
+      .addCase(addNewSongFile.fulfilled, (state, action) => {
+        state.selectedSongId = action.payload.data.id;
+      })
+      // When adding a importing song file jump to it in navigator
+      .addCase(
+        trackerDocumentActions.convertModToUgeSong.fulfilled,
+        (state, action) => {
+          state.selectedSongId = action.payload.data.id;
+        },
+      )
+      // After dragging cells, set selection to new location
+      .addCase(
+        trackerDocumentActions.moveAbsoluteCellsComplete,
+        (state, action) => {
+          state.selectedPatternCells = action.payload.newSelection;
+        },
+      )
+      .addCase(trackerDocumentActions.insertSequence, (state, action) => {
+        const offset = action.payload.position === "after" ? 1 : 0;
+        state.selectedSequence = action.payload.sequenceIndex + offset;
+        state.loopSequenceId = undefined;
+        if (!state.playing) {
+          applyTrackerGridToSequenceStart(state, state.selectedSequence);
+        }
+      })
+      .addCase(trackerDocumentActions.cloneSequencePattern, (state, action) => {
+        const offset = action.payload.position === "after" ? 1 : 0;
+        state.selectedSequence = action.payload.sequenceIndex + offset;
+        state.loopSequenceId = undefined;
+        if (!state.playing) {
+          applyTrackerGridToSequenceStart(state, state.selectedSequence);
+        }
+      })
+      .addCase(
+        trackerDocumentActions.duplicateSequencePattern,
+        (state, action) => {
+          const offset = action.payload.position === "after" ? 1 : 0;
+          state.selectedSequence = action.payload.sequenceIndex + offset;
+          state.loopSequenceId = undefined;
+          if (!state.playing) {
+            applyTrackerGridToSequenceStart(state, state.selectedSequence);
+          }
+        },
+      )
+      .addCase(trackerDocumentActions.removeSequence, (state) => {
+        state.loopSequenceId = undefined;
+      })
+      .addCase(trackerDocumentActions.clearAbsoluteCells, (state) => {
+        state.mobileOverlayView = "none";
+      })
+      .addMatcher(
+        (action: UnknownAction): action is UnknownAction =>
+          action.type.startsWith("trackerDocument/") &&
+          !action.type.startsWith("trackerDocument/loadSong") &&
+          !action.type.startsWith("trackerDocument/saveSong") &&
+          !action.type.startsWith("trackerDocument/addNewSong") &&
+          !action.type.startsWith("trackerDocument/unloadSong") &&
+          !action.type.startsWith("trackerDocument/requestAddNewSong"),
+        (state, _action) => {
+          state.modified = true;
+        },
+      ),
+});
+
+export const actions = { ...trackerSlice.actions, pasteAbsoluteCells };
+
+export default trackerSlice.reducer;

@@ -1,0 +1,117 @@
+import styled from "styled-components";
+import { StyledInput } from "./style";
+import { ToggleButtonGroupWrapper } from "ui/form/ToggleButtonGroup";
+import { StyledButton } from "ui/buttons/style";
+import API from "renderer/lib/api";
+
+export const InputGroup = styled.div`
+  display: flex;
+  width: 100%;
+
+  &
+    > div:not(:first-child)
+    ${StyledInput},
+    &
+    > ${StyledInput}:not(:first-child) {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  & > ${ToggleButtonGroupWrapper}:not(:first-child),
+  & > ${ToggleButtonGroupWrapper}:not(:first-child) > :first-child > label {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  & > div:not(:first-child) .CustomSelect .CustomSelect__control,
+  & > .CustomSelect:not(:first-child) .CustomSelect__control {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  & > div:not(:first-child) .MentionsInput__control textarea {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
+  & > div:not(:last-child) ${StyledInput}, & > ${StyledInput}:not(:last-child) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  & > ${ToggleButtonGroupWrapper}:not(:last-child),
+  & > ${ToggleButtonGroupWrapper}:not(:last-child) > :last-child > label {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  & > div:not(:last-child) .CustomSelect .CustomSelect__control,
+  & > .CustomSelect:not(:last-child) .CustomSelect__control {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  & > div:not(:last-child) .MentionsInput__control textarea {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+`;
+
+export const InputGroupLabel = styled.label`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  height: 100%;
+  padding: 5px;
+  box-sizing: border-box;
+  font-size: ${(props) => props.theme.typography.fontSize};
+  background: ${(props) => props.theme.colors.input.background};
+  color: ${(props) => props.theme.colors.input.text};
+  border: 1px solid ${(props) => props.theme.colors.input.border};
+  border-radius: ${(props) => props.theme.borderRadius}px;
+`;
+
+export const InputGroupPrepend = styled.div`
+  ${StyledButton} {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 0;
+    height: 28px;
+    ${() =>
+      API.env === "web" &&
+      `@media (max-width: 840px) {
+      height: 38px;
+    }`}
+  }
+  ${InputGroupLabel} {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 0;
+    height: 28px;
+    ${() =>
+      API.env === "web" &&
+      `@media (max-width: 840px) {
+      height: 38px;
+    }`}
+  }
+`;
+
+export const InputGroupAppend = styled.div`
+  ${StyledButton} {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: 0;
+    height: 28px;
+    ${() =>
+      API.env === "web" &&
+      `@media (max-width: 840px) {
+      height: 38px;
+    }`}
+  }
+  ${InputGroupLabel} {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: 0;
+    height: 28px;
+    ${() =>
+      API.env === "web" &&
+      `@media (max-width: 840px) {
+      height: 38px;
+    }`}
+  }
+`;

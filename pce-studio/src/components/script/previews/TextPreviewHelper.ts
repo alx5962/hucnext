@@ -1,0 +1,225 @@
+import { FontData, lexTextWithMapping } from "shared/lib/helpers/fonts";
+import { assetURL } from "shared/lib/helpers/assets";
+import { TILE_SIZE } from "consts";
+import { FontAsset } from "shared/lib/resources/types";
+
+const DOLLAR_CHAR = 36;
+const HASH_CHAR = 35;
+const ZERO_CHAR = 48;
+
+const isTransparent = (r: number, g: number, b: number): boolean => {
+  return (
+    (r === 255 && b === 255 && g === 0) || (g === 255 && r === 0 && b === 0)
+  );
+};
+
+export const drawFrame = (
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  width: number,
+  height: number,
+) => {
+  ctx.drawImage(img, 0, 16, 8, 8, 0, (height - 1) * 8, 8, 8); // BL
+  ctx.drawImage(img, 16, 16, 8, 8, (width - 1) * 8, (height - 1) * 8, 8, 8); // BR
+  for (let i = 0; i < height - 2; i++) {
+    ctx.drawImage(img, 0, 8, 8, 8, 0, (i + 1) * 8, 8, 8); // L
+    ctx.drawImage(img, 16, 8, 8, 8, (width - 1) * 8, (i + 1) * 8, 8, 8); // R
+  }
+  for (let i = 0; i < width - 2; i++) {
+    ctx.drawImage(img, 8, 16, 8, 8, (i + 1) * 8, (height - 1) * 8, 8, 8); // B
+    ctx.drawImage(img, 8, 0, 8, 8, (i + 1) * 8, 0, 8, 8); // T
+  }
+  ctx.drawImage(img, 0, 0, 8, 8, 0, 0, 8, 8); // TL
+  ctx.drawImage(img, 16, 0, 8, 8, (width - 1) * 8, 0, 8, 8); // TR
+  for (let i = 0; i < height - 2; i++) {
+    for (let j = 0; j < width - 2; j++) {
+      ctx.drawImage(img, 8, 8, 8, 8, (j + 1) * 8, (i + 1) * 8, 8, 8); // C
+    }
+  }
+};
+
+export const drawFill = (
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  width: number,
+  height: number,
+) => {
+  for (let i = 0; i < height; i++) {
+    for (let j = 0; j < width; j++) {
+      ctx.drawImage(img, 8, 8, 8, 8, j * 8, i * 8, 8, 8); // C
+    }
+  }
+};
+
+const loadImage = async (src: string): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.src = src;
+    img.onload = () => {
+      resolve(img);
+    };
+    img.onerror = (error) => {
+      reject(error);
+    };
+  });
+};
+
+export const loadFont = async (font: FontAsset): Promise<FontData> => {
+  const fontFilename = assetURL("fonts", font);
+  const img = await loadImage(fontFilename);
+  const widths: number[] = [];
+  let isMono = true;
+
+  // Make green background color transparent
+  const tmpCanvas = document.createElement("canvas");
+  const tmpCtx = tmpCanvas.getContext("2d");
+  if (!tmpCtx) {
+    throw new Error("Unable to get canvas context while loading font");
+  }
+  tmpCtx.drawImage(img, 0, 0);
+  const imgData = tmpCtx?.getImageData(0, 0, img.width, img.height);
+  if (imgData) {
+    const charsX = Math.floor(img.width / 8);
+    const charsY = Math.floor(img.height / 8);
+
+    for (let yi = 0; yi < charsY; yi++) {
+      for (let xi = 0; xi < charsX; xi++) {
+        let width = 0;
+        while (width < 8) {
+          const i = 4 * (yi * 8 * img.width + xi * 8 + width);
+          const r = imgData.data[i];
+          const g = imgData.data[i + 1];
+          const b = imgData.data[i + 2];
+          if (isTransparent(r, g, b)) {
+            isMono = false;
+            break;
+          }
+          width++;
+        }
+        widths.push(width);
+      }
+    }
+  }
+
+  return {
+    id: font.id,
+    img,
+    isMono,
+    widths,
+    mapping: font.mapping,
+    table: font.table,
+  };
+};
+
+export const drawText = (
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  xOffset: number,
+  yOffset: number,
+  maxHeight: number,
+  fontsData: Record<string, FontData>,
+  defaultFontId: string,
+  fallbackFontId: string,
+) => {
+  let drawX = 0;
+  let drawY = 0;
+  let leftX = 0;
+
+  let font = fontsData[defaultFontId];
+
+  if (!font) {
+    font = fontsData[fallbackFontId];
+  }
+
+  if (!font) {
+    return;
+  }
+
+  const tileHeight = Math.floor(font.img.height / 8);
+
+  const drawCharCode = (charCode: number) => {
+    let charIndex = font.table[charCode];
+    if (charIndex === -1) {
+      charIndex = (charCode - (tileHeight < 16 ? 32 : 0)) % font.widths.length;
+    }
+    const lookupX = charIndex % 16;
+    const lookupY = Math.floor(charIndex / 16);
+    if (drawY >= maxHeight * 8) {
+      return;
+    }
+    ctx.drawImage(
+      font.img,
+      lookupX * 8,
+      lookupY * 8,
+      font.widths[charIndex],
+      8,
+      drawX + xOffset,
+      drawY + yOffset,
+      font.widths[charIndex],
+      8,
+    );
+    drawX += font.widths[charIndex] ?? 0;
+  };
+
+  const textTokens = lexTextWithMapping(text, fontsData, font.id, false);
+
+  textTokens.forEach((token) => {
+    if (token.type === "text") {
+      const string = token.previewValue ?? token.value;
+      let i = 0;
+
+      while (i < string.length) {
+        const char = string[i];
+
+        // Newline - encodeString() above causes all newlines to be represented as \012
+        if (
+          char === "\\" &&
+          string[i + 1] === "0" &&
+          string[i + 2] === "1" &&
+          string[i + 3] === "2"
+        ) {
+          drawX = leftX;
+          drawY += 8;
+          i += 4;
+          continue;
+        }
+
+        drawCharCode(char.codePointAt(0) ?? 0);
+
+        i++;
+      }
+    } else if (token.type === "variable" && token.fixedLength !== undefined) {
+      for (let c = 0; c < token.fixedLength - 1; c++) {
+        drawCharCode(ZERO_CHAR);
+      }
+      drawCharCode(DOLLAR_CHAR);
+    } else if (token.type === "variable") {
+      drawCharCode(DOLLAR_CHAR);
+      drawCharCode(DOLLAR_CHAR);
+      drawCharCode(DOLLAR_CHAR);
+    } else if (token.type === "char") {
+      drawCharCode(HASH_CHAR);
+    } else if (token.type === "font") {
+      const newFont = fontsData[token.fontId];
+      if (newFont) {
+        font = newFont;
+      }
+    } else if (token.type === "gotoxy" && token.relative) {
+      if (token.x > 0) {
+        drawX = (Math.floor(drawX / TILE_SIZE) + (token.x - 1)) * TILE_SIZE;
+      } else if (token.x < 0) {
+        drawX = (Math.floor(drawX / TILE_SIZE) + token.x) * TILE_SIZE;
+      }
+      if (token.y > 0) {
+        drawY = (Math.floor(drawY / TILE_SIZE) + (token.y - 1)) * TILE_SIZE;
+      } else if (token.y < 0) {
+        drawY = (Math.floor(drawY / TILE_SIZE) + token.y) * TILE_SIZE;
+      }
+      leftX = drawX;
+    } else if (token.type === "gotoxy" && !token.relative) {
+      drawX = (token.x - 1) * TILE_SIZE - xOffset;
+      drawY = (token.y - 1) * TILE_SIZE - yOffset;
+      leftX = drawX;
+    }
+  });
+};

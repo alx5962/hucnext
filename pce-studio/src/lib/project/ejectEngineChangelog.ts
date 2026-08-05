@@ -1,0 +1,1356 @@
+import flatten from "lodash/flatten";
+import uniq from "lodash/uniq";
+import l10n from "shared/lib/lang/l10n";
+
+type EngineChange = {
+  version: string;
+  description: string;
+  modifiedFiles: string[];
+};
+
+const createDescription = (shortDesc: string, features: string[]): string =>
+  `${shortDesc}:\n` + features.map((feature) => `   * ${feature}`).join("\n");
+
+const changes: EngineChange[] = [
+  {
+    version: "3.0.0-e0",
+    description:
+      "Complete engine rewrite based around GBVM:\n" +
+      "   * Support for metasprites\n" +
+      "   * Parallax backgrounds\n" +
+      "   * hUGEDriver music engine\n" +
+      "   * Variable width fonts\n" +
+      "   * Super GB borders\n" +
+      "   * GBVM scripting language\n" +
+      "   * Much more!",
+    modifiedFiles: ["All of them (sorry)"],
+  },
+  {
+    version: "3.0.1-e0",
+    description:
+      "Bug fixes and preperation for GBDK-2020 v4.0.6:\n" +
+      "   * Fixed issue where input scripts could be trigger while VM is locked\n" +
+      "   * Allowed input scripts to optionally prevent default button actions\n" +
+      "   * Moved engine field defines into a single state_defines.h file\n" +
+      "   * Switched SDCC features to use macros in preparation for new GBDK",
+    modifiedFiles: ["All..."],
+  },
+  {
+    version: "3.0.2-e0",
+    description:
+      "Bug fixes and crash handler:\n" +
+      "   * Added crash handler screen\n" +
+      "   * Text control code 0x09 added to skip characters without waiting\n" +
+      "   * Allow tilesets with zero length\n" +
+      "   * Fix issue where VM_LOCK was not affecting context switching\n" +
+      "   * Optimised input script checks",
+    modifiedFiles: [
+      "src/core/crash_handler.s",
+      "src/core/data_manager.c",
+      "src/core/events.c",
+      "src/core/ui.c",
+      "src/core/vm.c",
+    ],
+  },
+  {
+    version: "3.0.2-e1",
+    description:
+      "Bug fixes:\n" +
+      "   * Hide sprites when overlay is fullscreen\n" +
+      '   * Make sequences of control codes in strings "instant"',
+    modifiedFiles: [
+      "src/core/actor.s",
+      "src/core/interrupts.c",
+      "src/core/ui.c",
+    ],
+  },
+  {
+    version: "3.0.2-e2",
+    description:
+      "Bug fixes:\n" +
+      "   * Don't prevent jumping when overlapping actor in platform scenes",
+    modifiedFiles: ["src/states/platform.c"],
+  },
+  {
+    version: "3.0.3-e0",
+    description:
+      "Updates:\n" +
+      "   * Update to latest hUGEDriver\n" +
+      "   * Add engine support for text sounds\n" +
+      "   * Save executing ctxs when saving game data\n" +
+      "   * Improve GBA detection\n" +
+      "   * Fix scroll jitter seen in top-down scenes",
+    modifiedFiles: [
+      "include/input.h",
+      "include/ui.h",
+      "include/vm.h",
+      "include/vm.i",
+      "include/vm_ui.h",
+      "lib/hUGEDriver.lib",
+      "src/core/core.c",
+      "src/core/input.c",
+      "src/core/interrupts.c",
+      "src/core/load_save.c",
+      "src/core/ui.c",
+      "src/core/vm.c",
+      "src/core/vm_instructions.c",
+      "src/core/vm_ui.c",
+    ],
+  },
+  {
+    version: "3.0.3-e1",
+    description:
+      "Updates:\n" +
+      "   * Avoid rendering garbage when no scene has loaded yet\n" +
+      "   * use GBDK-2020 hardware sprite hiding function\n" +
+      "   * Move save blob signature to game data",
+    modifiedFiles: [
+      "include/actor.h",
+      "include/oam_utils.h",
+      "include/shadow.h",
+      "src/core/actor.c",
+      "src/core/data_manager.c",
+      "src/core/interrupts.c",
+      "src/core/load_save.c",
+      "src/core/oam_utils.s",
+    ],
+  },
+  {
+    version: "3.0.3-e2",
+    description:
+      "Updates:\n" +
+      "   * Fix logic hiding actors behind overlay\n" +
+      "   * Fix VM_OVERLAY_HIDE\n" +
+      "   * Remove optional macro args from sound instructions",
+    modifiedFiles: ["include/vm.i", "src/core/interrupts.c"],
+  },
+  {
+    version: "3.0.3-e3",
+    description:
+      "Updates:\n" +
+      "   * Fix issue where vertical parallax could write over tiles\n" +
+      "   * Merged sprites hide/show into single instruction\n" +
+      "   * Merged fade in/out into single instruction",
+    modifiedFiles: [
+      "include/vm.i",
+      "include/vm_gameboy.h",
+      "src/core/scroll.c",
+      "src/core/vm_gameboy.c",
+      "src/core/vm_instructions.c",
+    ],
+  },
+  {
+    version: "3.0.3-e4",
+    description:
+      "Updates:\n" +
+      "   * Allow reserving sprite tiles per scene for player\n" +
+      "   * Renamed exclusive_sprite to reserve_tiles",
+    modifiedFiles: ["include/gbs_types.i", "src/core/data_manager.c"],
+  },
+  {
+    version: "3.1.0-e0",
+    description:
+      "Updates:\n" +
+      "   * Store RNG seed in saved data\n" +
+      "   * Add support for VM_SWITCH instruction",
+    modifiedFiles: [
+      "include/vm.h",
+      "include/vm.i",
+      "src/core/load_save.c",
+      "src/core/vm.c",
+      "src/core/vm_instructions.c",
+    ],
+  },
+  {
+    version: "3.1.0-e1",
+    description:
+      "Updates:\n" +
+      "   * Fix vertical shoot em up scene type\n" +
+      "   * Improved randomize\n" +
+      "   * Add VM_LOAD_TILESET and VM_OVERLAY_SET_MAP",
+    modifiedFiles: [
+      "include/vm.i",
+      "include/vm_gameboy.h",
+      "include/vm_ui.h",
+      "src/core/vm_gameboy.c",
+      "src/core/vm_instructions.c",
+      "src/core/vm_ui.c",
+      "src/states/shmup.c",
+    ],
+  },
+  {
+    version: "3.1.0-e2",
+    description:
+      "Updates:\n" +
+      "   * Add VM_ACTOR_MOVE_CANCEL\n" +
+      "   * Update hUGEDriver\n" +
+      "   * Fix issue where activating an actor wouldn't trigger update script",
+    modifiedFiles: [
+      "include/gbs_types.h",
+      "include/hUGEDriver.h",
+      "include/hUGEDriverRoutines.h",
+      "include/vm.i",
+      "include/vm_actor.h",
+      "lib/hUGEDriver.lib",
+      "src/core/music_manager.c",
+      "src/core/vm.c",
+      "src/core/vm_actor.c",
+      "src/core/vm_instructions.c",
+    ],
+  },
+  {
+    version: "3.1.0-e3",
+    description:
+      "Updates:\n" +
+      "   * Add disabled flag to actors\n" +
+      "   * Manually deactivating an actor will disable it preventing it from activating when coming back onscreen\n" +
+      "   * Manually activating an actor will enable it again",
+    modifiedFiles: [
+      "include/gbs_types.h",
+      "src/core/actor.c",
+      "src/core/data_manager.c",
+      "src/core/vm_actor.c",
+    ],
+  },
+  {
+    version: "3.1.0-e4",
+    description:
+      "Updates:\n" +
+      "   * Fix bug where disabling the player would trigger rendering garbage\n" +
+      "   * Remove unused spritesheet_0 header include in projectiles",
+    modifiedFiles: [
+      "src/core/actor.c",
+      "src/core/projectiles.c",
+      "src/core/vm_actor.c",
+    ],
+  },
+  {
+    version: "3.1.0-e5",
+    description:
+      "Updates:\n" +
+      "   * Update hUGEDriver.lib\n" +
+      "   * unify types in far_ptr_t and TO_FAR_PTR_T\n" +
+      "   * add .R_REF_SET macro for VM_RPN instruction to set by reference\n" +
+      "   * VM_OVERLAY_SET_SUBMAP and VM_OVERLAY_SET_MAP now accept X and Y coordinates from variables\n" +
+      "   * remove useless VM_GET_SYSTIME, use VM_GET_INT16 instead\n" +
+      "   * move ___sdcc_bcall_ehl trampoline to 0x0008, add ph rule that replace CALL with RST which save 2 bytes and 2 cycles each call\n" +
+      "   * new overlay_priority field that allow set priority CGB attributes bit for the UI by default and thus partially hide actors behind the partially visible window layer\n" +
+      "   * replace VM_LOAD_FRAME and VM_LOAD_CURSOR with universal VM_LOAD_TILES",
+    modifiedFiles: [
+      "include/bankdata.h",
+      "include/hUGEDriver.h",
+      "include/music_manager.h",
+      "include/sample_player.h",
+      "include/sfx_player.h",
+      "include/ui.h",
+      "include/vm.h",
+      "include/vm.i",
+      "include/vm_gameboy.h",
+      "include/vm_music.h",
+      "include/vm_ui.h",
+      "lib/hUGEDriver.lib",
+      "src/core/___sdcc_bcall_ehl.s",
+      "src/core/actor.c",
+      "src/core/core.c",
+      "src/core/data_manager.c",
+      "src/core/interrupt_timer.s",
+      "src/core/music_manager.c",
+      "src/core/sample_player.c",
+      "src/core/sfx_player.c",
+      "src/core/ui.c",
+      "src/core/vm.c",
+      "src/core/vm_gameboy.c",
+      "src/core/vm_instructions.c",
+      "src/core/vm_music.c",
+      "src/core/vm_ui.c",
+    ],
+  },
+  {
+    version: "3.1.0-e6",
+    description:
+      "Updates:\n" +
+      [
+        "   * Add support for sound effects priority",
+        "   * Fix issue where soft reset could lead to UI tiles over scene tiles",
+      ].join("\n"),
+    modifiedFiles: [
+      "include/music_manager.h",
+      "include/sfx_player.h",
+      "include/vm.i",
+      "include/vm_music.h",
+      "src/core/data_manager.c",
+      "src/core/music_manager.c",
+      "src/core/sfx_player.c",
+      "src/core/ui.c",
+      "src/core/vm_instructions.c",
+      "src/core/vm_music.c",
+    ],
+  },
+  {
+    version: "3.1.0-e7",
+    description:
+      "Updates:\n" +
+      [
+        "   * Update hUGEDriver.lib",
+        "   * Fix issue where projectiles launched at >224 degrees would be facing in wrong direction",
+        "   * Allow overflowing of background tiles into UI",
+        "   * Free space used in bank 2",
+        "   * Remove 255 variable limit in VM_SAVE_PEEK",
+        "   * Save rumble state while switching SRAM banks",
+        "   * Update flasher for compatibility with GBDK-2020 v4.1",
+        "   * Add .UI_MENU_SET_START flag for VM_CHOICE to set starting menu item",
+        "   * Fix VM_OVERLAY_SET_SUBMAP on CGB",
+        "   * Add boolean show_actors_on_overlay to draw actors over overlay layer",
+        "   * Restore previously playing music when loading game data",
+      ].join("\n"),
+    modifiedFiles: [
+      "include/interrupts.h",
+      "include/load_save.h",
+      "include/music_manager.h",
+      "include/rtc.h",
+      "include/system.h",
+      "include/trigger.h",
+      "include/ui.h",
+      "include/vm.h",
+      "include/vm.i",
+      "include/vm_load_save.h",
+      "include/vm_ui.h",
+      "lib/hUGEDriver.lib",
+      "src/core/actor.c",
+      "src/core/bankdata.c",
+      "src/core/data_manager.c",
+      "src/core/flasher.c",
+      "src/core/flasher_s.s",
+      "src/core/interrupts.c",
+      "src/core/load_save.c",
+      "src/core/music_manager.c",
+      "src/core/projectiles.c",
+      "src/core/set_tile_submap.s",
+      "src/core/states_caller.s",
+      "src/core/system.c",
+      "src/core/trigger.c",
+      "src/core/ui.c",
+      "src/core/ui_a.s",
+      "src/core/vm.c",
+      "src/core/vm_gameboy.c",
+      "src/core/vm_instructions.c",
+      "src/core/vm_load_save.c",
+      "src/core/vm_music.c",
+      "src/core/vm_ui.c",
+    ],
+  },
+  {
+    version: "3.1.0-e8",
+    description:
+      "Updates:\n" +
+      [
+        "   * Add GB Printer support",
+        "   * Add instruction VM_CALL_NATIVE to call native C functions from script",
+        "   * Fix issue where actors would play idle animation during scripted movement",
+        "   * Remove unnecessary additional re-triggering of ch3 in the SFX engine",
+      ].join("\n"),
+    modifiedFiles: [
+      "include/gbprinter.h",
+      "include/ui.h",
+      "include/vm.h",
+      "include/vm.i",
+      "include/vm_gbprinter.h",
+      "include/vm_ui.h",
+      "src/core/gbprinter.c",
+      "src/core/sfx_player.c",
+      "src/core/ui.c",
+      "src/core/vm.c",
+      "src/core/vm_actor.c",
+      "src/core/vm_gbprinter.c",
+      "src/core/vm_instructions.c",
+      "src/core/vm_ui.c",
+    ],
+  },
+  {
+    version: "3.1.0-e9",
+    description:
+      "Updates:\n" +
+      [
+        "   * Fix an issue where fading out mid-scene would cause game to hang",
+      ].join("\n"),
+    modifiedFiles: [
+      "src/core/fade_manager.c",
+      "src/core/interrupts.c",
+      "src/core/scroll.c",
+      "src/core/vm.c",
+      "src/states/topdown.c",
+    ],
+  },
+  {
+    version: "3.1.0-e10",
+    description:
+      "Updates:\n" +
+      [
+        "   * Add support for persistent actors that won't unload when offscreen",
+        "   * Add support for projectiles that survive multiple collisions",
+        "   * Add support for projectiles that only play animation once",
+        '   * Disable margin after printing, that allows to printing "endless" pictures',
+        "   * Optimise actors_update() function",
+        "   * Optimise vm_actor_move_to() function",
+      ].join("\n"),
+    modifiedFiles: [
+      "include/gbs_types.h",
+      "include/projectiles.h",
+      "include/vm.h",
+      "include/vm.i",
+      "src/core/actor.c",
+      "src/core/gbprinter.c",
+      "src/core/projectiles.c",
+      "src/core/vm.c",
+      "src/core/vm_actor.c",
+      "src/core/vm_camera.c",
+      "src/core/vm_projectiles.c",
+    ],
+  },
+  {
+    version: "3.1.0-e11",
+    description:
+      "Updates:\n" +
+      [
+        "   * Fix issue where actors would switch direction at last frame of vm_actor_move_to",
+        "   * Moved all actor flags instructions into single VM_ACTOR_SET_FLAGS with macros for compatibility with old instructions",
+        "   * Tidied actor and camera manipulation structs",
+      ].join("\n"),
+    modifiedFiles: [
+      "include/actor.h",
+      "include/vm.i",
+      "include/vm_actor.h",
+      "src/core/vm_actor.c",
+      "src/core/vm_camera.c",
+      "src/core/vm_instructions.c",
+    ],
+  },
+  {
+    version: "3.1.0-e12",
+    description:
+      "Updates:\n" +
+      [
+        "   * Allow VM instructions to be stored outside of bank 2 as we were running out of space",
+        "   * Add VM_PROJECTILE_LOAD_TYPE instruction to replace projectile def in current scene",
+        "   * Fix issue with VM_SET_FONT not correctly updating vwf_current_font_idx value",
+      ].join("\n"),
+    modifiedFiles: [
+      "include/bankdata.h",
+      "include/data_manager.h",
+      "include/load_save.h",
+      "include/ui.h",
+      "include/vm.h",
+      "include/vm.i",
+      "include/vm_actor.h",
+      "include/vm_camera.h",
+      "include/vm_gameboy.h",
+      "include/vm_gbprinter.h",
+      "include/vm_load_save.h",
+      "include/vm_math.h",
+      "include/vm_music.h",
+      "include/vm_palette.h",
+      "include/vm_projectiles.h",
+      "include/vm_rtc.h",
+      "include/vm_scene.h",
+      "include/vm_sgb.h",
+      "include/vm_sio.h",
+      "include/vm_ui.h",
+      "src/core/bankdata.c",
+      "src/core/data_manager.c",
+      "src/core/vm.c",
+      "src/core/vm_actor.c",
+      "src/core/vm_camera.c",
+      "src/core/vm_gameboy.c",
+      "src/core/vm_gbprinter.c",
+      "src/core/vm_instructions.c",
+      "src/core/vm_load_save.c",
+      "src/core/vm_math.c",
+      "src/core/vm_music.c",
+      "src/core/vm_palette.c",
+      "src/core/vm_projectiles.c",
+      "src/core/vm_rtc.c",
+      "src/core/vm_scene.c",
+      "src/core/vm_sgb.c",
+      "src/core/vm_sio.c",
+      "src/core/vm_ui.c",
+    ],
+  },
+  {
+    version: "3.1.0-e13",
+    description:
+      "Updates\n" +
+      [
+        "   * Update most files to be autobanked allowing tighter packed and smaller ROMs",
+      ].join("\n"),
+    modifiedFiles: [
+      "include/actor.h",
+      "src/core/actor.c",
+      "src/core/camera.c",
+      "src/core/core.c",
+      "src/core/crash_handler.s",
+      "src/core/data_manager.c",
+      "src/core/events.c",
+      "src/core/fade_manager.c",
+      "src/core/flasher.c",
+      "src/core/flasher_s.s",
+      "src/core/gbprinter.c",
+      "src/core/input.c",
+      "src/core/interrupts.c",
+      "src/core/load_save.c",
+      "src/core/music_manager.c",
+      "src/core/palette.c",
+      "src/core/parallax.c",
+      "src/core/projectiles.c",
+      "src/core/scroll.c",
+      "src/core/scroll_a.s",
+      "src/core/sfx_player.c",
+      "src/core/sgb_border.c",
+      "src/core/sio.c",
+      "src/core/trigger.c",
+      "src/core/ui.c",
+      "src/core/ui_a.s",
+      "src/core/vm.c",
+      "src/core/vm_actor.c",
+      "src/core/vm_camera.c",
+      "src/core/vm_gameboy.c",
+      "src/core/vm_gbprinter.c",
+      "src/core/vm_load_save.c",
+      "src/core/vm_math.c",
+      "src/core/vm_music.c",
+      "src/core/vm_palette.c",
+      "src/core/vm_projectiles.c",
+      "src/core/vm_rtc.c",
+      "src/core/vm_scene.c",
+      "src/core/vm_sgb.c",
+      "src/core/vm_sio.c",
+      "src/core/vm_ui.c",
+      "src/core/vm_ui_a.s",
+      "src/states/adventure.c",
+      "src/states/logo.c",
+      "src/states/platform.c",
+      "src/states/pointnclick.c",
+      "src/states/shmup.c",
+      "src/states/topdown.c",
+    ],
+  },
+  {
+    version: "3.1.0-e14",
+    description:
+      "Updates\n" +
+      [
+        "   * VM_PRINT_OVERLAY now accept MARGIN paremeter: feed N lines after printing, use 0x03 for the last print in the batch",
+        "   * Add ability to start text rendering from the arbitrary tile != 0 (in the VRAM bank 0 only if CGB)",
+        "   * Fix back resolving of base tile when loading projectile default",
+      ].join("\n"),
+    modifiedFiles: [
+      "include/gbprinter.h",
+      "include/ui.h",
+      "include/vm.i",
+      "include/vm_gbprinter.h",
+      "include/vm_ui.h",
+      "src/core/actor.c",
+      "src/core/gbprinter.c",
+      "src/core/ui.c",
+      "src/core/vm_gbprinter.c",
+      "src/core/vm_instructions.c",
+      "src/core/vm_projectiles.c",
+      "src/core/vm_ui.c",
+    ],
+  },
+  {
+    version: "3.1.0-e15",
+    description:
+      "Updates\n" +
+      [
+        "   * Improved documentation within vm.i",
+        "   * Fix text rolling buffer for DMG",
+        "   * Fix wraparound bug in check_collision_in_direction",
+      ].join("\n"),
+    modifiedFiles: ["include/vm.i", "src/core/actor.c", "src/core/vm_ui.c"],
+  },
+  {
+    version: "3.2.0-e0",
+    description:
+      "Updates\n" +
+      [
+        "   * Fix issue where loading a scene containing projectiles or dynamically modified sprites could cause graphical corruption",
+      ].join("\n"),
+    modifiedFiles: ["include/projectiles.h", "src/core/data_manager.c"],
+  },
+  {
+    version: "3.2.0-e1",
+    description:
+      "Updates\n" +
+      [
+        "   * Update to use latest GBDK-2020",
+        "   * Update to latest hUGEDriver",
+      ].join("\n"),
+    modifiedFiles: ["All of them (sorry)"],
+  },
+  {
+    version: "3.2.0-e2",
+    description:
+      "Updates\n" +
+      [
+        "   * Dyanamically allocate emote tiles",
+        "   * Fix GBT_player crash with new GBDK-2020",
+      ].join("\n"),
+    modifiedFiles: [
+      "include/actor.h",
+      "include/gbt_player.h",
+      "src/core/actor.c",
+      "src/core/data_manager.c",
+      "src/core/vm.c",
+    ],
+  },
+  {
+    version: "3.2.0-e3",
+    description:
+      "Updates\n" +
+      [
+        "   * Add support for slopes to platform scenes",
+        "   * Fix issue where falling on to ladder while holding dpad down could sometimes cause player to get stuck",
+        "   * Fix bounds check for right screen edge when player isn't 16px wide",
+        "   * Fix VM_REPLACE_TILE_XY to allow tiles larger than 255 for logo scene type",
+      ].join("\n"),
+    modifiedFiles: [
+      "src/states/adventure.c",
+      "src/states/platform.c",
+      "src/states/shmup.c",
+      "src/core/vm_gameboy.c",
+    ],
+  },
+  {
+    version: "3.2.0-e4",
+    description:
+      "Updates\n" +
+      [
+        "   * Fix issue where transferring data over linkcable would cause game to hang",
+      ].join("\n"),
+    modifiedFiles: ["include/sio.h", "src/core/sio.c"],
+  },
+  {
+    version: "3.3.0-e0",
+    description:
+      "Updates\n" + ["   * Added scene types to engine.json"].join("\n"),
+    modifiedFiles: [
+      "engine.json",
+      "src/gb/include/data/scene_types.h",
+      "src/gb/include/gbs_types.h",
+    ],
+  },
+  {
+    version: "3.3.0-e1",
+    description: createDescription("Updates", [
+      "Add support for random numbers in RPN",
+      "Add macro VM_GLOBAL() to acess globals from GBVM scripts",
+      "Camera lock on scene change updated to be handled by GBVM script",
+    ]),
+    modifiedFiles: [
+      "include/camera.h",
+      "include/vm.h",
+      "include/vm.i",
+      "include/vm_gameboy.h",
+      "src/core/camera.c",
+      "src/core/vm.c",
+      "src/core/vm_gameboy.c",
+      "src/core/vm_instructions.c",
+    ],
+  },
+  {
+    version: "3.3.0-e2",
+    description: createDescription("Updates", [
+      "Camera updated to use fixed point coordinates",
+    ]),
+    modifiedFiles: [
+      "src/core/camera.c",
+      "src/core/scroll.c",
+      "src/core/vm_camera.c",
+    ],
+  },
+  {
+    version: "3.3.0-e3",
+    description: createDescription("Fixes", [
+      "Fix issue where new scene's palettes wouldn't load when switching between scenes without fade out",
+    ]),
+    modifiedFiles: ["src/core/fade_manager.c"],
+  },
+  {
+    version: "4.0.0-e0",
+    description: createDescription("Updates", ["Optimize atan2()"]),
+    modifiedFiles: ["src/core/math_atan2.c"],
+  },
+  {
+    version: "4.0.0-e1",
+    description: createDescription("Fixes", [
+      "Fix typo with white tile reference in UI",
+    ]),
+    modifiedFiles: ["include/ui.h", "src/core/ui.c", "src/core/vm_ui.c"],
+  },
+  {
+    version: "4.0.0-e2",
+    description: createDescription("Fixes", [
+      "Add support for onLoad callback when loading saved data",
+    ]),
+    modifiedFiles: ["src/core/core.c"],
+  },
+  {
+    version: "4.0.1-e0",
+    description: createDescription("Fixes", [
+      "Improve VRAM write timing in the submap and frame drawing functions",
+    ]),
+    modifiedFiles: ["src/core/set_tile_submap.s", "src/core/ui_a.s"],
+  },
+  {
+    version: "4.0.2-e0",
+    description: createDescription("Fixes", [
+      "Improve 'wait for input' text code responsiveness when using slower text speeds",
+    ]),
+    modifiedFiles: ["src/core/ui.c"],
+  },
+  {
+    version: "4.0.3-e0",
+    description: createDescription("Fixes", [
+      "Remove unused text_wait variable from ui",
+      "Minor performance improvement of itoa_fmt()",
+    ]),
+    modifiedFiles: [
+      "include/ui.h",
+      "src/core/ui.c",
+      "src/core/vm_ui.c",
+      "src/core/vm_ui_a.s",
+    ],
+  },
+  {
+    version: "4.1.0-e0",
+    description: createDescription("Fixes", [
+      "Fix issue where modified player flags were not being reset when changing scenes",
+    ]),
+    modifiedFiles: ["src/core/actor.c"],
+  },
+  {
+    version: "4.1.0-e1",
+    description: createDescription("Fixes", [
+      "Fix issue where timers were not suspending when executing modal dialogues and menus",
+    ]),
+    modifiedFiles: ["src/core/vm.c"],
+  },
+  {
+    version: "4.2.0-e1",
+    description: createDescription("Fixes", [
+      "Store actor coordinates as signed values preventing overflow when attempting to move an actor offscreen to the top or left",
+    ]),
+    modifiedFiles: [
+      "include/actor.h",
+      "include/collision.h",
+      "include/gbs_types.h",
+      "include/math.h",
+      "include/projectiles.h",
+      "include/trigger.h",
+      "src/core/actor.c",
+      "src/core/projectiles.c",
+      "src/core/trigger.c",
+      "src/core/vm_projectiles.c",
+      "src/states/adventure.c",
+      "src/states/shmup.c",
+    ],
+  },
+  {
+    version: "4.2.0-e2",
+    description: createDescription("Updates", [
+      "Update VM_PROJECTILE_LOAD_TYPE to allow setting both source and destination index",
+      "Flags for 'anim_once' and 'strong' moved into projectile_def_t rather than being defined at launch time",
+      "Improved collision handling for ladders and one-way platforms in the Platformer scene type. Ladders now use the player's bottom edge for anchoring, and one-way platforms no longer snap the player to the platform when colliding from below",
+    ]),
+    modifiedFiles: [
+      "include/gbs_types.h",
+      "include/projectiles.h",
+      "include/vm.i",
+      "include/vm_projectiles.h",
+      "src/core/projectiles.c",
+      "src/core/vm_instructions.c",
+      "src/core/vm_projectiles.c",
+      "src/states/platform.c",
+    ],
+  },
+  {
+    version: "4.2.0-e3",
+    description: createDescription("Fixes", [
+      "Fix bottom margins on GB Printer",
+    ]),
+    modifiedFiles: ["src/core/gbprinter.c"],
+  },
+  {
+    version: "4.2.0-e4",
+    description: createDescription("Fixes", [
+      "Fix text draw position when using VM_DISPLAY_TEXT_EX with .DISPLAY_PRESERVE_POS flag",
+      "Fix vm_music_setpos() being interrupted by the music ISR",
+      "Remove unused members of projectile_t struct",
+    ]),
+    modifiedFiles: [
+      "include/gbs_types.h",
+      "src/core/ui.c",
+      "src/core/vm_music.c",
+    ],
+  },
+  {
+    version: "4.2.0-e5",
+    description: createDescription("Fixes", [
+      "Fix UI palette text control code. Palette indices now go from 1 to 8, because zero byte is a string terminator",
+    ]),
+    modifiedFiles: ["src/core/ui.c"],
+  },
+  {
+    version: "4.2.0-e6",
+    description: createDescription("Updates", [
+      "Add pause_state_update boolean which when set to true will cause the current state_update function to not be called in the run loop",
+    ]),
+    modifiedFiles: ["include/states_caller.h", "src/core/core.c"],
+  },
+  {
+    version: "4.2.0-e7",
+    description: createDescription("Updates", [
+      "Optimize input processing through persistent storage of pressed buttons",
+    ]),
+    modifiedFiles: ["include/input.h", "src/core/input.c"],
+  },
+  {
+    version: "4.2.0-e8",
+    description: createDescription("Refactor", [
+      "Store position coordinates as unsigned 11.5 fixed point values allowing optimisation of tile coordinate calculations",
+      "Update platform scenes to version based on Platformer Plus",
+      "Allow vm_actor_move_to to only check collisions with walls and/or actors",
+    ]),
+    modifiedFiles: [
+      "include/actor.h",
+      "include/camera.h",
+      "include/collision.h",
+      "include/data_manager.h",
+      "include/gbs_types.h",
+      "include/math.h",
+      "include/projectiles.h",
+      "include/scroll.h",
+      "include/states/platform.h",
+      "include/trigger.h",
+      "include/vm.i",
+      "include/vm_actor.h",
+      "src/core/absolute.c",
+      "src/core/actor.c",
+      "src/core/camera.c",
+      "src/core/collision.c",
+      "src/core/data_manager.c",
+      "src/core/projectiles.c",
+      "src/core/scroll.c",
+      "src/core/trigger.c",
+      "src/core/vm_actor.c",
+      "src/core/vm_camera.c",
+      "src/core/vm_instructions.c",
+      "src/core/vm_projectiles.c",
+      "src/states/adventure.c",
+      "src/states/platform.c",
+      "src/states/pointnclick.c",
+      "src/states/shmup.c",
+      "src/states/topdown.c",
+    ],
+  },
+  {
+    version: "4.2.0-e9",
+    description: createDescription("Updates", [
+      "Add support for setting per scene camera min/max bounds",
+    ]),
+    modifiedFiles: [
+      "include/gbs_types.h",
+      "include/math.h",
+      "include/scroll.h",
+      "src/core/data_manager.c",
+      "src/core/scroll.c",
+    ],
+  },
+  {
+    version: "4.2.0-e10",
+    description: createDescription("Fixes", [
+      "Fix issue where holding button to fast forward through text would close text box when end reached",
+      "Fix position overflow in large Adventure scenes",
+      "Fix position overflow in large Point and Click scenes",
+    ]),
+    modifiedFiles: [
+      "include/math.h",
+      "src/core/ui.c",
+      "src/states/adventure.c",
+      "src/states/pointnclick.c",
+    ],
+  },
+  {
+    version: "4.2.0-e11",
+    description: createDescription("Updates", [
+      "Fix issue causing scroll bounds to be ignored for scenes with width of 20 or height of 18 tiles",
+      "Add sizes and IDs into the save blob for easier crash analysis",
+    ]),
+    modifiedFiles: ["src/core/data_manager.c", "src/core/load_save.c"],
+  },
+  {
+    version: "4.2.0-e12",
+    description: createDescription("Fixes", [
+      "Fix issue in topdown scene type where player speed set to non-whole numbers would often cause player to clip through collisions",
+    ]),
+    modifiedFiles: ["src/states/topdown.c"],
+  },
+  {
+    version: "4.2.0-e13",
+    description: createDescription("Fixes", [
+      "Fix issue where game may not compile if both Color and Super GB modes are enabled",
+      `Fix issue where 'Actor Move To' would not always detect one way tile collisions`,
+    ]),
+    modifiedFiles: ["include/ui.h", "src/core/ui.c", "src/core/vm_actor.c"],
+  },
+  {
+    version: "4.2.0-e14",
+    description: createDescription("Updates", [
+      "Fix issue compiling when platformer dash button set to Interact button",
+      "Add support for setting platformer dash button as A or B",
+    ]),
+    modifiedFiles: ["src/states/platform.c"],
+  },
+  {
+    version: "4.2.0-e15",
+    description: createDescription("Updates", [
+      "Add enhanced Adventure scene type with more configurable options",
+      "Fix bounding box logic which was off by a few subpixels on right and bottom edges",
+    ]),
+    modifiedFiles: [
+      "include/math.h",
+      "src/core/vm_actor.c",
+      "src/states/adventure.c",
+      "src/states/platform.c",
+      "src/states/pointnclick.c",
+      "src/states/shmup.c",
+    ],
+  },
+  {
+    version: "4.2.0-e16",
+    description: createDescription("Updates", [
+      "Optimise actor collision check functions",
+      "Optimise actor/actor collision checks in vm_actor_move_to",
+      "Fix issue in Adventure scene type where callbacks were not being reset on scene load",
+      'Fix issue in Adventure scene type where player could get stuck in "push" state when pushing against an actor that moved',
+      "Fix issue where setting dash and run input to same button in Platformer scenes would prevent player from being able to dash",
+    ]),
+    modifiedFiles: [
+      "include/collision.h",
+      "src/core/actor.c",
+      "src/core/vm_actor.c",
+      "src/states/adventure.c",
+      "src/states/platform.c",
+    ],
+  },
+  {
+    version: "4.2.0-e17",
+    description: createDescription("Updates", [
+      "Improve collisions in adventure mode when multiple actors are colliding with player on the same frame",
+    ]),
+    modifiedFiles: ["src/states/adventure.c"],
+  },
+  {
+    version: "4.2.0-e18",
+    description: createDescription("Updates", [
+      "Improved shoot em up scene type to allow configuring free/locked movement and setting trigger activation conditions",
+    ]),
+    modifiedFiles: ["include/actor.h", "include/math.h", "src/states/shmup.c"],
+  },
+  {
+    version: "4.2.0-e19",
+    description: createDescription("Updates", [
+      "Update VM_ACTOR_SET_BOUNDS to allow setting calculated coordinates",
+    ]),
+    modifiedFiles: [
+      "include/vm.i",
+      "include/vm_actor.h",
+      "src/core/vm_actor.c",
+      "src/core/vm_instructions.c",
+    ],
+  },
+  {
+    version: "4.2.0-e20",
+    description: createDescription("Fixes", [
+      "Fix optional arguments in vm_beginthread",
+      "Optimise actor collision checks to reduce need to read inc_noclip flag within loop",
+    ]),
+    modifiedFiles: [
+      "include/actor.h",
+      "src/core/actor.c",
+      "src/core/projectiles.c",
+      "src/core/vm.c",
+      "src/core/vm_actor.c",
+      "src/states/adventure.c",
+      "src/states/platform.c",
+      "src/states/pointnclick.c",
+      "src/states/shmup.c",
+      "src/states/topdown.c",
+    ],
+  },
+  {
+    version: "4.2.0-e21",
+    description: createDescription("Fixes", [
+      "Add actor_with_script_in_front_of_player() function which skips checking for collisions with actors that don't contain scripts",
+      "Improve interact collision checking in topdown/adventure/platform scenes",
+      "Fix bug in adventure causing push state to not change direction when pushing into corners",
+    ]),
+    modifiedFiles: [
+      "include/actor.h",
+      "src/core/actor.c",
+      "src/states/adventure.c",
+      "src/states/platform.c",
+      "src/states/topdown.c",
+    ],
+  },
+  {
+    version: "4.2.0-e22",
+    description: createDescription("Updates", [
+      "Optimise vm_actor_move_to by only checking current movement axis",
+      "Remove unnecessary projectile offscreen handling for projectiles_render()",
+      "Projectiles_update now tests if collision_group is set to 'player' and only tests for collisions with player in that case",
+      "Refactor splitting actors_update into separate update/render functions",
+      "Optimize bounds checking in actors_update",
+      "Refactor platformer/adventure state machine handling into separate functions to improve compile times",
+    ]),
+    modifiedFiles: [
+      "include/actor.h",
+      "src/core/actor.c",
+      "src/core/core.c",
+      "src/core/projectiles.c",
+      "src/core/ui.c",
+      "src/core/vm_actor.c",
+    ],
+  },
+  {
+    version: "4.2.0-e23",
+    description: createDescription("Updates", [
+      "Fix issue where setting adventure walk/run velocity to lower than current velocity wouldn't cause player to slow down",
+      "Tiny optimization: call deactivate_actor_impl (!BANKED) instead of deactivate_actor (BANKED) in actors_update",
+    ]),
+    modifiedFiles: ["src/core/actor.c", "src/states/adventure.c"],
+  },
+  {
+    version: "4.2.0-e24",
+    description: createDescription("Fixes", [
+      "Fix topdown player position overflow when moving off the top or left edge of the scene with movement speeds that don’t divide the tile size evenly",
+      "Tidy up slope collision definitions and remove magic numbers",
+    ]),
+    modifiedFiles: ["src/states/platform.c", "src/states/topdown.c"],
+  },
+  {
+    version: "4.2.0-e25",
+    description: createDescription("Fixes", [
+      "Fix issue where offscreen persistent actors were still visible",
+      "Fix issue preventing pinned and persistent actors from animating",
+    ]),
+    modifiedFiles: ["src/core/actor.c"],
+  },
+  {
+    version: "4.2.0-e26",
+    description: createDescription("Updates", [
+      "Optimize vm_call_native",
+      "Add vm_asm/vm_endasm instructions",
+      "No longer overwrite the memory below SP in crash handler",
+      "Fix issue in adventure where exit run state event fired when exiting ground state",
+    ]),
+    modifiedFiles: [
+      "include/vm.h",
+      "include/vm.i",
+      "src/core/crash_handler.s",
+      "src/core/vm.c",
+      "src/core/vm_instructions.c",
+      "src/states/adventure.c",
+    ],
+  },
+  {
+    version: "4.2.0-e27",
+    description: createDescription("Fixes", [
+      "Improve VM_STEP performance",
+      "Free space in bank 0 by moving sin table to banked space and by converting cos/sin/isqrt to banked functions",
+      "Fix wall jump typo in platformer scene type",
+      "Fix issue where offscreen actors could flash onscreen for a few frames if manually activated",
+      "Fix loading sprites with NULL tileset",
+      "Optimize activate_actors_in_row and Optimize activate_actors_in_col",
+      "Fix player to actor collision in adventure scene type",
+      "Fix crash handler",
+      "Fix staggering when player is moving in shmup scenes",
+      "Spread actor screen boundary checks over multiple frames to improve performance",
+      "Spread projectile collision checks over multiple frames",
+      "Fix vm_actor_move_to interupt to stop actor on tile boundaries again",
+      "Fix emotes when in 8x8 sprite mode",
+    ]),
+    modifiedFiles: [
+      "include/math.h",
+      "src/core/actor.c",
+      "src/core/crash_handler.s",
+      "src/core/data_manager.c",
+      "src/core/math.c",
+      "src/core/projectiles.c",
+      "src/core/vm.c",
+      "src/core/vm_actor.c",
+      "src/states/adventure.c",
+      "src/states/platform.c",
+      "src/states/shmup.c",
+    ],
+  },
+  {
+    version: "4.2.0-e28",
+    description: createDescription("Updates", [
+      'Change actor flags from bitfield-bools to "classic" bitmask accessed via SET/CLR/CHK_FLAG macro',
+      "Optimise actors_render performance by moving some checks to earlier in the function",
+    ]),
+    modifiedFiles: [
+      "include/gbs_types.h",
+      "include/vm_actor.h",
+      "src/core/actor.c",
+      "src/core/data_manager.c",
+      "src/core/vm_actor.c",
+    ],
+  },
+  {
+    version: "4.2.0-e29",
+    description: createDescription("Updates", [
+      "Add support for horizontal only player sprite in adventure scenes",
+      "Add new optimised instructions for moving actors VM_ACTOR_MOVE_TO_INIT, VM_ACTOR_MOVE_TO_X, VM_ACTOR_MOVE_TO_Y, VM_ACTOR_MOVE_TO_XY, VM_ACTOR_MOVE_TO_SET_DIR_X, VM_ACTOR_MOVE_TO_SET_DIR_Y",
+      "Optimise calls to projectile_launch when launch direction is axis aligned",
+      "Use static variable for saving/restoring bank in scroll",
+      "Use static variable for saving/restoring bank in projectiles",
+      "Minor optimizations to the general banked data manipulation functions",
+    ]),
+    modifiedFiles: [
+      "include/compat.h",
+      "include/vm.i",
+      "include/vm_actor.h",
+      "src/core/actor.c",
+      "src/core/bankdata.c",
+      "src/core/projectiles.c",
+      "src/core/scroll.c",
+      "src/core/vm.c",
+      "src/core/vm_actor.c",
+      "src/core/vm_instructions.c",
+      "src/states/adventure.c",
+    ],
+  },
+  {
+    version: "4.2.0-e30",
+    description: createDescription("Updates", [
+      "VM_ACTOR_SET_ANIM_MOVING to be used before moving when direction is locked rather than setting within vm_actor_move_to_init to prevent animation flicker in cases where movement is blocked",
+      "Match vm_actor_move_to actor/actor collisions to previous implementation to fix jank, tests all actors every frame and stops at previous position rather than snapping",
+      "Add unary negate operator to rpn",
+      "Fix issue where offscreen actors could appear onscreen while VM is locked",
+      "Implement correct bank switching in the GBT_PLAYER music driver",
+      "Remove unused variable 'map' in scroll.c",
+      "Save one cycle in VM_STEP",
+      "Improve performance of VM_CALL_NATIVE",
+      "Optimize isqrt function using assembly code",
+    ]),
+    modifiedFiles: [
+      "include/vm.i",
+      "include/vm_actor.h",
+      "lib/gbt_player.lib",
+      "src/core/actor.c",
+      "src/core/math.c",
+      "src/core/scroll.c",
+      "src/core/vm.c",
+      "src/core/vm_actor.c",
+      "src/core/vm_instructions.c",
+      "third-party/GBT_PLAYER/Makefile",
+      "third-party/GBT_PLAYER/gbt_player.s",
+      "third-party/GBT_PLAYER/gbt_player_bank1.s",
+      "third-party/GBT_PLAYER/makelib.bat",
+    ],
+  },
+  {
+    version: "4.2.0-e31",
+    description: createDescription("Updates", [
+      "Fix issue in Platformer scenes where the wall slide state would not exit upon landing",
+      "Optimize actors / projectiles render functions by removing +8 offset",
+      "Optimize Bank 0 usage by removing unnecessary global variable initializations",
+    ]),
+    modifiedFiles: [
+      "src/core/actor.c",
+      "src/core/fade_manager.c",
+      "src/core/game_time.c",
+      "src/core/interrupts.c",
+      "src/core/projectiles.c",
+      "src/core/trigger.c",
+      "src/states/platform.c",
+    ],
+  },
+  {
+    version: "4.2.0-e32",
+    description: createDescription("Updates", [
+      "Improve VM_RPN so compiler has ability to generate more efficient code",
+      "Split rendering from projectiles_update",
+      "only update/render projectiles when at least one projectile is active",
+      "Optimise projectile_launch by 200 t-cycles",
+      "Optimise actors_update, using static here is causing slower performance",
+      "Fix jitter correction in SHMUP scene when moving from an horizontal direction into a vertical direction without stopping moving",
+      "Fix issue where platformer was using air deceleration value when in the run state",
+      "Optimize VM_STEP by moving bank save / restore code to script_runner_update",
+      "Remove public declaration of VM_STEP, it must be called through the script runner",
+      "define the rest of the RPN operators, so there are no magic numbers anymore",
+      "fix typo in the .REF_MEM definition",
+      "Add setting for forced activation of triggers on input in platformer",
+    ]),
+    modifiedFiles: [
+      "include/projectiles.h",
+      "include/vm.h",
+      "include/vm.i",
+      "src/core/actor.c",
+      "src/core/core.c",
+      "src/core/projectiles.c",
+      "src/core/vm.c",
+      "src/states/platform.c",
+      "src/states/shmup.c",
+    ],
+  },
+  {
+    version: "4.2.0-e33",
+    description: createDescription("Updates", [
+      "Make actor_set_anim_idle NONBANKED, as this is heavily used by vm_actor_move_to_*",
+      "reduce stack use of actor_move_to ops by setting actor to static",
+      "When interrupting actor movement, vm_actor_move_cancel is now responsible for moving actor to nearest tile aligned position simplifying repeated logic in move_to instructions",
+      "Small overlapping_player optimization",
+      "New VM_LOAD_TEXT_EX instruction which accept format string as a parameter on the VM stack and work similar to the C sprintf(), expecting varargs on the VM stack",
+      "Add support for .R_REF_MEM_IND indirect memory reads in the VM_RPN",
+    ]),
+    modifiedFiles: [
+      "include/actor.h",
+      "include/ui.h",
+      "include/vm.h",
+      "include/vm.i",
+      "include/vm_ui.h",
+      "src/core/actor.c",
+      "src/core/ui.c",
+      "src/core/vm.c",
+      "src/core/vm_actor.c",
+      "src/core/vm_instructions.c",
+      "src/core/vm_ui.c",
+    ],
+  },
+  {
+    version: "4.2.0-e34",
+    description: createDescription("Updates", [
+      "Add VM_RATE_LIMIT allowing portions of scripts to be skipped if this op was already called within last N frames",
+      "Fix description for the VM_MUSIC_MUTE, add channel constants like .MUTE_NOISE",
+      "Separate SINCOS table from math, make it static so it is duplicated into the each module where it is used, that bloat banked code a bit, but improve performance without wasting bank 0 space which is fine. sincos.h must not be used in the nonbanked code.",
+    ]),
+    modifiedFiles: [
+      "include/math.h",
+      "include/sincos.h",
+      "include/vm.h",
+      "include/vm.i",
+      "src/core/math.c",
+      "src/core/projectiles.c",
+      "src/core/vm.c",
+      "src/core/vm_instructions.c",
+      "src/core/vm_math.c",
+      "src/states/pointnclick.c",
+      "src/states/shmup.c",
+    ],
+  },
+  {
+    version: "4.2.2-e1",
+    description: createDescription("Fixes", [
+      "Fix persistent actors flashing on-screen issue by delaying activation of persistent and pinned actors until scroll position is initialised",
+      "Add ability to configure how many frames projectile collisions are spread over (4 frames, 2 frames, test every frame)",
+    ]),
+    modifiedFiles: [
+      "include/actor.h",
+      "src/core/actor.c",
+      "src/core/core.c",
+      "src/core/data_manager.c",
+      "src/core/projectiles.c",
+    ],
+  },
+  {
+    version: "4.3.0-e1",
+    description: createDescription("Updates", [
+      "Fix scene loading when it interrupts a camera shake event",
+      "Remove magic numbers for setting VBK_REG",
+      "Fix screenshake from removing projectiles",
+      "Fix brief text glitch that would appear when drawing dialogue frame on CGB",
+      "Fix player detecting itself instead of another actor when the player has on player hit scripts",
+      "Fix issue where platformer was reusing coyote timer for wall jump leading to cases where jumping after leaving a ledge would cause a large push forwards",
+      "Fix issue where jump state wasn't decreasing wall jump coyote timer",
+      "Normalize tabulations and remove trailing white spaces",
+      "Refactor Makefile / directory structure to have assembly source in separate platform-specific directory",
+      "Fix issue where disabling player collisions wouldn't prevent projectiles from colliding with player",
+      "Fix issue in platformer scenes where drop through feature can allow phasing through solid walls",
+    ]),
+    modifiedFiles: [
+      "include/collision.h",
+      "include/events.h",
+      "include/hUGEDriver.h",
+      "include/macro.h",
+      "include/rtc.h",
+      "include/scroll.h",
+      "include/shadow.h",
+      "include/sincos.h",
+      "include/system.h",
+      "include/vm_gameboy.h",
+      "include/vm.i",
+      "Makefile.common",
+      "src/core/absolute.c",
+      "src/core/actor.c",
+      "src/core/bankdata.c",
+      "src/core/collision.c",
+      "src/core/core.c",
+      "src/core/data_manager.c",
+      "src/core/events.c",
+      "src/core/gb/bootstrap.s",
+      "src/core/gb/crash_handler.s",
+      "src/core/gb/flasher_s.s",
+      "src/core/gb/interrupt_sio.s",
+      "src/core/gb/interrupt_timer.s",
+      "src/core/gb/scroll_a.s",
+      "src/core/gb/set_tile_submap.s",
+      "src/core/gb/states_caller.s",
+      "src/core/gb/ui_a.s",
+      "src/core/gb/vm_ui_a.s",
+      "src/core/gbprinter.c",
+      "src/core/math.c",
+      "src/core/palette.c",
+      "src/core/parallax.c",
+      "src/core/projectiles.c",
+      "src/core/scroll.c",
+      "src/core/sgb_border.c",
+      "src/core/trigger.c",
+      "src/core/ui.c",
+      "src/core/vm_actor.c",
+      "src/core/vm_camera.c",
+      "src/core/vm_gameboy.c",
+      "src/core/vm_ui.c",
+      "src/states/adventure.c",
+      "src/states/platform.c",
+      "src/states/shmup.c",
+    ],
+  },
+];
+
+export const isKnownEngineVersion = (currentVersion: string): boolean => {
+  return changes.some((change) => change.version === currentVersion);
+};
+
+const ejectEngineChangelog = (currentVersion: string) => {
+  const startIndex = changes.findIndex(
+    (change) => change.version === currentVersion,
+  );
+  let changelog = l10n("WARNING_MISSING_UPDATES") + ":\n\n";
+  const modifiedFiles = [];
+
+  for (let i = startIndex + 1; i < changes.length; i++) {
+    const change = changes[i];
+    changelog += `  [${change.version}]\n  ${change.description}\n\n`;
+    modifiedFiles.push(change.modifiedFiles);
+  }
+
+  changelog += "\n" + l10n("WARNING_MODIFIED_FILES") + ":\n\n  ";
+  changelog += uniq(flatten(modifiedFiles)).join("\n  ");
+
+  return changelog;
+};
+
+export default ejectEngineChangelog;

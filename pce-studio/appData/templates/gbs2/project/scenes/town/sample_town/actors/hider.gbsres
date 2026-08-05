@@ -1,0 +1,57 @@
+{
+  "_resourceType": "actor",
+  "id": "4348bd46-83d5-4efc-8cc5-daf3c40f4552",
+  "name": "Hider",
+  "frame": 0,
+  "animate": false,
+  "spriteSheetId": "46a3db76-878e-4896-892b-d1afa7d5e2f0",
+  "prefabId": "",
+  "direction": "down",
+  "moveSpeed": 1,
+  "animSpeed": 15,
+  "paletteId": "",
+  "isPinned": false,
+  "persistent": false,
+  "collisionGroup": "",
+  "collisionExtraFlags": [],
+  "prefabScriptOverrides": {},
+  "_index": 6,
+  "symbol": "actor_35",
+  "coordinateType": "tiles",
+  "x": 36,
+  "y": 24,
+  "script": [
+    {
+      "id": "65f0aa0d-ffec-4915-8d93-c9c696828a96",
+      "command": "EVENT_ACTOR_EMOTE",
+      "args": {
+        "actorId": "$self$",
+        "emoteId": "c8d5eadd-dced-43df-8367-1e4d9bfc7923"
+      }
+    },
+    {
+      "id": "a9ad2df8-a16e-495c-a257-1c4824ed33e8",
+      "command": "EVENT_TEXT",
+      "args": {
+        "text": [
+          "Oh you got me!"
+        ]
+      }
+    },
+    {
+      "id": "d9e2f0cd-ed7f-4dca-8a42-97e151efd8ae",
+      "command": "EVENT_SET_VALUE",
+      "args": {
+        "variable": "10",
+        "value": {
+          "type": "true"
+        }
+      }
+    }
+  ],
+  "startScript": [],
+  "updateScript": [],
+  "hit1Script": [],
+  "hit2Script": [],
+  "hit3Script": []
+}

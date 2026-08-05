@@ -1,0 +1,136 @@
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react";
+import uniq from "lodash/uniq";
+import { musicSelectors } from "store/features/entities/entitiesSelectors";
+import {
+  Option,
+  Select,
+  OptionLabelWithPreview,
+  SingleValueWithPreview,
+  SelectCommonProps,
+  OptGroup,
+  FormatFolderLabel,
+  findSelectOption,
+} from "ui/form/Select";
+import { PauseIcon, PlayIcon } from "ui/icons/Icons";
+import { Button } from "ui/buttons/Button";
+import musicActions from "store/features/music/musicActions";
+import { useAppDispatch, useAppSelector } from "store/hooks";
+import { SingleValue } from "react-select";
+
+interface MusicSelectProps extends SelectCommonProps {
+  name: string;
+  value?: string;
+  onChange?: (newId: string) => void;
+}
+
+interface PlayPauseTrackProps extends SelectCommonProps {
+  musicId: string;
+}
+
+const PlayPauseTrack = ({ musicId }: PlayPauseTrackProps) => {
+  const dispatch = useAppDispatch();
+  const musicPlaying = useAppSelector((state) => state.music.playing);
+
+  const onMouseDown = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    e.preventDefault();
+  }, []);
+
+  const onClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (musicPlaying) {
+        dispatch(musicActions.pauseMusic());
+      } else {
+        dispatch(musicActions.playMusic({ musicId }));
+      }
+    },
+    [dispatch, musicId, musicPlaying],
+  );
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      dispatch(musicActions.pauseMusic());
+    };
+  }, [dispatch]);
+
+  return (
+    <Button
+      size="small"
+      variant="transparent"
+      onClick={onClick}
+      onMouseDown={onMouseDown}
+    >
+      {musicPlaying ? <PauseIcon /> : <PlayIcon />}
+    </Button>
+  );
+};
+
+const MusicSelectComponent = ({
+  value,
+  onChange,
+  ...selectProps
+}: MusicSelectProps) => {
+  const tracks = useAppSelector((state) => musicSelectors.selectAll(state));
+  const [options, setOptions] = useState<OptGroup[]>([]);
+
+  useEffect(() => {
+    const plugins = uniq(tracks.map((s) => s.plugin || "")).sort();
+    setOptions(
+      plugins.map((pluginKey) => ({
+        label: pluginKey,
+        options: tracks
+          .filter((track) => (track.plugin || "") === pluginKey)
+          .map((track) => ({
+            label: track.filename,
+            value: track.id,
+          })),
+      })),
+    );
+  }, [tracks]);
+
+  const currentValue = useMemo(
+    () => findSelectOption(options, value) || options[0]?.options[0],
+    [options, value],
+  );
+
+  const onSelectChange = useCallback(
+    (newValue: SingleValue<Option>) => {
+      if (newValue) {
+        onChange?.(newValue.value);
+      }
+    },
+    [onChange],
+  );
+
+  return (
+    <Select
+      value={currentValue}
+      options={options}
+      onChange={onSelectChange}
+      formatOptionLabel={(option: Option) => {
+        return (
+          <OptionLabelWithPreview
+            preview={<PlayPauseTrack musicId={option.value} />}
+          >
+            <FormatFolderLabel label={option.label} />
+          </OptionLabelWithPreview>
+        );
+      }}
+      components={{
+        SingleValue: () => (
+          <SingleValueWithPreview
+            preview={<PlayPauseTrack musicId={currentValue?.value || ""} />}
+          >
+            <FormatFolderLabel label={currentValue?.label} />
+          </SingleValueWithPreview>
+        ),
+      }}
+      {...selectProps}
+    />
+  );
+};
+
+export const MusicSelect = memo<MusicSelectProps>(MusicSelectComponent);

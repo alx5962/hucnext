@@ -1,0 +1,82 @@
+{
+  "_resourceType": "actor",
+  "id": "447d6507-bec0-4698-a915-e85e37d3c412",
+  "name": "Angry Guy",
+  "frame": 0,
+  "animate": false,
+  "spriteSheetId": "dfa75239-299d-41fe-a6cd-9e9438da1938",
+  "prefabId": "",
+  "direction": "up",
+  "moveSpeed": 1,
+  "animSpeed": 15,
+  "paletteId": "",
+  "isPinned": false,
+  "persistent": false,
+  "collisionGroup": "",
+  "collisionExtraFlags": [],
+  "prefabScriptOverrides": {},
+  "_index": 2,
+  "symbol": "actor_32",
+  "coordinateType": "tiles",
+  "x": 17,
+  "y": 25,
+  "script": [
+    {
+      "id": "6dd7a171-3763-4394-98c0-d90ad5f60698",
+      "command": "EVENT_IF",
+      "args": {
+        "variable": "15",
+        "condition": {
+          "type": "variable",
+          "value": "15"
+        }
+      },
+      "children": {
+        "true": [
+          {
+            "id": "d0f2c6ef-5c55-4e19-ae64-d85ccbcce8bc",
+            "command": "EVENT_TEXT",
+            "args": {
+              "text": "I guess it was a\nmisunderstanding."
+            }
+          },
+          {
+            "id": "c31f2eb0-b906-4743-ba3d-c7292e1edd7c",
+            "command": "EVENT_SET_VALUE",
+            "args": {
+              "variable": "4",
+              "value": {
+                "type": "true"
+              }
+            }
+          }
+        ],
+        "false": [
+          {
+            "id": "1b772224-ad71-46c8-8d5a-a3b2f6e594b8",
+            "command": "EVENT_TEXT",
+            "args": {
+              "text": "What is that guy\nlooking at?"
+            }
+          },
+          {
+            "id": "18a5933f-d24b-4c2b-b415-95b22e0dce28",
+            "command": "EVENT_ACTOR_SET_DIRECTION",
+            "args": {
+              "actorId": "447d6507-bec0-4698-a915-e85e37d3c412",
+              "direction": {
+                "type": "direction",
+                "value": "up"
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "startScript": [],
+  "updateScript": [],
+  "hit1Script": [],
+  "hit2Script": [],
+  "hit3Script": []
+}

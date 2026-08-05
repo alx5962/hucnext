@@ -1,0 +1,114 @@
+import React from "react";
+import { PIANO_ROLL_CELL_SIZE, TOTAL_NOTES } from "consts";
+import {
+  StyledPianoRollNote,
+  StyledPatternChannelNotes,
+  StyledPianoRollNoteTouchBlocker,
+} from "./style";
+import { useAppSelector } from "store/hooks";
+
+interface PatternChannelNotesProps {
+  patternId: number;
+  channelId: number;
+  isActive: boolean;
+  selectedRowIds?: ReadonlySet<number>;
+  isDragging: boolean;
+}
+
+const ARPEGGIO_CODE = 0;
+
+const noteBottom = (note: number) =>
+  (note % TOTAL_NOTES) * PIANO_ROLL_CELL_SIZE;
+
+export const PatternChannelNotes = React.memo(
+  ({
+    patternId,
+    channelId,
+    isActive,
+    selectedRowIds,
+    isDragging,
+  }: PatternChannelNotesProps) => {
+    const channelCells = useAppSelector(
+      (state) => state.trackerDocument.present.song?.patterns[patternId],
+    );
+
+    if (!channelCells) {
+      return null;
+    }
+
+    let instrument: number | null = null;
+
+    return (
+      <StyledPatternChannelNotes $active={isActive}>
+        {channelCells.map((cell, rowIndex) => {
+          if (!cell || cell.note === null) {
+            return null;
+          }
+
+          const isSelected =
+            isActive && (selectedRowIds?.has(rowIndex) ?? false);
+
+          if (cell.instrument !== null) {
+            instrument = cell.instrument;
+          }
+
+          const noteInstrument =
+            instrument !== null && isActive ? instrument : undefined;
+
+          const usingPreviousInstrument =
+            cell.instrument === null && instrument !== null;
+
+          const left = rowIndex * PIANO_ROLL_CELL_SIZE;
+          const effect = cell.effectParam ?? 0;
+
+          return (
+            <React.Fragment key={`note_${rowIndex}_${channelId}`}>
+              <StyledPianoRollNote
+                data-type="note"
+                data-note={cell.note}
+                data-row={rowIndex}
+                $instrument={noteInstrument}
+                $usingPreviousInstrument={usingPreviousInstrument}
+                $isSelected={isSelected}
+                $isDragging={isDragging}
+                style={{
+                  left,
+                  bottom: noteBottom(cell.note),
+                }}
+              >
+                {isActive ? (
+                  <StyledPianoRollNoteTouchBlocker $isSelected={isSelected} />
+                ) : null}
+              </StyledPianoRollNote>
+
+              {cell.effectCode === ARPEGGIO_CODE ? (
+                <>
+                  <StyledPianoRollNote
+                    data-param={effect >> 4}
+                    $instrument={noteInstrument}
+                    $usingPreviousInstrument={usingPreviousInstrument}
+                    $isVirtual
+                    style={{
+                      left,
+                      bottom: noteBottom(cell.note + (effect >> 4)),
+                    }}
+                  />
+                  <StyledPianoRollNote
+                    data-param={effect & 0xf}
+                    $instrument={noteInstrument}
+                    $usingPreviousInstrument={usingPreviousInstrument}
+                    $isVirtual
+                    style={{
+                      left,
+                      bottom: noteBottom(cell.note + (effect & 0xf)),
+                    }}
+                  />
+                </>
+              ) : null}
+            </React.Fragment>
+          );
+        })}
+      </StyledPatternChannelNotes>
+    );
+  },
+);
