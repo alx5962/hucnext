@@ -2,6 +2,7 @@
 
 extern const unsigned char player_spr[];
 extern const unsigned short player_pal[];
+extern const unsigned char scene_1_collisions[];
 
 void engine_init(void) {
     pce_sys_init();
@@ -9,11 +10,12 @@ void engine_init(void) {
     camera_init();
     trigger_init();
     vm_init();
+    collision_init(scene_1_collisions, 32, 28);
 
     // Load background image tile patterns, palettes, and tilemap into VRAM/VCE
     load_background(bg_scene_chr, bg_scene_pal, bg_scene_bat, 32, 28);
 
-    // Load player actor sprite pattern into VRAM 0x5000 & sprite palette 16 (palette index 0)
+    // Load player actor sprite pattern into VRAM 0x5000 & sprite palette 16
     load_vram(0x5000, player_spr, 0x40);
     load_palette(16, player_pal, 1);
 
@@ -37,10 +39,13 @@ void engine_update(void) {
         if (input & JOY_DOWN)  dy += 2;
 
         new_x = g_actors[0].x + dx;
-        new_y = g_actors[0].y + dy;
+        if (!collision_check_box(new_x, g_actors[0].y)) {
+            g_actors[0].x = new_x;
+        }
 
-        if (collision_check_point(new_x, new_y) == COLLISION_NONE) {
-            actor_set_pos(0, new_x, new_y);
+        new_y = g_actors[0].y + dy;
+        if (!collision_check_box(g_actors[0].x, new_y)) {
+            g_actors[0].y = new_y;
         }
 
         camera_update(g_actors[0].x, g_actors[0].y);

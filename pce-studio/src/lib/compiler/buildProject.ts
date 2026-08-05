@@ -87,7 +87,7 @@ export const buildProject = async (
 
       await fs.writeFile(targetPath, sanitizedContent, "utf8");
 
-      // Only include raw root-level asset .c files compatible with Small C
+      // Only include raw root-level asset .c files compatible with Small C (e.g. scene_1_collisions.c)
       const baseName = Path.basename(filename);
       const isSubDir = filename.includes("/") || filename.includes("\\");
       if (
@@ -95,10 +95,10 @@ export const buildProject = async (
         !isSubDir &&
         baseName !== "main.c" &&
         !baseName.startsWith("font_") &&
-        !baseName.startsWith("scene_") &&
         !baseName.includes("signature") &&
         !fileContent.includes("struct ") &&
-        !baseName.endsWith("_collisions.c")
+        !fileContent.includes("far_ptr_t") &&
+        (!baseName.startsWith("scene_") || baseName.endsWith("_collisions.c"))
       ) {
         cFileIncludes.push(`#include "${baseName}"`);
       }

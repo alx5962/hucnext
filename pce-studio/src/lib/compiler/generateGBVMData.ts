@@ -922,7 +922,7 @@ export const compileSceneCollisions = (
     sceneCollisionsSymbol(scene.symbol),
     `// Scene: ${sceneName(scene, sceneIndex)}\n// Collisions`,
     collisions.map(toHex),
-    scene.width,
+    Math.min(16, scene.width),
   );
 
 export const compileSceneCollisionsHeader = (

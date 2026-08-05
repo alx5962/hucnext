@@ -46,6 +46,24 @@ async function runTestBuild() {
     convertPngToPcx(isoHeroPng, path.join(destSprDir, "iso_hero.pcx"));
   }
 
+  // Generate test scene_1_collisions.c formatted with 16 elements per line for HuC line length compatibility
+  const collisions = new Array(32 * 28).fill(0);
+  for (let x = 0; x < 32; x++) {
+    collisions[3 * 32 + x] = 15; // Row 3 wall
+    collisions[18 * 32 + x] = 15; // Row 18 wall
+  }
+
+  const lines = [];
+  for (let i = 0; i < collisions.length; i += 16) {
+    const chunk = collisions.slice(i, i + 16).map(c => `0x${c.toString(16).padStart(2, "0").toUpperCase()}`);
+    lines.push(`  ${chunk.join(", ")}`);
+  }
+  const collisionsCContent = `#include "include/gbs_types.h"\n\nconst unsigned char scene_1_collisions[] = {\n${lines.join(",\n")}\n};\n`;
+  fs.writeFileSync(path.join(buildDir, "scene_1_collisions.c"), collisionsCContent, "utf8");
+
+  // Create game_includes.h
+  fs.writeFileSync(path.join(buildDir, "game_includes.h"), `#ifndef GAME_INCLUDES_H\n#define GAME_INCLUDES_H\n#include "include/gbs_types.h"\n#include "scene_1_collisions.c"\n#endif\n`, "utf8");
+
   // Update main.c for test build
   const mainCPath = path.join(buildDir, "main.c");
   const mainCContent = `/*

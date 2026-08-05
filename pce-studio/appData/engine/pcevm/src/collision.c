@@ -21,3 +21,11 @@ int collision_check_tile(int tile_x, int tile_y) {
 int collision_check_point(int px, int py) {
     return collision_check_tile(px >> 3, py >> 3);
 }
+
+int collision_check_box(int x, int y) {
+    if (collision_check_point(x + 2, y + 8) != COLLISION_NONE) return 1;
+    if (collision_check_point(x + 13, y + 8) != COLLISION_NONE) return 1;
+    if (collision_check_point(x + 2, y + 15) != COLLISION_NONE) return 1;
+    if (collision_check_point(x + 13, y + 15) != COLLISION_NONE) return 1;
+    return 0;
+}
