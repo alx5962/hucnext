@@ -936,16 +936,12 @@ export const compileSceneCollisionsHeader = (
   );
 
 export const compileTileset = (tileset: PrecompiledTileData) =>
-  toStructDataFile(
-    TILESET_TYPE,
+  toArrayDataFile(
+    "const unsigned char",
     tileset.symbol,
     `// Tileset: ${tileset.symbol}`,
-    {
-      n_tiles: Math.ceil(tileset.data.length / 16),
-      tiles: Array.from(tileset.data.length > 0 ? tileset.data : [0]).map(
-        toHex,
-      ),
-    },
+    Array.from(tileset.data.length > 0 ? tileset.data : [0]).map(toHex),
+    16,
   );
 
 export const compileTilesetHeader = (tileset: PrecompiledTileData) =>

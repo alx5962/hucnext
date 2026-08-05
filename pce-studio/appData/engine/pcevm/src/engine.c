@@ -1,11 +1,24 @@
 #include "include/engine.h"
 
+extern const unsigned char player_spr[];
+extern const unsigned short player_pal[];
+
 void engine_init(void) {
     pce_sys_init();
     actor_init();
     camera_init();
     trigger_init();
     vm_init();
+
+    // Load background image tile patterns, palettes, and tilemap into VRAM/VCE
+    load_background(bg_scene_chr, bg_scene_pal, bg_scene_bat, 32, 28);
+
+    // Load player actor sprite pattern into VRAM 0x5000 & sprite palette 16 (palette index 0)
+    load_vram(0x5000, player_spr, 0x40);
+    load_palette(16, player_pal, 1);
+
+    // Spawn player actor sprite in FOREGROUND at screen position (128, 112)
+    actor_spawn(128, 112, 0x5000, 0);
 }
 
 void engine_update(void) {

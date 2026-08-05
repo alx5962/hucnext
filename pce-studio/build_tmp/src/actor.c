@@ -5,6 +5,7 @@ int g_actor_count;
 
 void actor_init(void) {
     int i;
+    init_satb();
     g_actor_count = 0;
     for (i = 0; i < PCE_MAX_ACTORS; i++) {
         g_actors[i].active = 0;
@@ -39,9 +40,11 @@ void actor_update_all(void) {
         spr_x(g_actors[i].x);
         spr_y(g_actors[i].y);
         spr_pattern(g_actors[i].tile_id);
-        spr_pal(16 + g_actors[i].palette);
+        spr_pal(g_actors[i].palette);
         spr_ctrl(SIZE_MAS | FLIP_MAS, SZ_16x16 | NO_FLIP);
+        spr_pri(1); // Set priority = 1 (Foreground in front of background tiles)
     }
+    satb_update(); // Flush SATB to hardware VDC
 }
 
 void actor_set_pos(int id, int x, int y) {

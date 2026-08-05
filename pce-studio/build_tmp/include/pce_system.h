@@ -1,8 +1,6 @@
 #ifndef PCE_SYSTEM_H
 #define PCE_SYSTEM_H
 
-#include <huc.h>
-
 #define PCE_SCREEN_WIDTH_TILES  32
 #define PCE_SCREEN_HEIGHT_TILES 28
 #define PCE_SCREEN_WIDTH_PX     256

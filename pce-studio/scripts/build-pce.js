@@ -1,6 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 const { execSync } = require("child_process");
+const { convertPngToPcx } = require("./convert-png-to-pcx");
 
 async function runTestBuild() {
   console.log("=== PCE Studio Test Build Runner ===");
@@ -29,6 +30,58 @@ async function runTestBuild() {
   }
   fs.mkdirSync(buildDir, { recursive: true });
   fs.cpSync(engineDir, buildDir, { recursive: true });
+
+  // Copy sample background & iso_hero sprite image for test build
+  const shmupDir = path.resolve(__dirname, "../../examples/huc/shmup");
+  const isoHeroPng = "C:\\Users\\alx59\\Documents\\PCEtest1\\assets\\sprites\\iso_hero.png";
+  const destBgDir = path.join(buildDir, "assets/backgrounds");
+  const destSprDir = path.join(buildDir, "assets/sprites");
+  fs.mkdirSync(destBgDir, { recursive: true });
+  fs.mkdirSync(destSprDir, { recursive: true });
+
+  if (fs.existsSync(path.join(shmupDir, "scene.png"))) {
+    fs.copyFileSync(path.join(shmupDir, "scene.png"), path.join(destBgDir, "scene.png"));
+  }
+  if (fs.existsSync(isoHeroPng)) {
+    convertPngToPcx(isoHeroPng, path.join(destSprDir, "iso_hero.pcx"));
+  }
+
+  // Update main.c for test build
+  const mainCPath = path.join(buildDir, "main.c");
+  const mainCContent = `/*
+ * PCE Studio Engine Main Entry Point
+ * Compiled with HuC (PC Engine C Compiler)
+ */
+
+#include <huc.h>
+
+#incchr(bg_scene_chr, "assets/backgrounds/scene.png")
+#incpal(bg_scene_pal, "assets/backgrounds/scene.png")
+#incbat(bg_scene_bat, "assets/backgrounds/scene.png", 0x1000, 32, 28)
+
+#incspr(player_spr, "assets/sprites/iso_hero.pcx", 0, 0, 4, 1)
+#incpal(player_pal, "assets/sprites/iso_hero.pcx")
+
+#ifndef MAIN_C
+#define MAIN_C
+
+#include "include/engine.h"
+#include "src/pce_system.c"
+#include "src/actor.c"
+#include "src/camera.c"
+#include "src/collision.c"
+#include "src/trigger.c"
+#include "src/vm.c"
+#include "src/engine.c"
+#include "game_includes.h"
+
+main() {
+    engine_run();
+}
+
+#endif
+`;
+  fs.writeFileSync(mainCPath, mainCContent, "utf8");
 
   console.log("Executing HuC compilation...");
   const env = {

@@ -13,6 +13,9 @@ void camera_update(int target_x, int target_y) {
     g_cam_y = target_y - (PCE_SCREEN_HEIGHT_PX / 2);
     if (g_cam_x < 0) g_cam_x = 0;
     if (g_cam_y < 0) g_cam_y = 0;
+    // Lock max camera scroll bounds for 256x224 single-screen scene
+    if (g_cam_x > 0) g_cam_x = 0;
+    if (g_cam_y > 0) g_cam_y = 0;
 }
 
 void camera_apply(void) {
