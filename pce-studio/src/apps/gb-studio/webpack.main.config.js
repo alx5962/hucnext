@@ -36,6 +36,18 @@ const mainPlugins = [
         from: "node_modules/acorn-walk",
         to: "node_modules/acorn-walk",
       },
+      {
+        from: "src/lib/events",
+        to: "src/lib/events",
+      },
+      {
+        from: "src/lang",
+        to: "src/lang",
+      },
+      {
+        from: "src/assets",
+        to: "src/assets",
+      },
     ],
   }),
 ];
@@ -60,23 +72,22 @@ module.exports = {
   },
   plugins: mainPlugins,
   resolve: {
-    extensions: [".js", ".ts", ".jsx", ".tsx", ".wasm", ".css"],
+    extensions: [".js", ".ts", ".jsx", ".tsx", ".json"],
     alias: {
       store: srcPath("store"),
       components: srcPath("components"),
       lang: srcPath("lang"),
       lib: srcPath("lib"),
       ui: srcPath("components", "ui"),
+      renderer: srcPath("renderer"),
       shared: srcPath("shared"),
+      assets: srcPath("assets"),
       consts: srcPath("consts.ts"),
+      wasm: repoPath("appData", "wasm"),
+      "contributors.json": repoPath("contributors.json"),
+      "contributors-external.json": repoPath("contributors-external.json"),
       "patrons.json": repoPath("patrons.json"),
-      "#my-quickjs-variant":
-        require.resolve("@jitl/quickjs-singlefile-cjs-release-sync"),
+      "#my-quickjs-variant": require.resolve("@jitl/quickjs-singlefile-browser-release-sync"),
     },
-  },
-  externals: {
-    "about-window": "about-window",
-    acorn: "acorn",
-    "acorn-walk": "acorn-walk",
   },
 };

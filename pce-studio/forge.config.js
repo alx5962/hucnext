@@ -11,6 +11,17 @@ module.exports = {
     name: "PCE Studio",
     executableName: "pce-studio",
     asar: true,
+    ignore: (path) => {
+      if (!path) return false;
+      if (path.startsWith("/.webpack")) return false;
+      if (path.startsWith("/package.json")) return false;
+      return true;
+    },
+    extraResource: [
+      "appData",
+      "../bin",
+      "../include"
+    ]
   },
   makers: [
     {

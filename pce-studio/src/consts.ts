@@ -17,23 +17,49 @@ if (isDist) {
   rootDir = normalize(`${__dirname}/../`);
 }
 
+const isPackaged =
+  typeof process !== "undefined" &&
+  Boolean(process.resourcesPath) &&
+  !process.resourcesPath?.includes("node_modules");
+
+let appDataRoot = normalize(`${rootDir}/appData`);
+let binRoot = normalize(`${rootDir}/../bin`);
+let includeRoot = normalize(`${rootDir}/../include/huc`);
+
+if (isPackaged && process.resourcesPath) {
+  appDataRoot = normalize(`${process.resourcesPath}/appData`);
+  binRoot = normalize(`${process.resourcesPath}/bin`);
+  includeRoot = normalize(`${process.resourcesPath}/include/huc`);
+}
+
+// Dynamic event, locale, and asset paths for Webpack build output
+let eventsDir = normalize(`${rootDir}/src/lib/events`);
+let localesDir = normalize(`${rootDir}/src/lang`);
+let assetsDir = normalize(`${rootDir}/src/assets`);
+
+if (isDist) {
+  eventsDir = normalize(`${rootDir}/.webpack/main/src/lib/events`);
+  localesDir = normalize(`${rootDir}/.webpack/main/src/lang`);
+  assetsDir = normalize(`${rootDir}/.webpack/main/src/assets`);
+}
+
 // Paths
 export const buildUUID = "_pcebuild";
-export const enginesRoot = normalize(`${rootDir}/appData/engine`);
+export const enginesRoot = normalize(`${appDataRoot}/engine`);
 export const defaultEngineRoot = normalize(`${enginesRoot}/pcevm`);
 export const defaultEngineMetaPath = normalize(`${enginesRoot}/engine.json`);
-export const hucBinRoot = normalize(`${rootDir}/../bin`);
-export const hucIncludeRoot = normalize(`${rootDir}/../include/huc`);
+export const hucBinRoot = binRoot;
+export const hucIncludeRoot = includeRoot;
 export const buildToolsRoot = normalize(`${rootDir}/buildTools`);
-export const binjgbWasmRoot = normalize(`${rootDir}/appData/wasm/binjgb`);
+export const binjgbWasmRoot = normalize(`${appDataRoot}/wasm/binjgb`);
 export const defaultWebTemplateRoot = normalize(
-  `${rootDir}/appData/webTemplates/binjgb`,
+  `${appDataRoot}/webTemplates/binjgb`,
 );
-export const projectTemplatesRoot = normalize(`${rootDir}/appData/templates`);
-export const musicTemplatesRoot = normalize(`${rootDir}/appData/music`);
-export const localesRoot = normalize(`${rootDir}/src/lang`);
-export const eventsRoot = normalize(`${rootDir}/src/lib/events`);
-export const assetsRoot = normalize(`${rootDir}/src/assets`);
+export const projectTemplatesRoot = normalize(`${appDataRoot}/templates`);
+export const musicTemplatesRoot = normalize(`${appDataRoot}/music`);
+export const localesRoot = localesDir;
+export const eventsRoot = eventsDir;
+export const assetsRoot = assetsDir;
 
 // Plugin Manager
 export const OFFICIAL_REPO_URL = "https://plugins.gbstudio.dev/repository.json";
@@ -51,22 +77,22 @@ export const NUM_SUBPIXEL_BITS = 5;
 
 // Scene Limits
 export const MAX_SCENE_TILE_COUNT = 16380;
-export const MAX_ACTORS = 32;
-export const MAX_ACTORS_SMALL = 16;
+export const MAX_ACTORS = 20;
+export const MAX_ACTORS_SMALL = 10;
 export const MAX_TRIGGERS = 30;
-export const MAX_ONSCREEN = 16;
-export const MAX_PROJECTILES = 8;
+export const MAX_ONSCREEN = 10;
+export const MAX_PROJECTILES = 5;
 
 export const MIN_WORLD_ENTITY_X = 60;
 export const MIN_WORLD_ENTITY_Y = 30;
 
 // Background Limits
-export const MAX_BACKGROUND_TILES = 32 * 28;
-export const MAX_BACKGROUND_TILES_CGB = 32 * 28 * 2;
+export const MAX_BACKGROUND_TILES = 16 * 12;
+export const MAX_BACKGROUND_TILES_CGB = 16 * 12 * 2;
 
-// System Limits & Screen Parameters (PC Engine: 256x224, 32x28 8x8 tiles)
-export const SCREEN_WIDTH = 32;
-export const SCREEN_HEIGHT = 28;
+// Screen
+export const SCREEN_WIDTH = 20;
+export const SCREEN_HEIGHT = 18;
 export const TILE_SIZE = 8;
 
 export const SCREEN_WIDTH_PX = SCREEN_WIDTH * TILE_SIZE;
@@ -150,11 +176,11 @@ export const TILE_COLOR_PROP_PRIORITY = 0x80;
 export const TILE_DEFAULT_UNSET = -1;
 export const DMG_PALETTE = {
   id: "dmg",
-  name: "PCE Default",
+  name: "DMG (GB Default)",
   colors: ["E8F8E0", "B0F088", "509878", "202850"],
 } as Palette;
 
-// Hardware
+// DMG Hardware
 export const FLAG_VRAM_BANK_1 = 0x8;
 export const LYC_SYNC_VALUE = 150;
 
@@ -397,8 +423,3 @@ export const defaultPalettes: Palette[] = [
   name: string;
   colors: [string, string, string, string];
 }[];
-
-// IDE Branding & Product Name
-export const PRODUCT_NAME = "PCE Studio";
-export const FILE_EXTENSION = "pceproj";
-export const ROM_EXTENSION = "pce";
