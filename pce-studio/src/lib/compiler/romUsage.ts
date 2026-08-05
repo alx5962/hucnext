@@ -35,8 +35,8 @@ const romUsage = async ({
   buildRoot = "/tmp",
   tmpPath = "/tmp",
   romStem = "game",
-  warnings = (_msg) => {},
-  progress = (_msg) => {},
+  warnings = (_msg) => { },
+  progress = (_msg) => { },
 }: RomUsageOptions) => {
   const env = { ...process.env };
 

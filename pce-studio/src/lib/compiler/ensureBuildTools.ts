@@ -45,7 +45,13 @@ const ensureBuildToolsInner = async (tmpPath: string): Promise<string> => {
   const tmpBuildToolsPath = `${tmpPath}/_gbstools`;
   const tmpVersionPath = `${tmpBuildToolsPath}/tools_version`;
 
-  const expectedVersion = await fs.readFile(expectedVersionPath, "utf8");
+  let expectedVersion = "1.0.0";
+  try {
+    expectedVersion = await fs.readFile(expectedVersionPath, "utf8");
+  } catch {
+    await fs.ensureDir(buildToolsPath);
+    await fs.writeFile(expectedVersionPath, expectedVersion, "utf8");
+  }
 
   let needsCopy = false;
 
@@ -55,7 +61,6 @@ const ensureBuildToolsInner = async (tmpPath: string): Promise<string> => {
       needsCopy = true;
     }
   } catch {
-    // No engine.json found
     needsCopy = true;
   }
 

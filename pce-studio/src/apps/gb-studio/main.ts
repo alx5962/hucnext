@@ -11,7 +11,9 @@ import {
 import windowStateKeeper from "electron-window-state";
 import Path, { relative } from "path";
 import {
+  copy,
   copyFile,
+  ensureDir,
   pathExists,
   readFile,
   remove,
@@ -1586,6 +1588,19 @@ ipcMain.handle(
         warnings,
       });
 
+      const projectRomPath = Path.join(
+        projectRoot,
+        "build",
+        "rom",
+        romFilename,
+      );
+      const tmpRomPath = Path.join(outputRoot, "build", "rom", romFilename);
+
+      if (await pathExists(tmpRomPath)) {
+        await ensureDir(Path.dirname(projectRomPath));
+        await copy(tmpRomPath, projectRomPath, { overwrite: true });
+      }
+
       if (exportBuild) {
         await copy(
           `${outputRoot}/build/${buildType}`,
@@ -1606,6 +1621,15 @@ ipcMain.handle(
                 )}`
           }`,
         );
+      } else {
+        buildLog(`-`);
+        buildLog(
+          `${l10n("COMPILER_BUILD_SUCCESS")} Opening ROM with default .pce application...`,
+        );
+        const romToLaunch = (await pathExists(projectRomPath))
+          ? projectRomPath
+          : tmpRomPath;
+        shell.openPath(romToLaunch);
       }
 
       const usageData = await romUsage({
@@ -1617,46 +1641,6 @@ ipcMain.handle(
       });
 
       sendToProjectWindow("debugger:romusage", usageData);
-
-      if (buildType === "web" && !exportBuild) {
-        buildLog(`-`);
-        buildLog(
-          `${l10n("COMPILER_BUILD_SUCCESS")} ${l10n(
-            "COMPILER_STARTING_EMULATOR",
-          )}...`,
-        );
-        if (debuggerEnabled) {
-          const { memoryMap, globalVariables } = await readDebuggerSymbols(
-            outputRoot,
-            romStem,
-          );
-          debuggerInitData = {
-            memoryMap,
-            globalVariables,
-            pauseOnScriptChanged: project.settings.debuggerPauseOnScriptChanged,
-            pauseOnWatchedVariableChanged:
-              project.settings.debuggerPauseOnWatchedVariableChanged,
-            breakpoints: project.settings.debuggerBreakpoints.map(
-              (breakpoint) => breakpoint.scriptEventId,
-            ),
-            watchedVariables: project.settings.debuggerWatchedVariables,
-            variableMap: keyBy(Object.values(compiledData.variableMap), "id"),
-          };
-          const gbvmScripts = pickBy(compiledData.files, (_, key) =>
-            key.endsWith(".s"),
-          );
-          sendToProjectWindow("debugger:symbols", {
-            variableMap: compiledData.variableMap,
-            sceneMap: compiledData.sceneMap,
-            gbvmScripts,
-          });
-        }
-        createPlay(
-          `file://${outputRoot}/build/web/index.html`,
-          sgbEnabled && colorMode === "mono",
-          debuggerEnabled,
-        );
-      }
 
       const buildTime = Date.now() - buildStartTime;
       buildLog(`${l10n("COMPILER_BUILD_TIME")}: ${msToHumanTime(buildTime)}`);
