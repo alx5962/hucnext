@@ -16,6 +16,7 @@ export type EjectOptions = {
 
 export const ejectBuild = async ({
   outputRoot,
+  compiledData,
   progress = () => {},
 }: EjectOptions) => {
   progress("Ejecting PC Engine engine sources and data...");
@@ -26,6 +27,14 @@ export const ejectBuild = async ({
   await fs.copy(defaultEngineRoot, outputRoot, {
     overwrite: true,
   });
+
+  if (compiledData && compiledData.files) {
+    for (const [filename, content] of Object.entries(compiledData.files)) {
+      const fullPath = Path.join(outputRoot, filename);
+      await fs.ensureDir(Path.dirname(fullPath));
+      await fs.writeFile(fullPath, content as string, "utf8");
+    }
+  }
 
   progress("Engine source files ejected successfully.");
 };

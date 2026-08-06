@@ -14,6 +14,7 @@
 
 #include "include/engine.h"
 #include "src/pce_system.c"
+#include "src/pce_sound.c"
 #include "src/actor.c"
 #include "src/camera.c"
 #include "src/collision.c"

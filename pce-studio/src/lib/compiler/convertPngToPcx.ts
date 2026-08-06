@@ -2,11 +2,30 @@ import fs from "fs-extra";
 import Path from "path";
 import { PNG } from "pngjs";
 
-export function convertPngToPcx(pngPath: string, pcxPath: string) {
+export type CropOptions = {
+  cropX?: number;
+  cropY?: number;
+  cropW?: number;
+  cropH?: number;
+};
+
+export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: CropOptions) {
   const data = fs.readFileSync(pngPath);
-  const png = PNG.sync.read(data);
-  const width = png.width;
-  const height = png.height;
+  const srcPng = PNG.sync.read(data);
+
+  let cropX = cropOpts?.cropX ?? 0;
+  let cropY = cropOpts?.cropY ?? 0;
+  let width = cropOpts?.cropW ?? srcPng.width;
+  let height = cropOpts?.cropH ?? srcPng.height;
+
+  // Boundary checks
+  if (cropX + width > srcPng.width) width = srcPng.width - cropX;
+  if (cropY + height > srcPng.height) height = srcPng.height - cropY;
+
+  // Detect transparent background color from top-left pixel (0,0) or alpha
+  const bgR = srcPng.data[0];
+  const bgG = srcPng.data[1];
+  const bgB = srcPng.data[2];
 
   // Build 256 color palette (16 colors mapped)
   const palette = new Uint8Array(768);
@@ -15,31 +34,46 @@ export function convertPngToPcx(pngPath: string, pcxPath: string) {
 
   const pixels = new Uint8Array(width * height);
 
-  for (let i = 0; i < width * height; i++) {
-    const idx = i * 4;
-    const r = png.data[idx];
-    const g = png.data[idx + 1];
-    const b = png.data[idx + 2];
-    const a = png.data[idx + 3];
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const srcIdx = ((cropY + y) * srcPng.width + (cropX + x)) * 4;
+      let r = srcPng.data[srcIdx];
+      let g = srcPng.data[srcIdx + 1];
+      let b = srcPng.data[srcIdx + 2];
+      const a = srcPng.data[srcIdx + 3];
 
-    if (a < 128) {
-      pixels[i] = 0; // Index 0 = Transparent
-      continue;
-    }
+      const dstIdx = y * width + x;
 
-    const key = `${r},${g},${b}`;
-    if (!colorMap.has(key)) {
-      if (colorCount < 15) {
-        colorCount++;
-        colorMap.set(key, colorCount);
-        palette[colorCount * 3] = r;
-        palette[colorCount * 3 + 1] = g;
-        palette[colorCount * 3 + 2] = b;
-      } else {
-        colorMap.set(key, 15);
+      // Check alpha transparency OR exact top-left background color match
+      const isTopLeftBg = Math.abs(r - bgR) <= 5 && Math.abs(g - bgG) <= 5 && Math.abs(b - bgB) <= 5;
+      const isPureGreenScreen = r === 0 && g === 255 && b === 0;
+
+      if (a < 128 || isTopLeftBg || isPureGreenScreen) {
+        pixels[dstIdx] = 0; // Index 0 = Transparent
+        continue;
       }
+
+      // Quantize artifact green leg/skin contour colors (147, 190, 112) to bright light cream skin (226, 247, 210)
+      if (r < 170 && g > 150 && b < 140) {
+        r = 226;
+        g = 247;
+        b = 210;
+      }
+
+      const key = `${r},${g},${b}`;
+      if (!colorMap.has(key)) {
+        if (colorCount < 15) {
+          colorCount++;
+          colorMap.set(key, colorCount);
+          palette[colorCount * 3] = r;
+          palette[colorCount * 3 + 1] = g;
+          palette[colorCount * 3 + 2] = b;
+        } else {
+          colorMap.set(key, 15);
+        }
+      }
+      pixels[dstIdx] = colorMap.get(key)!;
     }
-    pixels[i] = colorMap.get(key)!;
   }
 
   // Build 128-byte PCX Header
@@ -58,35 +92,41 @@ export function convertPngToPcx(pngPath: string, pcxPath: string) {
   header.writeUInt16LE(width, 66); // Bytes per line
   header.writeUInt16LE(1, 68); // Palette info
 
-  // RLE encode pixels
+  // RLE Encode pixel data
   const rleBuffer: number[] = [];
-  for (let y = 0; y < height; y++) {
-    let x = 0;
-    while (x < width) {
-      const val = pixels[y * width + x];
-      let run = 1;
-      while (x + run < width && pixels[y * width + x + run] === val && run < 63) {
-        run++;
-      }
-      if (run > 1 || val >= 0xC0) {
-        rleBuffer.push(0xC0 | run);
-      }
-      rleBuffer.push(val);
-      x += run;
+  let i = 0;
+  while (i < pixels.length) {
+    let runLength = 1;
+    const val = pixels[i];
+
+    while (
+      i + runLength < pixels.length &&
+      pixels[i + runLength] === val &&
+      runLength < 63 &&
+      (i + runLength) % width !== 0 // Don't run across scanlines
+    ) {
+      runLength++;
     }
+
+    if (runLength > 1 || (val & 0xC0) === 0xC0) {
+      rleBuffer.push(0xC0 | runLength);
+    }
+    rleBuffer.push(val);
+    i += runLength;
   }
+
+  // 256-color palette marker
+  const palMarker = Buffer.from([0x0C]);
 
   const outBuf = Buffer.concat([
     header,
     Buffer.from(rleBuffer),
-    Buffer.from([0x0C]), // Palette marker
-    Buffer.from(palette)
+    palMarker,
+    Buffer.from(palette),
   ]);
 
-  fs.mkdirpSync(Path.dirname(pcxPath));
+  fs.ensureDirSync(Path.dirname(pcxPath));
   fs.writeFileSync(pcxPath, outBuf);
 
   return { width, height };
 }
-
-export default convertPngToPcx;

@@ -1,6 +1,14 @@
 #include "include/actor.h"
 
-pce_actor_t g_actors[PCE_MAX_ACTORS];
+int g_actor_active[PCE_MAX_ACTORS];
+int g_actor_x[PCE_MAX_ACTORS];
+int g_actor_y[PCE_MAX_ACTORS];
+int g_actor_tile_id[PCE_MAX_ACTORS];
+int g_actor_palette[PCE_MAX_ACTORS];
+unsigned char g_actor_size[PCE_MAX_ACTORS];
+int g_actor_dir[PCE_MAX_ACTORS];
+int g_actor_anim_frame[PCE_MAX_ACTORS];
+int g_actor_sprite_handle[PCE_MAX_ACTORS];
 int g_actor_count;
 
 void actor_init(void) {
@@ -8,54 +16,80 @@ void actor_init(void) {
     init_satb();
     g_actor_count = 0;
     for (i = 0; i < PCE_MAX_ACTORS; i++) {
-        g_actors[i].active = 0;
-        g_actors[i].x = 0;
-        g_actors[i].y = 0;
-        g_actors[i].tile_id = 0;
-        g_actors[i].palette = 0;
-        g_actors[i].dir = 0;
-        g_actors[i].anim_frame = 0;
-        g_actors[i].sprite_handle = i;
+        g_actor_active[i] = 0;
+        g_actor_x[i] = 0;
+        g_actor_y[i] = 0;
+        g_actor_tile_id[i] = 0;
+        g_actor_palette[i] = 0;
+        g_actor_size[i] = SZ_16x16;
+        g_actor_dir[i] = 0;
+        g_actor_anim_frame[i] = 0;
+        g_actor_sprite_handle[i] = i;
     }
 }
 
-int actor_spawn(int x, int y, int tile_id, int palette) {
+int actor_spawn(int x, int y, int tile_id, int palette, int size) {
     int id;
     if (g_actor_count >= PCE_MAX_ACTORS) return -1;
     id = g_actor_count;
     g_actor_count++;
-    g_actors[id].active = 1;
-    g_actors[id].x = x;
-    g_actors[id].y = y;
-    g_actors[id].tile_id = tile_id;
-    g_actors[id].palette = palette;
+    g_actor_active[id] = 1;
+    g_actor_x[id] = x;
+    g_actor_y[id] = y;
+    g_actor_tile_id[id] = tile_id;
+    g_actor_palette[id] = palette;
+    g_actor_size[id] = (unsigned char)size;
     return id;
 }
 
 void actor_update_all(void) {
     int i;
     for (i = 0; i < g_actor_count; i++) {
-        if (!g_actors[i].active) continue;
-        spr_set(g_actors[i].sprite_handle);
-        spr_x(g_actors[i].x);
-        spr_y(g_actors[i].y);
-        spr_pattern(g_actors[i].tile_id);
-        spr_pal(g_actors[i].palette);
+        if (!g_actor_active[i]) {
+            if (g_actor_count > i + 16) {
+                spr_set(g_actor_sprite_handle[i] + 16);
+                spr_hide();
+            }
+            continue;
+        }
+
+        // Top tile (Head / Upper body)
+        spr_set(g_actor_sprite_handle[i]);
+        spr_x(g_actor_x[i]);
+        spr_y(g_actor_y[i]);
+        spr_pattern(g_actor_tile_id[i]);
+        spr_pal(g_actor_palette[i]);
+        spr_pri(1);
         spr_ctrl(SIZE_MAS | FLIP_MAS, SZ_16x16 | NO_FLIP);
-        spr_pri(1); // Set priority = 1 (Foreground in front of background tiles)
+
+        // If 16x32, render bottom tile (Body & Legs) stacked at Y + 16
+        if (g_actor_size[i] == SZ_16x32) {
+            spr_set(g_actor_sprite_handle[i] + 16);
+            spr_x(g_actor_x[i]);
+            spr_y(g_actor_y[i] + 16);
+            spr_pattern(g_actor_tile_id[i] + 0x40);
+            spr_pal(g_actor_palette[i]);
+            spr_pri(1);
+            spr_ctrl(SIZE_MAS | FLIP_MAS, SZ_16x16 | NO_FLIP);
+        } else {
+            if (g_actor_sprite_handle[i] + 16 < 64) {
+                spr_set(g_actor_sprite_handle[i] + 16);
+                spr_hide();
+            }
+        }
     }
-    satb_update(); // Flush SATB to hardware VDC
+    satb_update();
 }
 
 void actor_set_pos(int id, int x, int y) {
-    if (id >= 0 && id < PCE_MAX_ACTORS) {
-        g_actors[id].x = x;
-        g_actors[id].y = y;
+    if (id >= 0 && id < g_actor_count) {
+        g_actor_x[id] = x;
+        g_actor_y[id] = y;
     }
 }
 
 void actor_set_dir(int id, int dir) {
-    if (id >= 0 && id < PCE_MAX_ACTORS) {
-        g_actors[id].dir = dir;
+    if (id >= 0 && id < g_actor_count) {
+        g_actor_dir[id] = dir;
     }
 }

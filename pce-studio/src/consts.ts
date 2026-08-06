@@ -8,7 +8,9 @@ import {
 const isDist = __dirname.indexOf(".webpack") > -1;
 const isCli = __dirname.indexOf("out/cli") > -1;
 
-let rootDir = __dirname.substring(0, __dirname.lastIndexOf("node_modules"));
+let rootDir = __dirname.includes("node_modules")
+  ? __dirname.substring(0, __dirname.lastIndexOf("node_modules"))
+  : normalize(`${__dirname}/../`);
 if (isDist) {
   rootDir = __dirname.substring(0, __dirname.lastIndexOf(".webpack"));
 } else if (isCli) {

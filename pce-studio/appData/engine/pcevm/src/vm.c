@@ -1,5 +1,6 @@
 #include "include/vm.h"
 #include "include/actor.h"
+#include "include/pce_sound.h"
 
 int g_vm_vars[VM_MAX_VARS];
 static vm_context_t g_ctx;
@@ -36,6 +37,9 @@ void vm_set_var(int index, int val) {
 void vm_step(void) {
     unsigned char op;
     unsigned char v, val, actor_id, x, y, frames;
+    unsigned int* song_ptr;
+    unsigned int ptr_lo;
+    unsigned int ptr_hi;
 
     if (!g_ctx.active || !g_ctx.pc) return;
     
@@ -68,6 +72,15 @@ void vm_step(void) {
             case OP_WAIT:
                 frames = *g_ctx.pc++;
                 g_ctx.wait_frames = frames;
+                break;
+            case OP_MUSIC_PLAY:
+                ptr_lo = *g_ctx.pc++;
+                ptr_hi = *g_ctx.pc++;
+                song_ptr = (unsigned int*)((ptr_hi << 8) | ptr_lo);
+                pce_sound_play(song_ptr);
+                break;
+            case OP_MUSIC_STOP:
+                pce_sound_stop();
                 break;
             case OP_END:
                 g_ctx.active = 0;

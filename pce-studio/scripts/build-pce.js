@@ -28,6 +28,7 @@ async function runTestBuild() {
 
   const shmupDir = path.resolve(__dirname, "../../examples/huc/shmup");
   const isoHeroPng = "C:\\Users\\alx59\\Documents\\PCEtest1\\assets\\sprites\\iso_hero.png";
+  const kidParkPng = "C:\\Users\\alx59\\Documents\\PCEtest1\\assets\\sprites\\kidPark.png";
   const actorPng = "C:\\Users\\alx59\\Documents\\PCEtest1\\assets\\sprites\\actor.png";
   const scene2Png = "C:\\Users\\alx59\\Documents\\PCEtest1\\assets\\backgrounds\\scene2.png";
 
@@ -45,8 +46,11 @@ async function runTestBuild() {
   if (fs.existsSync(isoHeroPng)) {
     convertPngToPcx(isoHeroPng, path.join(destSprDir, "iso_hero.pcx"));
   }
+  if (fs.existsSync(kidParkPng)) {
+    convertPngToPcx(kidParkPng, path.join(destSprDir, "kidPark_sc1.pcx"), { cropX: 32, cropY: 0, cropW: 16, cropH: 32 });
+  }
   if (fs.existsSync(actorPng)) {
-    convertPngToPcx(actorPng, path.join(destSprDir, "actor.pcx"));
+    convertPngToPcx(actorPng, path.join(destSprDir, "actor_sc2.pcx"), { cropX: 0, cropY: 0, cropW: 16, cropH: 16 });
   }
 
   // Scene 1 & Scene 2 collisions
@@ -76,7 +80,20 @@ async function runTestBuild() {
   const sc2CContent = `#include "include/gbs_types.h"\n\nconst unsigned char scene_2_collisions[] = {\n${lines2.join(",\n")}\n};\n`;
   fs.writeFileSync(path.join(buildDir, "scene_2_collisions.c"), sc2CContent, "utf8");
 
-  fs.writeFileSync(path.join(buildDir, "game_includes.h"), `#ifndef GAME_INCLUDES_H\n#define GAME_INCLUDES_H\n#include "include/gbs_types.h"\n#include "scene_1_collisions.c"\n#include "scene_2_collisions.c"\n#endif\n`, "utf8");
+  const ugeFile = path.resolve(__dirname, "../appData/templates/gbs2/assets/music/Rulz_Intro.uge");
+  if (fs.existsSync(ugeFile)) {
+    const { loadUGESong, exportToC } = require("../src/shared/lib/uge/ugeHelper");
+    const ugeBuf = fs.readFileSync(ugeFile);
+    const song = loadUGESong(ugeBuf);
+    if (song) {
+      const musicC = exportToC(song, "song_0");
+      const musicDir = path.join(buildDir, "music");
+      fs.mkdirSync(musicDir, { recursive: true });
+      fs.writeFileSync(path.join(musicDir, "song_0.c"), musicC, "utf8");
+    }
+  }
+
+  fs.writeFileSync(path.join(buildDir, "game_includes.h"), `#ifndef GAME_INCLUDES_H\n#define GAME_INCLUDES_H\n#define HAS_MUSIC_DATA 1\n#include "include/gbs_types.h"\n#include "scene_1_collisions.c"\n#include "scene_2_collisions.c"\n#include "music/song_0.c"\n#endif\n`, "utf8");
 
   const mainCPath = path.join(buildDir, "main.c");
   const mainCContent = `/*
@@ -97,23 +114,27 @@ async function runTestBuild() {
 #incspr(player_spr, "assets/sprites/iso_hero.pcx", 0, 0, 4, 1)
 #incpal(player_pal, "assets/sprites/iso_hero.pcx")
 
-#incspr(actor1_spr, "assets/sprites/actor.pcx", 0, 0, 2, 1)
-#incpal(actor1_pal, "assets/sprites/actor.pcx")
+#incspr(actor_sc1_spr, "assets/sprites/kidPark_sc1.pcx", 0, 0, 1, 2)
+#incpal(actor_sc1_pal, "assets/sprites/kidPark_sc1.pcx")
+
+#incspr(actor_sc2_spr, "assets/sprites/actor_sc2.pcx", 0, 0, 1, 1)
+#incpal(actor_sc2_pal, "assets/sprites/actor_sc2.pcx")
 
 #define PLAYER_START_X 104
 #define PLAYER_START_Y 112
 #define HAS_SCENE_2 1
-#define HAS_ACTOR_1 1
-#define ACTOR_1_X 200
-#define ACTOR_1_Y 32
 
 #define HAS_ACTOR_SCENE_1 1
-#define ACTOR_SCENE_1_X 200
-#define ACTOR_SCENE_1_Y 32
+#define ACTOR_SCENE_1_X 152
+#define ACTOR_SCENE_1_Y 40
+#define ACTOR_SCENE_1_VRAM_SIZE 0x80
+#define ACTOR_SCENE_1_SPRITE_SIZE SZ_16x32
 
 #define HAS_ACTOR_SCENE_2 1
-#define ACTOR_SCENE_2_X 40
-#define ACTOR_SCENE_2_Y 40
+#define ACTOR_SCENE_2_X 32
+#define ACTOR_SCENE_2_Y 176
+#define ACTOR_SCENE_2_VRAM_SIZE 0x40
+#define ACTOR_SCENE_2_SPRITE_SIZE SZ_16x16
 
 #define HAS_TRIGGER_1 1
 #define TRIGGER_1_SCENE 1
@@ -140,6 +161,7 @@ async function runTestBuild() {
 
 #include "include/engine.h"
 #include "src/pce_system.c"
+#include "src/pce_sound.c"
 #include "src/actor.c"
 #include "src/camera.c"
 #include "src/collision.c"

@@ -69,10 +69,11 @@ export const compileMusicHeader = (tracks: PrecompiledMusicTrack[]) => {
   return `#ifndef MUSIC_DATA_H
 #define MUSIC_DATA_H
 
+#include "include/pce_sound.h"
+
 ${tracks
   .map(
-    (track) => `extern const void __bank_${track.dataName}_Data;
-extern const void ${track.dataName}_Data;`,
+    (track) => `extern hUGESong_t ${track.dataName}_Data;`,
   )
   .join("\n")}
 

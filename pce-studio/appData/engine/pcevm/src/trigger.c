@@ -4,11 +4,12 @@
 
 pce_trigger_t g_triggers[MAX_TRIGGERS];
 int g_trigger_count;
-extern int g_current_scene;
+static unsigned char g_trigger_cooldown = 0;
 void load_scene(int scene_num, int player_x, int player_y);
 
 void trigger_init(void) {
     g_trigger_count = 0;
+    g_trigger_cooldown = 0;
 }
 
 void trigger_add(int scene_id, int x, int y, int w, int h, int target_scene, int target_x, int target_y, unsigned char* script) {
@@ -28,25 +29,34 @@ void trigger_add(int scene_id, int x, int y, int w, int h, int target_scene, int
 
 void trigger_check(int px, int py) {
     int i, tx1, ty1, tx2, ty2;
+
+    if (g_trigger_cooldown > 0) {
+        g_trigger_cooldown--;
+        return;
+    }
+
     for (i = 0; i < g_trigger_count; i++) {
         if (g_triggers[i].scene_id != g_current_scene) {
             continue;
         }
 
-        tx1 = g_triggers[i].x << 3;
-        ty1 = g_triggers[i].y << 3;
-        tx2 = tx1 + (g_triggers[i].w << 3);
-        ty2 = ty1 + (g_triggers[i].h << 3);
+        tx1 = g_triggers[i].x;
+        ty1 = g_triggers[i].y;
+        tx2 = tx1 + g_triggers[i].w;
+        ty2 = ty1 + g_triggers[i].h;
 
         if ((px + 4) >= tx1 && (px + 4) < tx2 && (py + 8) >= ty1 && (py + 8) < ty2) {
             if (g_triggers[i].target_scene > 0) {
+                g_trigger_cooldown = 20;
                 load_scene(g_triggers[i].target_scene, g_triggers[i].target_x, g_triggers[i].target_y);
                 break;
             } else if (g_triggers[i].target_x >= 0 && g_triggers[i].target_y >= 0) {
+                g_trigger_cooldown = 20;
                 actor_set_pos(0, g_triggers[i].target_x, g_triggers[i].target_y);
                 break;
             }
             if (g_triggers[i].script) {
+                g_trigger_cooldown = 20;
                 vm_start_script(g_triggers[i].script);
                 break;
             }
