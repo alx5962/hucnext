@@ -8,6 +8,7 @@ extern int g_cam_y;
 
 void camera_init(void);
 void camera_update(int target_x, int target_y);
+void camera_update_x(int target_x);
 void camera_apply(void);
 
 #endif /* PCE_CAMERA_H */

@@ -377,7 +377,3 @@ void pce_sound_update(void) {
     }
   }
 }
-}
-}
-}
-}

@@ -7,6 +7,19 @@ const pathModule = (Path as any).default || Path;
 const convertPngToPcx = (convertPngToPcxDefault || convertPngToPcxFn) as typeof convertPngToPcxFn;
 const convertToIndexedPng = (convertToIndexedPngDefault || convertToIndexedPngFn) as typeof convertToIndexedPngFn;
 
+/**
+ * Maps scene type keys (from editor) to SCENE_TYPE_* numeric constants.
+ * Must stay in sync with appData/engine/pcevm/include/engine.h
+ */
+const SCENE_TYPE_MAP: Record<string, number> = {
+  TOPDOWN:     0,
+  PLATFORM:    1,
+  ADVENTURE:   2,
+  SHMUP:       3,
+  POINTNCLICK: 4,
+  LOGO:        5,
+};
+
 function getCropXForActor(actor: any, sprObj: any, canvasW: number): number {
   try {
     const firstTile = sprObj?.states?.[0]?.animations?.[0]?.frames?.[0]?.tiles?.[0];
@@ -54,8 +67,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   await fs.ensureDir(buildDir);
 
   const { defaultEngineRoot } = require("../../consts");
-  if (fs.existsSync(defaultEngineRoot)) {
-    await fs.copy(defaultEngineRoot, buildDir, { overwrite: true });
+  try {
+    if (fs.existsSync(defaultEngineRoot)) {
+      await fs.copy(defaultEngineRoot, buildDir, { overwrite: true, errorOnExist: false });
+    }
+  } catch (e) {
+    // Ignore transient EPERM file lock issues when overwriting engine files
   }
 
   // Look for project files (.gbsproj or project directory)
@@ -134,6 +151,40 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   }
 
   const allScenes = scenesFromGbsres.length > 0 ? scenesFromGbsres : (projectData.scenes || []);
+
+  // Load platformer settings from project/engine_field_values.gbsres if present
+  let engineFieldValuesMap: Record<string, any> = {};
+  const engineFieldsGbsPath = pathModule.join(projDir, "project", "engine_field_values.gbsres");
+  if (fs.existsSync(engineFieldsGbsPath)) {
+    try {
+      const efJson = fs.readJsonSync(engineFieldsGbsPath);
+      if (efJson && Array.isArray(efJson.engineFieldValues)) {
+        for (const ef of efJson.engineFieldValues) {
+          if (ef && ef.id) {
+            engineFieldValuesMap[ef.id] = ef.value;
+          }
+        }
+      }
+    } catch (e) { }
+  }
+
+  const rawWalkVel = typeof engineFieldValuesMap["plat_walk_vel"] === "number" ? engineFieldValuesMap["plat_walk_vel"] : 6400;
+  const rawGrav = typeof engineFieldValuesMap["plat_grav"] === "number" ? engineFieldValuesMap["plat_grav"] : 1792;
+  const rawMaxFall = typeof engineFieldValuesMap["plat_max_fall_vel"] === "number" ? engineFieldValuesMap["plat_max_fall_vel"] : 20000;
+
+  // Convert 16-bit fixed point engine field values to PC Engine subpixels (8 subpixels = 1 pixel)
+  const platWalkSubpx = Math.max(1, Math.round(rawWalkVel / 512));
+  const platGravitySubpx = Math.max(1, Math.round(rawGrav / 512));
+  const platMaxFallSubpx = Math.max(4, Math.round(rawMaxFall / 512));
+  const platJumpVelSubpx = Math.max(16, Math.round(Math.sqrt(2 * platGravitySubpx * 210)));
+
+  const sc1Type: string = (allScenes[0]?.type || "TOPDOWN").toUpperCase();
+  const sc1TypeNum = SCENE_TYPE_MAP[sc1Type] ?? SCENE_TYPE_MAP["TOPDOWN"];
+
+  const sc2Type: string = (allScenes[1]?.type || "TOPDOWN").toUpperCase();
+  const sc2TypeNum = SCENE_TYPE_MAP[sc2Type] ?? SCENE_TYPE_MAP["TOPDOWN"];
+
+  const sceneTypeDefine = `#define SCENE_1_TYPE ${sc1TypeNum}\n#define SCENE_2_TYPE ${sc2TypeNum}\n#define SCENE_TYPE ${sc1TypeNum}\n#define PLAT_WALK_SUBPX ${platWalkSubpx}\n#define PLAT_GRAVITY ${platGravitySubpx}\n#define PLAT_JUMP_SUBPX ${platJumpVelSubpx}\n#define PLAT_MAX_FALL ${platMaxFallSubpx}\n`;
 
   // Look for background PNGs and map backgroundId -> filename
   const bgIdMap: Record<string, string> = {};
@@ -545,6 +596,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
   const mainCContent = `
 #include <huc.h>
+
+/* Scene type: must be defined BEFORE including engine.h */
+${sceneTypeDefine}
 #include "include/engine.h"
 
 #incspr(player_spr, "${playerPcxRelativePath}", 0, 0, ${playerSprWidth16}, ${playerSprHeight16})
@@ -570,15 +624,15 @@ ${triggerDefines}
 
 #include "scene_1_collisions.c"
 #include "scene_2_collisions.c"
+#include "src/pce_system.c"
 #include "src/pce_sound.c"
 ${musicIncludes}
-#include "src/engine.c"
 #include "src/actor.c"
 #include "src/camera.c"
 #include "src/collision.c"
 #include "src/trigger.c"
 #include "src/vm.c"
-#include "src/pce_system.c"
+#include "src/engine.c"
 
 main() {
     engine_run();
