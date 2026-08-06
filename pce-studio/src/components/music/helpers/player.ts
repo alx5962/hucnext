@@ -187,26 +187,27 @@ const initPlayer = (onInit: (file: Uint8Array) => void, sfx?: string) => {
 
     // const doResumePlayerAddr = getRamAddress("do_resume_player");
 
-    const updateTracker = () => {
-      if (isExporting) {
-        return;
-      }
-      emulator.step("run");
-      if (isPreviewPlaying) {
-        previewEmulator.step("run");
-      }
-      // console.log(
-      //   "RUN",
-      //   `Is Player Paused: ${isPlayerPaused()}`,
-      //   `Do resume Player: ${emulator.readMem(doResumePlayerAddr)}`,
-      //   `OxFF0F: ${emulator.readMem(0xff0f)}`,
-      //   `Order Count: ${emulator.readMem(getRamAddress("order_cnt"))}`,
-      // );
-    };
-    setInterval(updateTracker, 1000 / 64);
+    startTrackerLoop();
   };
 
   compiler.compile(["-t", "-w"], onCompileDone, () => {});
+};
+
+let updateTrackerIntervalId: ReturnType<typeof setInterval> | undefined;
+
+const startTrackerLoop = () => {
+  if (updateTrackerIntervalId) return;
+  updateTrackerIntervalId = setInterval(() => {
+    if (isExporting) {
+      return;
+    }
+    if (emulator.isAvailable()) {
+      emulator.step("run");
+    }
+    if (isPreviewPlaying && previewEmulator.isAvailable()) {
+      previewEmulator.step("run");
+    }
+  }, 1000 / 64);
 };
 
 const setChannel = (
@@ -244,6 +245,12 @@ const setSolo = (
 
 const loadSong = (song: Song) => {
   stopPreview();
+  if (!romFile) {
+    initPlayer(() => {
+      loadSong(song);
+    });
+    return;
+  }
   updateRom(song);
   emulator.step("frame");
   stop();
@@ -291,6 +298,16 @@ const loadSound = (sfx?: string) => {
 
 const play = (song: Song, position?: MusicPosition) => {
   stopPreview();
+  startTrackerLoop();
+  if (emulator.setSongForPlayback) {
+    emulator.setSongForPlayback(song);
+  }
+  if (!romFile) {
+    initPlayer(() => {
+      play(song, position);
+    });
+    return;
+  }
   updateRom(song);
   emulator.step("frame");
   stop();

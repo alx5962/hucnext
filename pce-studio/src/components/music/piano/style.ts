@@ -508,7 +508,7 @@ export const StyledPianoRollPlayhead = styled.div<{
   $isDefaultMarker?: boolean;
 }>`
   pointer-events: none;
-  z-index: 0;
+  z-index: 10;
   width: 2px;
   height: ${PIANO_ROLL_CELL_SIZE * TOTAL_NOTES + PIANO_ROLL_CELL_SIZE}px;
   background: ${(props) => props.theme.colors.highlight};

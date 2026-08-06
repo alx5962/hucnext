@@ -24,10 +24,19 @@ export const UgePlayer = () => {
 
   useEffect(() => {
     API.music.openMusic();
+    const state = store.getState();
+    const song = state.trackerDocument.present.song;
+    dispatch(trackerActions.playerReady(true));
+    if (song) {
+      API.music.sendToMusicWindow({
+        action: "load-song",
+        song,
+      });
+    }
     return function close() {
       API.music.closeMusic();
     };
-  }, []);
+  }, [store, dispatch]);
 
   const play = useAppSelector((state) => state.tracker.playing);
   const exporting = useAppSelector((state) => state.tracker.exporting);

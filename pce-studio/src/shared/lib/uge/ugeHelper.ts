@@ -896,9 +896,8 @@ static const unsigned char order_cnt = ${song.sequence.length * 2};
     data += definition;
   }
   for (let track = 0; track < 4; track++)
-    data += `static const unsigned char* order${
-      track + 1
-    }[] = {${getSequenceMappingFor(track)}};\n`;
+    data += `static const unsigned char* order${track + 1
+      }[] = {${getSequenceMappingFor(track)}};\n`;
   data += "static const unsigned char duty_instruments[] = {\n";
   data += song.dutyInstruments.map((instr) => `    ${formatDutyInstrument(instr)}`).join(",\n");
   data += "\n};\n";

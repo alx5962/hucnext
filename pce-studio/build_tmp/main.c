@@ -59,6 +59,7 @@
 #include "scene_1_collisions.c"
 #include "scene_2_collisions.c"
 #include "src/pce_sound.c"
+#include "include/hUGEDriver.h"
 #include "music/song_0.c"
 
 #include "src/engine.c"

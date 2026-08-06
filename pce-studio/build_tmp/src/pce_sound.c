@@ -154,12 +154,13 @@ static void process_channel(int track, unsigned char* pattern_ptr) {
                 duty_idx = (d_inst[1] >> 6) & 0x03;
                 g_ch_vol[track] = ((d_inst[2] >> 4) & 0x0F) * 2;
             }
+            if (g_ch_vol[track] == 0) g_ch_vol[track] = 24;
             if (g_ch_duty[track] != duty_idx) {
                 g_ch_duty[track] = duty_idx;
                 load_wave_ram(pce_ch, (unsigned char*)&g_duty_table[duty_idx * 32]);
             } else {
                 *PSG_CH = pce_ch;
-                *PSG_CTRL = 0x80 | g_ch_vol[track];
+                *PSG_CTRL = 0x80 | (g_ch_vol[track] & 0x1F);
             }
         } else if (track == 2) {
             wave_idx = 0;
@@ -168,6 +169,7 @@ static void process_channel(int track, unsigned char* pattern_ptr) {
                 wave_idx = w_inst[2];
                 g_ch_vol[track] = ((w_inst[1] >> 5) & 0x03) * 10;
             }
+            if (g_ch_vol[track] == 0) g_ch_vol[track] = 24;
             if (waves_ptr && (g_ch_inst[2] != inst || inst == 0)) {
                 g_ch_inst[2] = inst;
                 raw_wave = &waves_ptr[wave_idx * 16];
@@ -178,17 +180,22 @@ static void process_channel(int track, unsigned char* pattern_ptr) {
                 load_wave_ram(pce_ch, wave_samples);
             } else {
                 *PSG_CH = pce_ch;
-                *PSG_CTRL = 0x80 | g_ch_vol[track];
+                *PSG_CTRL = 0x80 | (g_ch_vol[track] & 0x1F);
             }
         } else if (track == 3) {
-            noise_freq = 31 - (note % 32);
             if (inst > 0 && noise_instrs) {
                 n_inst = &noise_instrs[(inst - 1) * 6];
                 g_ch_vol[track] = ((n_inst[0] >> 4) & 0x0F) * 2;
+                if (g_ch_vol[track] == 0) g_ch_vol[track] = 16;
+                noise_freq = 31 - (note % 32);
+                *PSG_CH = 4;
+                *PSG_NOISE = 0x80 | (noise_freq & 0x1F);
+                *PSG_CTRL = 0x80 | (g_ch_vol[track] & 0x1F);
+            } else {
+                *PSG_CH = 4;
+                *PSG_NOISE = 0x00;
+                *PSG_CTRL = 0x00;
             }
-            *PSG_CH = 4;
-            *PSG_NOISE = 0x80 | (noise_freq & 0x1F);
-            *PSG_CTRL = 0x80 | g_ch_vol[track];
         }
     }
 }

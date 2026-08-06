@@ -13,7 +13,7 @@ function getCropXForActor(actor: any, sprObj: any, canvasW: number): number {
     if (firstTile && typeof firstTile.sliceX === "number") {
       return firstTile.sliceX;
     }
-  } catch (e) {}
+  } catch (e) { }
 
   const dir = actor?.direction?.toLowerCase() || "down";
   if (dir === "up") return canvasW * 1;
@@ -71,7 +71,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   if (fs.existsSync(settingsGbsPath)) {
     try {
       settingsGbsData = fs.readJsonSync(settingsGbsPath);
-    } catch (e) {}
+    } catch (e) { }
   }
 
   // Load gbsres files if present
@@ -90,7 +90,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       try {
         const json = fs.readJsonSync(pathModule.join(spritesDir, gf));
         spritesFromGbsres.push(json);
-      } catch (e) {}
+      } catch (e) { }
     }
   }
 
@@ -128,7 +128,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           }
 
           scenesFromGbsres.push(scJson);
-        } catch (e) {}
+        } catch (e) { }
       }
     }
   }
@@ -150,7 +150,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           if (bJson && bJson.id && bJson.filename) {
             bgIdMap[bJson.id] = bJson.filename;
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
   }
@@ -465,7 +465,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
               symbol: mJson.symbol || "song_0",
             };
           }
-        } catch (e) {}
+        } catch (e) { }
       }
     }
   }

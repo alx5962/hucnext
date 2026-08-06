@@ -72,6 +72,31 @@ module.exports = {
               },
               name: "preferences_window",
             },
+            {
+              html: "./src/apps/gb-studio/plugins/plugins.html",
+              js: "./src/apps/gb-studio/plugins/PluginsRoot.tsx",
+              preload: {
+                js: "./src/apps/gb-studio/plugins/preload.ts",
+                config: rendererPreloadConfig,
+              },
+              name: "plugins_window",
+            },
+            {
+              html: "./src/apps/gb-studio/music/music.html",
+              js: "./src/apps/gb-studio/music/MusicRoot.tsx",
+              preload: {
+                js: "./src/apps/gb-studio/project/preload.ts",
+                config: rendererPreloadConfig,
+              },
+              name: "music_window",
+            },
+            {
+              name: "game_window",
+              preload: {
+                js: "./src/apps/gb-studio/game/preload.ts",
+                config: rendererPreloadConfig,
+              },
+            },
           ],
         },
       },

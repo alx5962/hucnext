@@ -718,8 +718,7 @@ export const createPlay = async (
 
   playWindow.setMenu(null);
   playWindow.loadURL(
-    `${url}?audio=true&sgb=${sgb ? "true" : "false"}&debug=${
-      !!debugEnabled && !!debuggerInitData ? "true" : "false"
+    `${url}?audio=true&sgb=${sgb ? "true" : "false"}&debug=${!!debugEnabled && !!debuggerInitData ? "true" : "false"
     }`,
   );
 
@@ -749,7 +748,7 @@ export const createMusic = async (
 ) => {
   musicWindowInitialized = false;
 
-  if (!musicWindow) {
+  if (!musicWindow || musicWindow.isDestroyed()) {
     // Create the browser window.
     musicWindow = new BrowserWindow({
       show: false,
@@ -761,13 +760,19 @@ export const createMusic = async (
         nodeIntegrationInWorker: false,
         webSecurity: true,
         devTools: isDevMode,
-        preload: MUSIC_WINDOW_PRELOAD_WEBPACK_ENTRY,
+        preload:
+          typeof MUSIC_WINDOW_PRELOAD_WEBPACK_ENTRY !== "undefined"
+            ? MUSIC_WINDOW_PRELOAD_WEBPACK_ENTRY
+            : MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+        backgroundThrottling: false,
       },
     });
   }
 
-  musicWindow.setMenu(null);
-  musicWindow.loadURL(MUSIC_WINDOW_WEBPACK_ENTRY);
+  try {
+    musicWindow.setMenu(null);
+    musicWindow.loadURL(MUSIC_WINDOW_WEBPACK_ENTRY);
+  } catch (e) { }
 
   musicWindow.on("closed", () => {
     musicWindow = null;
@@ -1325,14 +1330,17 @@ ipcMain.handle("music:open", async (_event, sfx?: string) => {
 });
 
 ipcMain.handle("music:close", async () => {
-  if (musicWindow) {
-    musicWindow.destroy();
-    musicWindowInitialized = false;
+  if (musicWindow && !musicWindow.isDestroyed()) {
+    try {
+      musicWindow.destroy();
+    } catch (e) { }
   }
+  musicWindow = null;
+  musicWindowInitialized = false;
 });
 
 ipcMain.on("music:data-send", (_event, data: MusicDataPacket) => {
-  if (musicWindow && musicWindowInitialized) {
+  if (musicWindow && !musicWindow.isDestroyed()) {
     sendToMusicWindow("music:data", data);
   }
 });
@@ -1611,14 +1619,13 @@ ipcMain.handle(
         }
         buildLog(`-`);
         buildLog(
-          `${l10n("COMPILER_BUILD_SUCCESS")} ${
-            buildType === "web"
-              ? `${l10n("COMPILER_SITE_READY_AT")} ${Path.normalize(
-                  `${projectRoot}/build/web/index.html`,
-                )}`
-              : `${l10n("COMPILER_ROM_READY_AT")} ${Path.normalize(
-                  `${projectRoot}/build/rom/${romFilename}`,
-                )}`
+          `${l10n("COMPILER_BUILD_SUCCESS")} ${buildType === "web"
+            ? `${l10n("COMPILER_SITE_READY_AT")} ${Path.normalize(
+              `${projectRoot}/build/web/index.html`,
+            )}`
+            : `${l10n("COMPILER_ROM_READY_AT")} ${Path.normalize(
+              `${projectRoot}/build/rom/${romFilename}`,
+            )}`
           }`,
         );
       } else {

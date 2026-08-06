@@ -488,7 +488,7 @@ const SongEditorToolsPanel = ({ musicAsset }: SongEditorToolsPanelProps) => {
         <ExportButtonWrapper>
           <Button
             variant="transparent"
-            disabled={!hasSong || !playerReady || exporting}
+            disabled={!hasSong || exporting}
             title={l10n("TOOLBAR_EXPORT_AS")}
             onClick={onOpenExportPanel}
             active={showExportPanel}

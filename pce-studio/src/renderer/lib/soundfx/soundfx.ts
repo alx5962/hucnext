@@ -51,5 +51,8 @@ const getAudioCtx = () => {
   if (!globalAudioCtx) {
     globalAudioCtx = new window.AudioContext();
   }
+  if (globalAudioCtx && globalAudioCtx.state === "suspended") {
+    globalAudioCtx.resume();
+  }
   return globalAudioCtx;
 };

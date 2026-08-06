@@ -282,7 +282,7 @@ export const SongContextBar = ({
     () => (
       <ButtonGroup>
         <Button
-          disabled={!playerReady || exporting}
+          disabled={exporting}
           onClick={togglePlay}
           title={getPlayButtonLabel(play, playbackFromStart)}
         >
@@ -295,7 +295,7 @@ export const SongContextBar = ({
           )}
         </Button>
         <Button
-          disabled={!playerReady || exporting}
+          disabled={exporting}
           onClick={stopPlayback}
           title={l10n("FIELD_STOP")}
         >
