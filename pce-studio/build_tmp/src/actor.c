@@ -47,7 +47,9 @@ void actor_update_all(void) {
     int i;
     for (i = 0; i < g_actor_count; i++) {
         if (!g_actor_active[i]) {
-            if (g_actor_count > i + 16) {
+            spr_set(g_actor_sprite_handle[i]);
+            spr_hide();
+            if (g_actor_sprite_handle[i] + 16 < 64) {
                 spr_set(g_actor_sprite_handle[i] + 16);
                 spr_hide();
             }

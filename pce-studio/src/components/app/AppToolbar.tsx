@@ -221,7 +221,7 @@ const AppToolbar: FC = () => {
   }
 
   useEffect(() => {
-    document.title = `GB Studio - ${appTitle}`;
+    document.title = `PCE Studio - ${appTitle}`;
   }, [appTitle]);
 
   if (!loaded) {

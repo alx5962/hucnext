@@ -16,10 +16,11 @@ module.exports = async () => {
       {
         name: "@electron-forge/maker-squirrel",
         config: {
-          name: "gb_studio",
-          exe: "gb-studio.exe",
+          name: "pce_studio",
+          exe: "pce-studio.exe",
           loadingGif: "src/assets/app/install.gif",
           setupIcon: "src/assets/app/icon/app_icon.ico",
+          productName: "PCE Studio",
         },
       },
       {
@@ -28,9 +29,9 @@ module.exports = async () => {
       },
       new MakerAppImage({
         options: {
-          name: "gb-studio",
-          bin: "gb-studio",
-          productName: "GB Studio",
+          name: "pce-studio",
+          bin: "pce-studio",
+          productName: "PCE Studio",
           genericName: "Visual retro game maker",
           icon: {
             strict: true,

@@ -19,12 +19,29 @@ int g_plat_on_ground = 0;
 int g_shmup_scroll_x = 0;
 
 void load_scene(int scene_num, int player_x, int player_y) {
+    int i;
     g_current_scene = scene_num;
+
+    for (i = 1; i < PCE_MAX_ACTORS; i++) {
+        g_actor_active[i] = 0;
+    }
 
     if (scene_num == 1) {
         g_current_scene_type = SCENE_1_TYPE;
         load_background(bg_scene1_chr, bg_scene1_pal, bg_scene1_bat, 32, 28);
         collision_init(scene_1_collisions, 32, 28);
+
+        #ifdef HAS_ACTOR_SCENE_1_1
+        load_vram(0x5400, actor_sc1_1_spr, ACTOR_SCENE_1_1_VRAM_SIZE);
+        load_palette(17, actor_sc1_1_pal, 1);
+        if (g_actor_count > 1) {
+            g_actor_active[1] = 1;
+            g_actor_tile_id[1] = 0x5400;
+            g_actor_palette[1] = 1;
+            g_actor_size[1] = ACTOR_SCENE_1_1_SPRITE_SIZE;
+            actor_set_pos(1, ACTOR_SCENE_1_1_X, ACTOR_SCENE_1_1_Y);
+        }
+        #else
         #ifdef HAS_ACTOR_SCENE_1
         load_vram(0x5400, actor_sc1_spr, ACTOR_SCENE_1_VRAM_SIZE);
         load_palette(17, actor_sc1_pal, 1);
@@ -35,9 +52,18 @@ void load_scene(int scene_num, int player_x, int player_y) {
             g_actor_size[1] = ACTOR_SCENE_1_SPRITE_SIZE;
             actor_set_pos(1, ACTOR_SCENE_1_X, ACTOR_SCENE_1_Y);
         }
-        #else
-        if (g_actor_count > 1) {
-            g_actor_active[1] = 0;
+        #endif
+        #endif
+
+        #ifdef HAS_ACTOR_SCENE_1_2
+        load_vram(0x5600, actor_sc1_2_spr, ACTOR_SCENE_1_2_VRAM_SIZE);
+        load_palette(18, actor_sc1_2_pal, 1);
+        if (g_actor_count > 2) {
+            g_actor_active[2] = 1;
+            g_actor_tile_id[2] = 0x5600;
+            g_actor_palette[2] = 2;
+            g_actor_size[2] = ACTOR_SCENE_1_2_SPRITE_SIZE;
+            actor_set_pos(2, ACTOR_SCENE_1_2_X, ACTOR_SCENE_1_2_Y);
         }
         #endif
     }
@@ -45,7 +71,23 @@ void load_scene(int scene_num, int player_x, int player_y) {
     else if (scene_num == 2) {
         g_current_scene_type = SCENE_2_TYPE;
         load_background(bg_scene2_chr, bg_scene2_pal, bg_scene2_bat, 32, 28);
+        #ifdef HAS_SCENE_2_COLLISIONS
         collision_init(scene_2_collisions, 32, 28);
+        #else
+        collision_init(scene_1_collisions, 32, 28);
+        #endif
+
+        #ifdef HAS_ACTOR_SCENE_2_1
+        load_vram(0x5400, actor_sc2_1_spr, ACTOR_SCENE_2_1_VRAM_SIZE);
+        load_palette(17, actor_sc2_1_pal, 1);
+        if (g_actor_count > 1) {
+            g_actor_active[1] = 1;
+            g_actor_tile_id[1] = 0x5400;
+            g_actor_palette[1] = 1;
+            g_actor_size[1] = ACTOR_SCENE_2_1_SPRITE_SIZE;
+            actor_set_pos(1, ACTOR_SCENE_2_1_X, ACTOR_SCENE_2_1_Y);
+        }
+        #else
         #ifdef HAS_ACTOR_SCENE_2
         load_vram(0x5400, actor_sc2_spr, ACTOR_SCENE_2_VRAM_SIZE);
         load_palette(17, actor_sc2_pal, 1);
@@ -56,10 +98,67 @@ void load_scene(int scene_num, int player_x, int player_y) {
             g_actor_size[1] = ACTOR_SCENE_2_SPRITE_SIZE;
             actor_set_pos(1, ACTOR_SCENE_2_X, ACTOR_SCENE_2_Y);
         }
+        #endif
+        #endif
+    }
+    #endif
+
+    #ifdef HAS_SCENE_3
+    else if (scene_num == 3) {
+        #ifdef SCENE_3_TYPE
+        g_current_scene_type = SCENE_3_TYPE;
         #else
+        g_current_scene_type = SCENE_1_TYPE;
+        #endif
+        load_background(bg_scene3_chr, bg_scene3_pal, bg_scene3_bat, 32, 28);
+        #ifdef HAS_SCENE_3_COLLISIONS
+        collision_init(scene_3_collisions, 32, 28);
+        #else
+        collision_init(scene_1_collisions, 32, 28);
+        #endif
+
+        #ifdef HAS_ACTOR_SCENE_3_1
+        load_vram(0x5400, actor_sc3_1_spr, ACTOR_SCENE_3_1_VRAM_SIZE);
+        load_palette(17, actor_sc3_1_pal, 1);
         if (g_actor_count > 1) {
-            g_actor_active[1] = 0;
+            g_actor_active[1] = 1;
+            g_actor_tile_id[1] = 0x5400;
+            g_actor_palette[1] = 1;
+            g_actor_size[1] = ACTOR_SCENE_3_1_SPRITE_SIZE;
+            actor_set_pos(1, ACTOR_SCENE_3_1_X, ACTOR_SCENE_3_1_Y);
         }
+        #endif
+    }
+    #endif
+
+    #ifdef HAS_SCENE_4
+    else if (scene_num == 4) {
+        #ifdef SCENE_4_TYPE
+        g_current_scene_type = SCENE_4_TYPE;
+        #else
+        g_current_scene_type = SCENE_1_TYPE;
+        #endif
+        load_background(bg_scene4_chr, bg_scene4_pal, bg_scene4_bat, 32, 28);
+        #ifdef HAS_SCENE_4_COLLISIONS
+        collision_init(scene_4_collisions, 32, 28);
+        #else
+        collision_init(scene_1_collisions, 32, 28);
+        #endif
+    }
+    #endif
+
+    #ifdef HAS_SCENE_5
+    else if (scene_num == 5) {
+        #ifdef SCENE_5_TYPE
+        g_current_scene_type = SCENE_5_TYPE;
+        #else
+        g_current_scene_type = SCENE_1_TYPE;
+        #endif
+        load_background(bg_scene5_chr, bg_scene5_pal, bg_scene5_bat, 32, 28);
+        #ifdef HAS_SCENE_5_COLLISIONS
+        collision_init(scene_5_collisions, 32, 28);
+        #else
+        collision_init(scene_1_collisions, 32, 28);
         #endif
     }
     #endif
@@ -111,12 +210,29 @@ void engine_init(void) {
     trigger_add(TRIGGER_4_SCENE, TRIGGER_4_X, TRIGGER_4_Y, TRIGGER_4_W, TRIGGER_4_H, TRIGGER_4_TARGET_SCENE, TRIGGER_4_TARGET_X, TRIGGER_4_TARGET_Y, (void*)0);
     #endif
 
+    #ifdef HAS_TRIGGER_5
+    trigger_add(TRIGGER_5_SCENE, TRIGGER_5_X, TRIGGER_5_Y, TRIGGER_5_W, TRIGGER_5_H, TRIGGER_5_TARGET_SCENE, TRIGGER_5_TARGET_X, TRIGGER_5_TARGET_Y, (void*)0);
+    #endif
+
+    #ifdef HAS_TRIGGER_6
+    trigger_add(TRIGGER_6_SCENE, TRIGGER_6_X, TRIGGER_6_Y, TRIGGER_6_W, TRIGGER_6_H, TRIGGER_6_TARGET_SCENE, TRIGGER_6_TARGET_X, TRIGGER_6_TARGET_Y, (void*)0);
+    #endif
+
+    #ifdef HAS_TRIGGER_7
+    trigger_add(TRIGGER_7_SCENE, TRIGGER_7_X, TRIGGER_7_Y, TRIGGER_7_W, TRIGGER_7_H, TRIGGER_7_TARGET_SCENE, TRIGGER_7_TARGET_X, TRIGGER_7_TARGET_Y, (void*)0);
+    #endif
+
+    #ifdef HAS_TRIGGER_8
+    trigger_add(TRIGGER_8_SCENE, TRIGGER_8_X, TRIGGER_8_Y, TRIGGER_8_W, TRIGGER_8_H, TRIGGER_8_TARGET_SCENE, TRIGGER_8_TARGET_X, TRIGGER_8_TARGET_Y, (void*)0);
+    #endif
+
     load_vram(0x5000, player_spr, 0x40);
     load_palette(16, player_pal, 1);
 
     actor_spawn(PLAYER_START_X, PLAYER_START_Y, 0x5000, 0, SZ_16x16);
 
     actor_spawn(0, 0, 0x5400, 1, SZ_16x16);
+    actor_spawn(0, 0, 0x5600, 2, SZ_16x16);
 
     load_scene(1, PLAYER_START_X, PLAYER_START_Y);
 }
@@ -153,40 +269,56 @@ void hide_dialogue(void) {
 static unsigned int g_last_input = 0;
 
 void check_actor_interaction(unsigned int input) {
-    int dx, dy;
+    int dx, dy, i;
     unsigned int pressed;
     pressed = input & ~g_last_input;
     g_last_input = input;
 
     if (pressed & (JOY_I | JOY_II)) {
-        if (g_actor_count > 1 && g_actor_active[1]) {
-            dx = g_actor_x[0] - g_actor_x[1];
-            dy = g_actor_y[0] - g_actor_y[1];
-            if (dx < 0) dx = -dx;
-            if (dy < 0) dy = -dy;
-            if (dx <= 48 && dy <= 48) {
-                if (g_dialogue_active) {
-                    hide_dialogue();
-                } else {
-                    #ifdef HAS_ACTOR_SCENE_1
-                    if (g_current_scene == 1) {
-                        #ifdef ACTOR_SCENE_1_TEXT
-                        show_dialogue(ACTOR_SCENE_1_TEXT);
-                        #else
-                        show_dialogue("Hello!");
+        for (i = 1; i < g_actor_count; i++) {
+            if (g_actor_active[i]) {
+                dx = g_actor_x[0] - g_actor_x[i];
+                dy = g_actor_y[0] - g_actor_y[i];
+                if (dx < 0) dx = -dx;
+                if (dy < 0) dy = -dy;
+                if (dx <= 48 && dy <= 48) {
+                    if (g_dialogue_active) {
+                        hide_dialogue();
+                    } else {
+                        if (g_current_scene == 1) {
+                            if (i == 1) {
+                                #ifdef ACTOR_SCENE_1_1_TEXT
+                                show_dialogue(ACTOR_SCENE_1_1_TEXT);
+                                #else
+                                #ifdef ACTOR_SCENE_1_TEXT
+                                show_dialogue(ACTOR_SCENE_1_TEXT);
+                                #endif
+                                #endif
+                            } else if (i == 2) {
+                                #ifdef ACTOR_SCENE_1_2_TEXT
+                                show_dialogue(ACTOR_SCENE_1_2_TEXT);
+                                #endif
+                            }
+                        }
+                        #ifdef HAS_SCENE_2
+                        else if (g_current_scene == 2) {
+                            if (i == 1) {
+                                #ifdef ACTOR_SCENE_2_1_TEXT
+                                show_dialogue(ACTOR_SCENE_2_1_TEXT);
+                                #else
+                                #ifdef ACTOR_SCENE_2_TEXT
+                                show_dialogue(ACTOR_SCENE_2_TEXT);
+                                #endif
+                                #endif
+                            } else if (i == 2) {
+                                #ifdef ACTOR_SCENE_2_2_TEXT
+                                show_dialogue(ACTOR_SCENE_2_2_TEXT);
+                                #endif
+                            }
+                        }
                         #endif
                     }
-                    #endif
-
-                    #ifdef HAS_ACTOR_SCENE_2
-                    if (g_current_scene == 2) {
-                        #ifdef ACTOR_SCENE_2_TEXT
-                        show_dialogue(ACTOR_SCENE_2_TEXT);
-                        #else
-                        show_dialogue("Hello!");
-                        #endif
-                    }
-                    #endif
+                    break;
                 }
             }
         }

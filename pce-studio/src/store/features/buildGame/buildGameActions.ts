@@ -91,7 +91,7 @@ const buildGame =
 const deleteBuildCache = (): AppThunk<Promise<void>> => async (dispatch) => {
   await API.app.deleteBuildCache();
   dispatch(consoleActions.clearConsole());
-  dispatch(consoleActions.stdOut({ text: "Cleared GB Studio caches" }));
+  dispatch(consoleActions.stdOut({ text: "Cleared PCE Studio caches" }));
 };
 
 const ejectEngine = (): AppThunk => () => {

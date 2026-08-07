@@ -102,10 +102,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   }
 
   // Look for project files (.gbsproj or project directory)
+  let projectData: any = (typeof projectDirPath === "object" && projectDirPath !== null) ? projectDirPath : {};
   const projectJsonPath = pathModule.join(projDir, "project.gbsproj");
-  let projectData: any = {};
   if (fs.existsSync(projectJsonPath)) {
-    projectData = await fs.readJson(projectJsonPath);
+    try {
+      const diskData = await fs.readJson(projectJsonPath);
+      projectData = { ...diskData, ...projectData };
+    } catch (e) { }
   }
 
   // Load settings.gbsres if present
@@ -140,7 +143,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const allSprites = [...(projectData.sprites || []), ...spritesFromGbsres];
 
   // Parse scene and actor gbsres files
-  const scenesFromGbsres: any[] = [];
+  let scenesFromGbsres: any[] = [];
   const scenesDir = pathModule.join(projDir, "project", "scenes");
   if (fs.existsSync(scenesDir)) {
     const sceneDirs = fs.readdirSync(scenesDir);
@@ -176,7 +179,83 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
   }
 
-  const allScenes = scenesFromGbsres.length > 0 ? scenesFromGbsres : (projectData.scenes || []);
+  if (settingsGbsData && Array.isArray(settingsGbsData.sceneIds) && scenesFromGbsres.length > 0) {
+    const sceneMap = new Map<string, any>();
+    scenesFromGbsres.forEach((sc: any) => {
+      if (sc.id) sceneMap.set(sc.id, sc);
+    });
+    const orderedScenes: any[] = [];
+    settingsGbsData.sceneIds.forEach((scId: string) => {
+      if (sceneMap.has(scId)) {
+        orderedScenes.push(sceneMap.get(scId));
+        sceneMap.delete(scId);
+      }
+    });
+    sceneMap.forEach((sc) => orderedScenes.push(sc));
+    if (orderedScenes.length > 0) {
+      scenesFromGbsres = orderedScenes;
+    }
+  } else if (scenesFromGbsres.length > 0) {
+    scenesFromGbsres.sort((a, b) => {
+      const numA = parseInt((a.name || "").replace(/\D/g, "")) || 0;
+      const numB = parseInt((b.name || "").replace(/\D/g, "")) || 0;
+      if (numA && numB) return numA - numB;
+      return 0;
+    });
+  }
+
+  const allScenes = (projectData.scenes && projectData.scenes.length > 0)
+    ? projectData.scenes
+    : (scenesFromGbsres.length > 0 ? scenesFromGbsres : []);
+
+  // Parse background gbsres files and projectData.backgrounds
+  const bgsFromGbsres: any[] = [];
+  const projectBgResDir = pathModule.join(projDir, "project", "backgrounds");
+  const bgAssetsResDir = pathModule.join(projDir, "assets", "backgrounds");
+  for (const bDir of [projectBgResDir, bgAssetsResDir]) {
+    if (fs.existsSync(bDir)) {
+      const gbsFiles = fs.readdirSync(bDir).filter((f: any) => typeof f === "string" && f.endsWith(".gbsres"));
+      for (const gf of gbsFiles) {
+        try {
+          const json = fs.readJsonSync(pathModule.join(bDir, gf));
+          if (json && json.id && json.filename) {
+            bgsFromGbsres.push(json);
+          }
+        } catch (e) { }
+      }
+    }
+  }
+
+  const allBackgrounds = [...(projectData.backgrounds || []), ...bgsFromGbsres];
+  const bgIdMap: Record<string, string> = {};
+  allBackgrounds.forEach((bg: any) => {
+    if (bg && bg.id && bg.filename) {
+      bgIdMap[bg.id] = bg.filename;
+    }
+    if (bg && bg.id && bg.name) {
+      const fn = bg.filename || (bg.name.endsWith(".png") ? bg.name : `${bg.name}.png`);
+      bgIdMap[bg.id] = fn;
+      bgIdMap[bg.name] = fn;
+    }
+  });
+
+  const bgAssetsDir = pathModule.join(outputAssetsDir, "backgrounds");
+  const projectBgDir = pathModule.join(projDir, "assets", "backgrounds");
+  const bgDirsToScan = [projectBgDir, bgAssetsDir];
+
+  for (const bDir of bgDirsToScan) {
+    if (fs.existsSync(bDir)) {
+      const gbsresFiles = fs.readdirSync(bDir).filter((f: any) => typeof f === "string" && f.endsWith(".gbsres"));
+      for (const gbf of gbsresFiles) {
+        try {
+          const bJson = fs.readJsonSync(pathModule.join(bDir, gbf));
+          if (bJson && bJson.id && bJson.filename) {
+            bgIdMap[bJson.id] = bJson.filename;
+          }
+        } catch (e) { }
+      }
+    }
+  }
 
   // Load platformer settings from project/engine_field_values.gbsres if present
   let engineFieldValuesMap: Record<string, any> = {};
@@ -204,51 +283,52 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const platMaxFallSubpx = Math.max(4, Math.round(rawMaxFall / 512));
   const platJumpVelSubpx = Math.max(16, Math.round(Math.sqrt(2 * platGravitySubpx * 210)));
 
-  const sc1Type: string = (allScenes[0]?.type || "TOPDOWN").toUpperCase();
-  const sc1TypeNum = SCENE_TYPE_MAP[sc1Type] ?? SCENE_TYPE_MAP["TOPDOWN"];
+  const sceneBgFilenames: string[] = [];
+  const sceneTypeDefineList: string[] = [];
 
-  const sc2Type: string = (allScenes[1]?.type || "TOPDOWN").toUpperCase();
-  const sc2TypeNum = SCENE_TYPE_MAP[sc2Type] ?? SCENE_TYPE_MAP["TOPDOWN"];
-
-  const sceneTypeDefine = `#define SCENE_1_TYPE ${sc1TypeNum}\n#define SCENE_2_TYPE ${sc2TypeNum}\n#define SCENE_TYPE ${sc1TypeNum}\n#define PLAT_WALK_SUBPX ${platWalkSubpx}\n#define PLAT_GRAVITY ${platGravitySubpx}\n#define PLAT_JUMP_SUBPX ${platJumpVelSubpx}\n#define PLAT_MAX_FALL ${platMaxFallSubpx}\n`;
-
-  // Look for background PNGs and map backgroundId -> filename
-  const bgIdMap: Record<string, string> = {};
-  const bgAssetsDir = pathModule.join(outputAssetsDir, "backgrounds");
-  const projectBgDir = pathModule.join(projDir, "assets", "backgrounds");
-  const bgDirsToScan = [projectBgDir, bgAssetsDir];
-
-  for (const bDir of bgDirsToScan) {
-    if (fs.existsSync(bDir)) {
-      const gbsresFiles = fs.readdirSync(bDir).filter((f: any) => typeof f === "string" && f.endsWith(".gbsres"));
-      for (const gbf of gbsresFiles) {
-        try {
-          const bJson = fs.readJsonSync(pathModule.join(bDir, gbf));
-          if (bJson && bJson.id && bJson.filename) {
-            bgIdMap[bJson.id] = bJson.filename;
-          }
-        } catch (e) { }
+  const getSceneBgFilename = (scene: any, idx: number): string => {
+    if (scene) {
+      if (scene.backgroundId && bgIdMap[scene.backgroundId]) {
+        return bgIdMap[scene.backgroundId];
+      }
+      if (scene.background && typeof scene.background === "object" && scene.background.filename) {
+        return scene.background.filename;
+      }
+      if (scene.filename) {
+        return scene.filename;
       }
     }
-  }
+    const projectBgDir = pathModule.join(projDir, "assets", "backgrounds");
+    if (fs.existsSync(projectBgDir)) {
+      const pngFiles = fs.readdirSync(projectBgDir).filter((f: any) => typeof f === "string" && f.endsWith(".png"));
+      if (pngFiles.length > 0) {
+        return pngFiles[idx % pngFiles.length];
+      }
+    }
+    return "scene.png";
+  };
 
-  let scene1BgFilename = "scene.png";
-  if (allScenes[0]?.backgroundId && bgIdMap[allScenes[0].backgroundId]) {
-    scene1BgFilename = bgIdMap[allScenes[0].backgroundId];
-  }
+  allScenes.forEach((scene: any, idx: number) => {
+    const scNum = idx + 1;
+    const bgFile = getSceneBgFilename(scene, idx);
+    sceneBgFilenames.push(bgFile);
 
-  let scene2BgFilename = "scene3.png";
-  if (allScenes[1]?.backgroundId && bgIdMap[allScenes[1].backgroundId]) {
-    scene2BgFilename = bgIdMap[allScenes[1].backgroundId];
-  }
+    const scType: string = (scene.type || "TOPDOWN").toUpperCase();
+    const scTypeNum = SCENE_TYPE_MAP[scType] ?? SCENE_TYPE_MAP["TOPDOWN"];
+    sceneTypeDefineList.push(`#define SCENE_${scNum}_TYPE ${scTypeNum}`);
+    sceneTypeDefineList.push(`#define HAS_SCENE_${scNum} 1`);
+  });
+
+  const firstType = (allScenes[0]?.type || "TOPDOWN").toUpperCase();
+  const firstTypeNum = SCENE_TYPE_MAP[firstType] ?? SCENE_TYPE_MAP["TOPDOWN"];
+  const sceneTypeDefine = sceneTypeDefineList.join("\n") + `\n#define SCENE_TYPE ${firstTypeNum}\n#define PLAT_WALK_SUBPX ${platWalkSubpx}\n#define PLAT_GRAVITY ${platGravitySubpx}\n#define PLAT_JUMP_SUBPX ${platJumpVelSubpx}\n#define PLAT_MAX_FALL ${platMaxFallSubpx}\n`;
 
   // Ensure background PNGs exist in build assets/backgrounds directory
   const destBgDir = pathModule.join(buildDir, "assets", "backgrounds");
   await fs.ensureDir(destBgDir);
 
-
-
-  for (const bgFile of [scene1BgFilename, scene2BgFilename]) {
+  const uniqueBgFiles = Array.from(new Set(sceneBgFilenames));
+  for (const bgFile of uniqueBgFiles) {
     for (const bDir of bgDirsToScan) {
       const srcPng = pathModule.join(bDir, bgFile);
       if (fs.existsSync(srcPng)) {
@@ -262,6 +342,40 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       }
     }
   }
+
+  let bgDirectives = "";
+  sceneBgFilenames.forEach((bgFile, idx) => {
+    const scNum = idx + 1;
+    bgDirectives += `#incchr(bg_scene${scNum}_chr, "assets/backgrounds/${bgFile}", 0, 0, 32, 28)\n`;
+    bgDirectives += `#incpal(bg_scene${scNum}_pal, "assets/backgrounds/${bgFile}")\n`;
+    bgDirectives += `#incbat(bg_scene${scNum}_bat, "assets/backgrounds/${bgFile}", 0x1000, 32, 28)\n`;
+  });
+
+  let collisionIncludes = "";
+  allScenes.forEach((scene: any, idx: number) => {
+    const scNum = idx + 1;
+    const colFileName = `scene_${scNum}_collisions.c`;
+    const colFilePath = pathModule.join(buildDir, colFileName);
+
+    let colBytes = new Uint8Array(32 * 28);
+    if (scene.collisions && Array.isArray(scene.collisions)) {
+      const len = Math.min(colBytes.length, scene.collisions.length);
+      for (let i = 0; i < len; i++) {
+        colBytes[i] = scene.collisions[i];
+      }
+    }
+
+    const lines: string[] = [];
+    for (let i = 0; i < colBytes.length; i += 16) {
+      const chunk = Array.from(colBytes.slice(i, i + 16)).map(c => `0x${c.toString(16).padStart(2, "0").toUpperCase()}`);
+      lines.push(`  ${chunk.join(", ")}`);
+    }
+    const cContent = `#include "include/gbs_types.h"\n\nconst unsigned char scene_${scNum}_collisions[] = {\n${lines.join(",\n")}\n};\n`;
+    fs.writeFileSync(colFilePath, cContent, "utf8");
+
+    collisionIncludes += `#define HAS_SCENE_${scNum}_COLLISIONS 1\n`;
+    collisionIncludes += `#include "${colFileName}"\n`;
+  });
 
   // Look for sprite PNGs
   const spritePngFiles = fs.existsSync(pathModule.join(outputAssetsDir, "sprites"))
@@ -327,211 +441,133 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const playerStartX = parseCoord(rawStartX, 13);
   const playerStartY = parseCoord(rawStartY, 14) - (playerSprHeight16 * 16) + 8;
 
-  // Resolve scene 1 & scene 2 actors separately
+  // Dynamic actors processing for all scenes
   let actorDirectives = "";
   let actorDefines = "";
 
-  const scene1Actors = allScenes[0]?.actors || [];
-  const scene2Actors = allScenes[1]?.actors || [];
+  allScenes.forEach((scene: any, sceneIdx: number) => {
+    const sceneNum = sceneIdx + 1;
+    const sceneActors = scene.actors || [];
 
-  // Scene 1 Actor
-  if (scene1Actors.length > 0) {
-    const sc1Actor = scene1Actors[0];
-    let sc1Filename = "kidPark.png";
-    let sprObj1: any = null;
-    if (sc1Actor.spriteSheetId && allSprites.length > 0) {
-      sprObj1 = allSprites.find((s: any) => s.id === sc1Actor.spriteSheetId);
-      if (sprObj1?.filename) sc1Filename = String(sprObj1.filename);
-    }
-
-    const sc1SrcPng = pathModule.join(outputAssetsDir, "sprites", sc1Filename);
-    const sc1DestPcx = sc1SrcPng.replace(/\.png$/i, "_sc1.pcx");
-    try {
-      let cropX = 0;
-      let cropY = 0;
-      let cropW = 16;
-      let cropH = 32;
-      let w16 = 1;
-      let h16 = 2;
-
-      if (sprObj1) {
-        const canvasW = sprObj1.canvasWidth || 16;
-        const canvasH = sprObj1.canvasHeight || 32;
-        cropW = canvasW;
-        cropH = canvasH;
-        w16 = Math.max(1, Math.min(2, Math.floor(canvasW / 16)));
-        h16 = Math.max(1, Math.min(2, Math.floor(canvasH / 16)));
-        cropX = getCropXForActor(sc1Actor, sprObj1, canvasW);
-      } else {
-        cropX = getCropXForActor(sc1Actor, null, 16);
+    sceneActors.forEach((scActor: any, aIdx: number) => {
+      const actorNum = aIdx + 1;
+      let sprFilename = "actor_animated.png";
+      let sprObj: any = null;
+      if (scActor.spriteSheetId && allSprites.length > 0) {
+        sprObj = allSprites.find((s: any) => s.id === scActor.spriteSheetId);
+        if (sprObj?.filename) sprFilename = String(sprObj.filename);
       }
 
-      const dims = convertPngToPcx(sc1SrcPng, sc1DestPcx, { cropX, cropY, cropW, cropH });
-      if (!sprObj1) {
-        w16 = Math.max(1, Math.min(2, Math.floor(dims.width / 16)));
-        h16 = Math.max(1, Math.min(2, Math.floor(dims.height / 16)));
+      const srcPng = pathModule.join(outputAssetsDir, "sprites", sprFilename);
+      const destPcx = srcPng.replace(/\.png$/i, `_sc${sceneNum}_${actorNum}.pcx`);
+      try {
+        let cropX = 0;
+        let cropY = 0;
+        let cropW = 16;
+        let cropH = 16;
+        let w16 = 1;
+        let h16 = 1;
+
+        if (sprObj) {
+          const canvasW = sprObj.canvasWidth || 16;
+          const canvasH = sprObj.canvasHeight || 16;
+          cropW = canvasW;
+          cropH = canvasH;
+          w16 = Math.max(1, Math.min(2, Math.floor(canvasW / 16)));
+          h16 = Math.max(1, Math.min(2, Math.floor(canvasH / 16)));
+          cropX = getCropXForActor(scActor, sprObj, canvasW);
+        } else {
+          cropX = getCropXForActor(scActor, null, 16);
+        }
+
+        const dims = convertPngToPcx(srcPng, destPcx, { cropX, cropY, cropW, cropH });
+        if (!sprObj) {
+          w16 = Math.max(1, Math.min(2, Math.floor(dims.width / 16)));
+          h16 = Math.max(1, Math.min(2, Math.floor(dims.height / 16)));
+        }
+
+        const vramSizeHex = `0x${((w16 * h16) * 0x40).toString(16).toUpperCase()}`;
+        let sprSizeConst = "SZ_16x16";
+        if (w16 === 1 && h16 === 2) sprSizeConst = "SZ_16x32";
+        else if (w16 === 2 && h16 === 1) sprSizeConst = "SZ_32x16";
+        else if (w16 === 2 && h16 === 2) sprSizeConst = "SZ_32x32";
+
+        const relPcx = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcx).replace(/\\/g, "/")}`;
+        actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_spr, "${relPcx}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc${sceneNum}_${actorNum}_pal, "${relPcx}")\n`;
+
+        if (aIdx === 0) {
+          actorDirectives += `#incspr(actor_sc${sceneNum}_spr, "${relPcx}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc${sceneNum}_pal, "${relPcx}")\n`;
+        }
+
+        const actX = parseCoord(scActor.x, 8);
+        const actY = parseCoord(scActor.y, 12) - (h16 * 16) + 8;
+        let textDef = "";
+        const actText = extractActorText(scActor);
+        if (actText) {
+          const cleanText = actText.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
+          textDef = `#define ACTOR_SCENE_${sceneNum}_${actorNum}_TEXT "${cleanText}"\n`;
+          if (aIdx === 0) textDef += `#define ACTOR_SCENE_${sceneNum}_TEXT "${cleanText}"\n`;
+        }
+        actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum}_${actorNum} 1\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_SPRITE_SIZE ${sprSizeConst}\n${textDef}`;
+
+        if (aIdx === 0) {
+          actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum} 1\n#define ACTOR_SCENE_${sceneNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_SPRITE_SIZE ${sprSizeConst}\n`;
+        }
+      } catch (e) {
+        console.error(`Error processing Scene ${sceneNum} actor ${actorNum} sprite:`, e);
       }
-
-      const vramSizeHex = `0x${((w16 * h16) * 0x40).toString(16).toUpperCase()}`;
-      let sprSizeConst = "SZ_16x16";
-      if (w16 === 1 && h16 === 2) sprSizeConst = "SZ_16x32";
-      else if (w16 === 2 && h16 === 1) sprSizeConst = "SZ_32x16";
-      else if (w16 === 2 && h16 === 2) sprSizeConst = "SZ_32x32";
-
-      const relPcx = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), sc1DestPcx).replace(/\\/g, "/")}`;
-      actorDirectives += `#incspr(actor_sc1_spr, "${relPcx}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc1_pal, "${relPcx}")\n`;
-
-      const actX = parseCoord(sc1Actor.x, 14);
-      const actY = parseCoord(sc1Actor.y, 12) - (h16 * 16) + 8;
-      let textDef1 = "";
-      const sc1Text = extractActorText(sc1Actor);
-      if (sc1Text) {
-        const cleanText = sc1Text.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
-        textDef1 = `#define ACTOR_SCENE_1_TEXT "${cleanText}"\n`;
-      }
-      actorDefines += `#define HAS_ACTOR_SCENE_1 1\n#define ACTOR_SCENE_1_X ${actX}\n#define ACTOR_SCENE_1_Y ${actY}\n#define ACTOR_SCENE_1_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_1_SPRITE_SIZE ${sprSizeConst}\n${textDef1}`;
-    } catch (e) {
-      console.error("Error processing Scene 1 actor sprite:", e);
-    }
-  }
-
-  // Scene 2 Actor
-  if (scene2Actors.length > 0) {
-    const sc2Actor = scene2Actors[0];
-    let sc2Filename = "actor.png";
-    let sprObj2: any = null;
-    if (sc2Actor.spriteSheetId && allSprites.length > 0) {
-      sprObj2 = allSprites.find((s: any) => s.id === sc2Actor.spriteSheetId);
-      if (sprObj2?.filename) sc2Filename = String(sprObj2.filename);
-    }
-
-    const sc2SrcPng = pathModule.join(outputAssetsDir, "sprites", sc2Filename);
-    const sc2DestPcx = sc2SrcPng.replace(/\.png$/i, "_sc2.pcx");
-    try {
-      let cropX = 0;
-      let cropY = 0;
-      let cropW = 16;
-      let cropH = 16;
-      let w16 = 1;
-      let h16 = 1;
-
-      if (sprObj2) {
-        const canvasW = sprObj2.canvasWidth || 16;
-        const canvasH = sprObj2.canvasHeight || 16;
-        cropW = canvasW;
-        cropH = canvasH;
-        w16 = Math.max(1, Math.min(2, Math.floor(canvasW / 16)));
-        h16 = Math.max(1, Math.min(2, Math.floor(canvasH / 16)));
-        cropX = getCropXForActor(sc2Actor, sprObj2, canvasW);
-      } else {
-        cropX = getCropXForActor(sc2Actor, null, 16);
-      }
-
-      const dims = convertPngToPcx(sc2SrcPng, sc2DestPcx, { cropX, cropY, cropW, cropH });
-      if (!sprObj2) {
-        w16 = Math.max(1, Math.min(2, Math.floor(dims.width / 16)));
-        h16 = Math.max(1, Math.min(2, Math.floor(dims.height / 16)));
-      }
-
-      const vramSizeHex = `0x${((w16 * h16) * 0x40).toString(16).toUpperCase()}`;
-      let sprSizeConst = "SZ_16x16";
-      if (w16 === 1 && h16 === 2) sprSizeConst = "SZ_16x32";
-      else if (w16 === 2 && h16 === 1) sprSizeConst = "SZ_32x16";
-      else if (w16 === 2 && h16 === 2) sprSizeConst = "SZ_32x32";
-
-      const relPcx = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), sc2DestPcx).replace(/\\/g, "/")}`;
-      actorDirectives += `#incspr(actor_sc2_spr, "${relPcx}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc2_pal, "${relPcx}")\n`;
-
-      const actX = parseCoord(sc2Actor.x, 4);
-      const actY = parseCoord(sc2Actor.y, 22) - (h16 * 16) + 8;
-      let textDef2 = "";
-      const sc2Text = extractActorText(sc2Actor);
-      if (sc2Text) {
-        const cleanText = sc2Text.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
-        textDef2 = `#define ACTOR_SCENE_2_TEXT "${cleanText}"\n`;
-      }
-      actorDefines += `#define HAS_ACTOR_SCENE_2 1\n#define ACTOR_SCENE_2_X ${actX}\n#define ACTOR_SCENE_2_Y ${actY}\n#define ACTOR_SCENE_2_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_2_SPRITE_SIZE ${sprSizeConst}\n${textDef2}`;
-    } catch (e) {
-      console.error("Error processing Scene 2 actor sprite:", e);
-    }
-  }
-
-  // Resolve Triggers
-  let triggerDefines = "";
-  const scene1Triggers = allScenes[0]?.triggers || [];
-  const scene2Triggers = allScenes[1]?.triggers || [];
-
-  let triggerIndex = 1;
-
-  const scene1Id = allScenes[0]?.id;
-  const scene2Id = allScenes[1]?.id;
-
-  const resolveTargetScene = (scId: string, defaultSceneNum: number) => {
-    if (scId && scId === scene1Id) return 1;
-    if (scId && scId === scene2Id) return 2;
-    return defaultSceneNum;
-  };
-
-  scene1Triggers.forEach((tr: any) => {
-    let targetScene = 2;
-    let targetX = 16 * 8;
-    let targetY = 16 * 8;
-
-    if (tr.script && tr.script.length > 0) {
-      const switchCmd = tr.script.find((c: any) => c.command === "EVENT_SWITCH_SCENE");
-      if (switchCmd && switchCmd.args) {
-        targetScene = resolveTargetScene(switchCmd.args.sceneId, 2);
-        targetX = parseCoord(switchCmd.args.x, 16);
-        targetY = parseCoord(switchCmd.args.y, 16);
-      }
-    }
-
-    const tx = parseCoord(tr.x, 0);
-    const ty = parseCoord(tr.y, 0);
-    const tw = parseCoord(tr.width, 2);
-    const th = parseCoord(tr.height, 2);
-
-    triggerDefines += `#define HAS_TRIGGER_${triggerIndex} 1\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_SCENE 1\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_X ${tx}\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_Y ${ty}\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_W ${tw}\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_H ${th}\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_SCENE ${targetScene}\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_X ${targetX}\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_Y ${targetY}\n`;
-    triggerIndex++;
+    });
   });
 
-  scene2Triggers.forEach((tr: any) => {
-    let targetScene = 1;
-    let targetX = 19 * 8;
-    let targetY = 7 * 8;
-
-    if (tr.script && tr.script.length > 0) {
-      const switchCmd = tr.script.find((c: any) => c.command === "EVENT_SWITCH_SCENE");
-      if (switchCmd && switchCmd.args) {
-        targetScene = resolveTargetScene(switchCmd.args.sceneId, 1);
-        targetX = parseCoord(switchCmd.args.x, 19);
-        targetY = parseCoord(switchCmd.args.y, 7);
-      }
+  // Resolve Triggers
+  const sceneIdToNum: Record<string, number> = {};
+  allScenes.forEach((scene: any, idx: number) => {
+    if (scene.id) {
+      sceneIdToNum[scene.id] = idx + 1;
     }
+  });
 
-    const tx = parseCoord(tr.x, 0);
-    const ty = parseCoord(tr.y, 0);
-    const tw = parseCoord(tr.width, 2);
-    const th = parseCoord(tr.height, 2);
+  let triggerDefines = "";
+  let triggerIndex = 1;
 
-    triggerDefines += `#define HAS_TRIGGER_${triggerIndex} 1\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_SCENE 2\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_X ${tx}\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_Y ${ty}\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_W ${tw}\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_H ${th}\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_SCENE ${targetScene}\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_X ${targetX}\n`;
-    triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_Y ${targetY}\n`;
-    triggerIndex++;
+  allScenes.forEach((scene: any, sceneIdx: number) => {
+    const sceneNum = sceneIdx + 1;
+    const sceneTriggers = scene.triggers || [];
+
+    sceneTriggers.forEach((tr: any) => {
+      let targetScene = sceneNum === 1 ? 2 : 1;
+      let targetX = 16 * 8;
+      let targetY = (16 * 8) - (playerSprHeight16 * 16) + 8;
+
+      if (tr.script && tr.script.length > 0) {
+        const switchCmd = tr.script.find((c: any) => c.command === "EVENT_SWITCH_SCENE");
+        if (switchCmd && switchCmd.args) {
+          if (switchCmd.args.sceneId && sceneIdToNum[switchCmd.args.sceneId]) {
+            targetScene = sceneIdToNum[switchCmd.args.sceneId];
+          }
+          const rawX = parseCoord(switchCmd.args.x, 16) / 8;
+          const rawY = parseCoord(switchCmd.args.y, 16) / 8;
+          targetX = rawX * 8;
+          targetY = (rawY * 8) - (playerSprHeight16 * 16) + 8;
+        }
+      }
+
+      const tx = parseCoord(tr.x, 0);
+      const ty = parseCoord(tr.y, 0);
+      const tw = parseCoord(tr.width, 2);
+      const th = parseCoord(tr.height, 2);
+
+      triggerDefines += `#define HAS_TRIGGER_${triggerIndex} 1\n`;
+      triggerDefines += `#define TRIGGER_${triggerIndex}_SCENE ${sceneNum}\n`;
+      triggerDefines += `#define TRIGGER_${triggerIndex}_X ${tx}\n`;
+      triggerDefines += `#define TRIGGER_${triggerIndex}_Y ${ty}\n`;
+      triggerDefines += `#define TRIGGER_${triggerIndex}_W ${tw}\n`;
+      triggerDefines += `#define TRIGGER_${triggerIndex}_H ${th}\n`;
+      triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_SCENE ${targetScene}\n`;
+      triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_X ${targetX}\n`;
+      triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_Y ${targetY}\n`;
+      triggerIndex++;
+    });
   });
 
   // Look for music tracks (.uge files)
@@ -644,26 +680,18 @@ ${sceneTypeDefine}
 #incspr(player_spr, "${playerPcxRelativePath}", 0, 0, ${playerSprWidth16}, ${playerSprHeight16})
 #incpal(player_pal, "${playerPcxRelativePath}")
 
-#incchr(bg_scene1_chr, "assets/backgrounds/${scene1BgFilename}", 0, 0, 32, 28)
-#incpal(bg_scene1_pal, "assets/backgrounds/${scene1BgFilename}")
-#incbat(bg_scene1_bat, "assets/backgrounds/${scene1BgFilename}", 0x1000, 32, 28)
-
-#incchr(bg_scene2_chr, "assets/backgrounds/${scene2BgFilename}", 0, 0, 32, 28)
-#incpal(bg_scene2_pal, "assets/backgrounds/${scene2BgFilename}")
-#incbat(bg_scene2_bat, "assets/backgrounds/${scene2BgFilename}", 0x1000, 32, 28)
+${bgDirectives}
 
 ${actorDirectives}
 
 #define PLAYER_START_X ${playerStartX}
 #define PLAYER_START_Y ${playerStartY}
-#define HAS_SCENE_2 1
 ${hasMusicDef}
 
 ${actorDefines}
 ${triggerDefines}
 
-#include "scene_1_collisions.c"
-#include "scene_2_collisions.c"
+${collisionIncludes}
 #include "src/pce_system.c"
 #include "src/pce_sound.c"
 ${musicIncludes}

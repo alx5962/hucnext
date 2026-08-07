@@ -261,6 +261,7 @@ if (isDevMode) {
 export const createSplash = async (forceTab?: SplashTab) => {
   // Create the browser window.
   splashWindow = new BrowserWindow({
+    title: "PCE Studio",
     width: 640,
     height: 430,
     useContentSize: true,
@@ -300,6 +301,7 @@ export const createSplash = async (forceTab?: SplashTab) => {
 export const createPreferences = async () => {
   // Create the browser window.
   preferencesWindow = new BrowserWindow({
+    title: "PCE Studio",
     width: 600,
     height: 400,
     resizable: false,
@@ -331,6 +333,7 @@ export const createPreferences = async () => {
 
 export const createPluginsWindow = async () => {
   pluginsWindow = new BrowserWindow({
+    title: "PCE Studio",
     width: 600,
     height: 700,
     resizable: false,
@@ -367,6 +370,7 @@ export const createProjectWindow = async () => {
 
   // Create the browser window.
   projectWindow = new BrowserWindow({
+    title: "PCE Studio",
     x: projectWindowState.x,
     y: projectWindowState.y,
     width: Math.max(900, projectWindowState.width),
@@ -427,7 +431,7 @@ export const createProjectWindow = async () => {
 
   projectWindow.on("page-title-updated", (e, title) => {
     documentName = title
-      .replace(/^GB Studio -/, "")
+      .replace(/^(GB|PCE) Studio -/, "")
       .replace(/\(modified\)$/, "")
       .trim();
   });
