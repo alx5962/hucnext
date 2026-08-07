@@ -80,18 +80,20 @@ async function runTestBuild() {
   const sc2CContent = `#include "include/gbs_types.h"\n\nconst unsigned char scene_2_collisions[] = {\n${lines2.join(",\n")}\n};\n`;
   fs.writeFileSync(path.join(buildDir, "scene_2_collisions.c"), sc2CContent, "utf8");
 
-  const ugeFile = path.resolve(__dirname, "../appData/templates/gbs2/assets/music/Rulz_Intro.uge");
-  if (fs.existsSync(ugeFile)) {
-    const { loadUGESong, exportToC } = require("../src/shared/lib/uge/ugeHelper");
-    const ugeBuf = fs.readFileSync(ugeFile);
-    const song = loadUGESong(ugeBuf);
-    if (song) {
-      const musicC = exportToC(song, "song_0");
-      const musicDir = path.join(buildDir, "music");
-      fs.mkdirSync(musicDir, { recursive: true });
-      fs.writeFileSync(path.join(musicDir, "song_0.c"), musicC, "utf8");
+  try {
+    const ugeFile = path.resolve(__dirname, "../appData/templates/gbs2/assets/music/Rulz_Intro.uge");
+    if (fs.existsSync(ugeFile)) {
+      const { loadUGESong, exportToC } = require("../src/shared/lib/uge/ugeHelper");
+      const ugeBuf = fs.readFileSync(ugeFile);
+      const song = loadUGESong(ugeBuf);
+      if (song) {
+        const musicC = exportToC(song, "song_0");
+        const musicDir = path.join(buildDir, "music");
+        fs.mkdirSync(musicDir, { recursive: true });
+        fs.writeFileSync(path.join(musicDir, "song_0.c"), musicC, "utf8");
+      }
     }
-  }
+  } catch (e) { }
 
   fs.writeFileSync(path.join(buildDir, "game_includes.h"), `#ifndef GAME_INCLUDES_H\n#define GAME_INCLUDES_H\n#define HAS_MUSIC_DATA 1\n#include "include/gbs_types.h"\n#include "scene_1_collisions.c"\n#include "scene_2_collisions.c"\n#include "music/song_0.c"\n#endif\n`, "utf8");
 
@@ -125,10 +127,11 @@ async function runTestBuild() {
 #define HAS_SCENE_2 1
 
 #define HAS_ACTOR_SCENE_1 1
-#define ACTOR_SCENE_1_X 152
-#define ACTOR_SCENE_1_Y 40
+#define ACTOR_SCENE_1_X 112
+#define ACTOR_SCENE_1_Y 72
 #define ACTOR_SCENE_1_VRAM_SIZE 0x80
 #define ACTOR_SCENE_1_SPRITE_SIZE SZ_16x32
+#define ACTOR_SCENE_1_TEXT "yo man"
 
 #define HAS_ACTOR_SCENE_2 1
 #define ACTOR_SCENE_2_X 32
@@ -160,6 +163,9 @@ async function runTestBuild() {
 #define MAIN_C
 
 #include "include/engine.h"
+
+#include "scene_1_collisions.c"
+#include "scene_2_collisions.c"
 #include "src/pce_system.c"
 #include "src/pce_sound.c"
 #include "src/actor.c"
@@ -168,7 +174,6 @@ async function runTestBuild() {
 #include "src/trigger.c"
 #include "src/vm.c"
 #include "src/engine.c"
-#include "game_includes.h"
 
 main() {
     engine_run();

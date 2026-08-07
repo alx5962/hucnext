@@ -1,10 +1,9 @@
 import fs from "fs-extra";
 import Path from "path";
-import convertPngToPcxDefault, { convertPngToPcx as convertPngToPcxFn } from "./convertPngToPcx";
+import { convertPngToPcx } from "./convertPngToPcx";
 import convertToIndexedPngDefault, { convertToIndexedPng as convertToIndexedPngFn } from "./indexedPngWriter";
 
 const pathModule = (Path as any).default || Path;
-const convertPngToPcx = (convertPngToPcxDefault || convertPngToPcxFn) as typeof convertPngToPcxFn;
 const convertToIndexedPng = (convertToIndexedPngDefault || convertToIndexedPngFn) as typeof convertToIndexedPngFn;
 
 /**
@@ -19,6 +18,33 @@ const SCENE_TYPE_MAP: Record<string, number> = {
   POINTNCLICK: 4,
   LOGO:        5,
 };
+
+function extractActorText(actor: any): string {
+  if (!actor || !actor.script || !Array.isArray(actor.script)) return "";
+
+  const findTextInEvents = (events: any[]): string => {
+    for (const evt of events) {
+      if (!evt) continue;
+      if (evt.command === "EVENT_TEXT" || evt.command === "EVENT_TEXT_DRAW" || evt.command === "EVENT_DIALOGUE") {
+        const textVal = evt.args?.text;
+        if (typeof textVal === "string") return textVal;
+        if (Array.isArray(textVal) && typeof textVal[0] === "string") return textVal[0];
+        if (typeof textVal === "object" && textVal !== null && textVal.value) return String(textVal.value);
+      }
+      if (evt.children) {
+        for (const key of Object.keys(evt.children)) {
+          if (Array.isArray(evt.children[key])) {
+            const res = findTextInEvents(evt.children[key]);
+            if (res) return res;
+          }
+        }
+      }
+    }
+    return "";
+  };
+
+  return findTextInEvents(actor.script);
+}
 
 function getCropXForActor(actor: any, sprObj: any, canvasW: number): number {
   try {
@@ -277,6 +303,14 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
   }
 
+  const parseCoord = (val: any, fallback: number) => {
+    if (typeof val === "number" && !isNaN(val)) return Math.floor(val) * 8;
+    if (typeof val === "object" && val !== null && typeof val.value === "number" && !isNaN(val.value)) return Math.floor(val.value) * 8;
+    if (typeof val === "object" && val !== null && typeof val.x === "number" && !isNaN(val.x)) return Math.floor(val.x) * 8;
+    if (typeof val === "string" && !isNaN(Number(val))) return Math.floor(Number(val)) * 8;
+    return fallback * 8;
+  };
+
   // Resolve player start position
   const rawStartX = (typeof projectDirPath === "object" && projectDirPath?.settings?.startX !== undefined)
     ? projectDirPath.settings.startX
@@ -290,8 +324,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       ? settingsGbsData.startY
       : (projectData?.settings?.startY ?? 14));
 
-  const playerStartX = rawStartX * 8;
-  const playerStartY = rawStartY * 8;
+  const playerStartX = parseCoord(rawStartX, 13);
+  const playerStartY = parseCoord(rawStartY, 14) - (playerSprHeight16 * 16) + 8;
 
   // Resolve scene 1 & scene 2 actors separately
   let actorDirectives = "";
@@ -347,9 +381,15 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       const relPcx = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), sc1DestPcx).replace(/\\/g, "/")}`;
       actorDirectives += `#incspr(actor_sc1_spr, "${relPcx}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc1_pal, "${relPcx}")\n`;
 
-      const actX = (sc1Actor.x ?? 19) * 8;
-      const actY = (sc1Actor.y ?? 5) * 8;
-      actorDefines += `#define HAS_ACTOR_SCENE_1 1\n#define ACTOR_SCENE_1_X ${actX}\n#define ACTOR_SCENE_1_Y ${actY}\n#define ACTOR_SCENE_1_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_1_SPRITE_SIZE ${sprSizeConst}\n`;
+      const actX = parseCoord(sc1Actor.x, 14);
+      const actY = parseCoord(sc1Actor.y, 12) - (h16 * 16) + 8;
+      let textDef1 = "";
+      const sc1Text = extractActorText(sc1Actor);
+      if (sc1Text) {
+        const cleanText = sc1Text.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
+        textDef1 = `#define ACTOR_SCENE_1_TEXT "${cleanText}"\n`;
+      }
+      actorDefines += `#define HAS_ACTOR_SCENE_1 1\n#define ACTOR_SCENE_1_X ${actX}\n#define ACTOR_SCENE_1_Y ${actY}\n#define ACTOR_SCENE_1_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_1_SPRITE_SIZE ${sprSizeConst}\n${textDef1}`;
     } catch (e) {
       console.error("Error processing Scene 1 actor sprite:", e);
     }
@@ -402,9 +442,15 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       const relPcx = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), sc2DestPcx).replace(/\\/g, "/")}`;
       actorDirectives += `#incspr(actor_sc2_spr, "${relPcx}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc2_pal, "${relPcx}")\n`;
 
-      const actX = (sc2Actor.x ?? 4) * 8;
-      const actY = (sc2Actor.y ?? 22) * 8;
-      actorDefines += `#define HAS_ACTOR_SCENE_2 1\n#define ACTOR_SCENE_2_X ${actX}\n#define ACTOR_SCENE_2_Y ${actY}\n#define ACTOR_SCENE_2_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_2_SPRITE_SIZE ${sprSizeConst}\n`;
+      const actX = parseCoord(sc2Actor.x, 4);
+      const actY = parseCoord(sc2Actor.y, 22) - (h16 * 16) + 8;
+      let textDef2 = "";
+      const sc2Text = extractActorText(sc2Actor);
+      if (sc2Text) {
+        const cleanText = sc2Text.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
+        textDef2 = `#define ACTOR_SCENE_2_TEXT "${cleanText}"\n`;
+      }
+      actorDefines += `#define HAS_ACTOR_SCENE_2 1\n#define ACTOR_SCENE_2_X ${actX}\n#define ACTOR_SCENE_2_Y ${actY}\n#define ACTOR_SCENE_2_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_2_SPRITE_SIZE ${sprSizeConst}\n${textDef2}`;
     } catch (e) {
       console.error("Error processing Scene 2 actor sprite:", e);
     }
@@ -416,12 +462,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const scene2Triggers = allScenes[1]?.triggers || [];
 
   let triggerIndex = 1;
-  const parseCoord = (val: any, fallback: number) => {
-    if (typeof val === "number" && !isNaN(val)) return Math.floor(val) * 8;
-    if (typeof val === "object" && val !== null && typeof val.value === "number" && !isNaN(val.value)) return Math.floor(val.value) * 8;
-    if (typeof val === "string" && !isNaN(Number(val))) return Math.floor(Number(val)) * 8;
-    return fallback * 8;
-  };
 
   const scene1Id = allScenes[0]?.id;
   const scene2Id = allScenes[1]?.id;
@@ -446,10 +486,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       }
     }
 
-    const tx = (tr.x ?? 0) * 8;
-    const ty = (tr.y ?? 0) * 8;
-    const tw = (tr.width ?? 2) * 8;
-    const th = (tr.height ?? 2) * 8;
+    const tx = parseCoord(tr.x, 0);
+    const ty = parseCoord(tr.y, 0);
+    const tw = parseCoord(tr.width, 2);
+    const th = parseCoord(tr.height, 2);
 
     triggerDefines += `#define HAS_TRIGGER_${triggerIndex} 1\n`;
     triggerDefines += `#define TRIGGER_${triggerIndex}_SCENE 1\n`;
@@ -477,10 +517,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       }
     }
 
-    const tx = (tr.x ?? 0) * 8;
-    const ty = (tr.y ?? 0) * 8;
-    const tw = (tr.width ?? 2) * 8;
-    const th = (tr.height ?? 2) * 8;
+    const tx = parseCoord(tr.x, 0);
+    const ty = parseCoord(tr.y, 0);
+    const tw = parseCoord(tr.width, 2);
+    const th = parseCoord(tr.height, 2);
 
     triggerDefines += `#define HAS_TRIGGER_${triggerIndex} 1\n`;
     triggerDefines += `#define TRIGGER_${triggerIndex}_SCENE 2\n`;

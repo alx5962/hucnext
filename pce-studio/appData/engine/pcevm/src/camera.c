@@ -1,3 +1,4 @@
+#define PCE_CAMERA_C 1
 #include "include/camera.h"
 
 int g_cam_x;

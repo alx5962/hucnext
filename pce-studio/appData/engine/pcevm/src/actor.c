@@ -1,3 +1,4 @@
+#define PCE_ACTOR_C 1
 #include "include/actor.h"
 
 int g_actor_active[PCE_MAX_ACTORS];

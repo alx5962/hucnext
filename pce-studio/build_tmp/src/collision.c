@@ -1,3 +1,4 @@
+#define PCE_COLLISION_C 1
 #include "include/collision.h"
 
 unsigned char *g_collision_map;

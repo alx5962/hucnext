@@ -21,6 +21,7 @@
 #define SZ_32x32 0x11
 #endif
 
+#ifndef PCE_ACTOR_C
 extern int g_actor_active[];
 extern int g_actor_x[];
 extern int g_actor_y[];
@@ -31,6 +32,7 @@ extern int g_actor_dir[];
 extern int g_actor_anim_frame[];
 extern int g_actor_sprite_handle[];
 extern int g_actor_count;
+#endif
 
 void actor_init(void);
 int actor_spawn(int x, int y, int tile_id, int palette, int size);

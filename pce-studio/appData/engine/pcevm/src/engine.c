@@ -75,6 +75,11 @@ void load_scene(int scene_num, int player_x, int player_y) {
     }
 }
 
+const unsigned int font_pal[16] = {
+    0x000, 0x1FF, 0x1FF, 0x1FF, 0x1FF, 0x1FF, 0x1FF, 0x1FF,
+    0x000, 0x1FF, 0x1FF, 0x1FF, 0x1FF, 0x1FF, 0x1FF, 0x1FF
+};
+
 void engine_init(void) {
     pce_sys_init();
     pce_sound_init();
@@ -85,6 +90,10 @@ void engine_init(void) {
     camera_init();
     trigger_init();
     vm_init();
+
+    set_color(15, 0x1FF);
+    set_font_color(0, 15);
+    load_default_font();
 
     #ifdef HAS_TRIGGER_1
     trigger_add(TRIGGER_1_SCENE, TRIGGER_1_X, TRIGGER_1_Y, TRIGGER_1_W, TRIGGER_1_H, TRIGGER_1_TARGET_SCENE, TRIGGER_1_TARGET_X, TRIGGER_1_TARGET_Y, (void*)0);
@@ -112,11 +121,84 @@ void engine_init(void) {
     load_scene(1, PLAYER_START_X, PLAYER_START_Y);
 }
 
+int g_dialogue_active = 0;
+int g_dialogue_timer = 0;
+
+void show_dialogue(const char* msg) {
+    if (!msg || !*msg) return;
+    g_dialogue_active = 1;
+    g_dialogue_timer = 180;
+    set_color(15, 0x1FF);
+    set_font_color(0, 15);
+    put_string("                    ", 6, 22);
+    put_string("                    ", 6, 23);
+    put_string(msg, 6, 22);
+}
+
+void hide_dialogue(void) {
+    if (g_dialogue_active) {
+        g_dialogue_active = 0;
+        g_dialogue_timer = 0;
+        if (g_current_scene == 1) {
+            load_background(bg_scene1_chr, bg_scene1_pal, bg_scene1_bat, 32, 28);
+        }
+        #ifdef HAS_SCENE_2
+        else if (g_current_scene == 2) {
+            load_background(bg_scene2_chr, bg_scene2_pal, bg_scene2_bat, 32, 28);
+        }
+        #endif
+    }
+}
+
+static unsigned int g_last_input = 0;
+
+void check_actor_interaction(unsigned int input) {
+    int dx, dy;
+    unsigned int pressed;
+    pressed = input & ~g_last_input;
+    g_last_input = input;
+
+    if (pressed & (JOY_I | JOY_II)) {
+        if (g_actor_count > 1 && g_actor_active[1]) {
+            dx = g_actor_x[0] - g_actor_x[1];
+            dy = g_actor_y[0] - g_actor_y[1];
+            if (dx < 0) dx = -dx;
+            if (dy < 0) dy = -dy;
+            if (dx <= 48 && dy <= 48) {
+                if (g_dialogue_active) {
+                    hide_dialogue();
+                } else {
+                    #ifdef HAS_ACTOR_SCENE_1
+                    if (g_current_scene == 1) {
+                        #ifdef ACTOR_SCENE_1_TEXT
+                        show_dialogue(ACTOR_SCENE_1_TEXT);
+                        #else
+                        show_dialogue("Hello!");
+                        #endif
+                    }
+                    #endif
+
+                    #ifdef HAS_ACTOR_SCENE_2
+                    if (g_current_scene == 2) {
+                        #ifdef ACTOR_SCENE_2_TEXT
+                        show_dialogue(ACTOR_SCENE_2_TEXT);
+                        #else
+                        show_dialogue("Hello!");
+                        #endif
+                    }
+                    #endif
+                }
+            }
+        }
+    }
+}
+
 void update_topdown(void) {
     unsigned int input;
     int dx, dy, new_x, new_y;
 
     input = pce_sys_read_joy(0);
+    check_actor_interaction(input);
     if (g_actor_count > 0 && g_actor_active[0]) {
         dx = 0;
         dy = 0;
@@ -146,6 +228,7 @@ void update_platform(void) {
     int new_sub_y, new_y;
 
     input = pce_sys_read_joy(0);
+    check_actor_interaction(input);
     if (g_actor_count > 0 && g_actor_active[0]) {
         dx_sub = 0;
         if (input & JOY_LEFT)  dx_sub -= PLAT_WALK_SUBPX;
@@ -194,6 +277,7 @@ void update_adventure(void) {
     int dx, dy, new_x, new_y;
 
     input = pce_sys_read_joy(0);
+    check_actor_interaction(input);
     if (g_actor_count > 0 && g_actor_active[0]) {
         dx = 0;
         dy = 0;
@@ -225,6 +309,7 @@ void update_shmup(void) {
     g_cam_x = g_shmup_scroll_x;
 
     input = pce_sys_read_joy(0);
+    check_actor_interaction(input);
     if (g_actor_count > 0 && g_actor_active[0]) {
         dx = 0;
         dy = 0;
@@ -264,6 +349,15 @@ void update_logo(void) {
 void engine_update(void) {
     vm_step();
     pce_sound_update();
+
+    if (g_dialogue_active) {
+        if (g_dialogue_timer > 0) {
+            g_dialogue_timer--;
+            if (g_dialogue_timer == 0) {
+                hide_dialogue();
+            }
+        }
+    }
 
     if (g_current_scene_type == SCENE_TYPE_PLATFORM) {
         update_platform();

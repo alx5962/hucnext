@@ -1,3 +1,4 @@
+#define PCE_TRIGGER_C 1
 #include "include/trigger.h"
 #include "include/vm.h"
 #include "include/actor.h"
