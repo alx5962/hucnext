@@ -126,16 +126,16 @@ const ImageViewer = ({ backgroundId }: ImageViewerProps) => {
                 transform: `translate3d(0px, 0px, 0px) scale(${zoom})`,
               }}
             >
-              {colorsEnabled && background.autoColor ? (
-                <AutoColorizedImage
+              {!previewAsMono ? (
+                <img
+                  src={assetURL("backgrounds", background)}
+                  alt=""
                   width={background.width * TILE_SIZE}
                   height={background.height * TILE_SIZE}
-                  src={assetURL("backgrounds", background)}
-                  uiPalette={
-                    scene?.paletteIds?.[7] === "auto" ? undefined : palettes[7]
-                  }
-                  previewAsMono={previewAsMono}
-                  monoBGP={monoBGP}
+                  style={{
+                    imageRendering: "pixelated",
+                    pointerEvents: "none",
+                  }}
                 />
               ) : (
                 <ColorizedImage

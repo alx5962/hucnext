@@ -237,8 +237,8 @@ const SceneView = memo(({ id, index, editable }: SceneViewProps) => {
     return <></>;
   }
 
-  const sceneWidth = scene.type === "LOGO" ? 20 : scene.width;
-  const sceneHeight = scene.type === "LOGO" ? 18 : scene.height;
+  const sceneWidth = scene.width;
+  const sceneHeight = scene.height;
 
   const scenePxWidth = sceneWidth * TILE_SIZE;
   const scenePxHeight = sceneHeight * TILE_SIZE;

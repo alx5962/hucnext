@@ -13,7 +13,7 @@ typedef struct {
     unsigned char* script;
 } pce_trigger_t;
 
-#define MAX_TRIGGERS 16
+#define MAX_TRIGGERS 128
 
 #ifndef PCE_TRIGGER_C
 extern pce_trigger_t g_triggers[MAX_TRIGGERS];

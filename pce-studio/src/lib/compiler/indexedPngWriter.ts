@@ -61,7 +61,10 @@ export function convertToIndexedPng(srcPath: string, destPath: string): void {
     let minDiff = Infinity;
     for (let i = 0; i < palette.length; i++) {
       const [pr, pg, pb] = palette[i];
-      const diff = Math.abs(r - pr) + Math.abs(g - pg) + Math.abs(b - pb);
+      const dr = r - pr;
+      const dg = g - pg;
+      const db = b - pb;
+      const diff = dr * dr * 0.299 + dg * dg * 0.587 + db * db * 0.114;
       if (diff < minDiff) {
         minDiff = diff;
         bestIdx = i;

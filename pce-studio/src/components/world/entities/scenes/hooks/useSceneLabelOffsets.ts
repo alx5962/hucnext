@@ -31,7 +31,7 @@ export const useSceneLabelOffsets = (sceneId: string) => {
     if (!scene) {
       return 0;
     }
-    return scene.type === "LOGO" ? 20 : scene.width;
+    return scene.width;
   });
 
   const worldScrollX = useAppSelector((state) => state.editor.worldScrollX);

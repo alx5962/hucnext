@@ -202,9 +202,12 @@ const settingsSlice = createSlice({
   extraReducers: (builder) =>
     builder
       .addCase(projectActions.loadProject.fulfilled, (state, action) => {
+        const loadedSettings = action.payload.resources.settings;
         return {
           ...state,
-          ...action.payload.resources.settings,
+          ...loadedSettings,
+          colorMode: !loadedSettings.colorMode || loadedSettings.colorMode === "mono" ? "mixed" : loadedSettings.colorMode,
+          previewAsMono: false,
         };
       })
       .addMatcher(isResizeTilemapLayersAction, (state, action) => {

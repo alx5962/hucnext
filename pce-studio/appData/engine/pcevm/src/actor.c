@@ -44,7 +44,7 @@ int actor_spawn(int x, int y, int tile_id, int palette, int size) {
 }
 
 void actor_update_all(void) {
-    int i;
+    int i, flip;
     for (i = 0; i < g_actor_count; i++) {
         if (!g_actor_active[i]) {
             spr_set(g_actor_sprite_handle[i]);
@@ -56,6 +56,8 @@ void actor_update_all(void) {
             continue;
         }
 
+        flip = (i > 0 && g_actor_dir[i] == 1) ? FLIP_X : NO_FLIP;
+
         // Top tile (Head / Upper body)
         spr_set(g_actor_sprite_handle[i]);
         spr_x(g_actor_x[i]);
@@ -63,7 +65,7 @@ void actor_update_all(void) {
         spr_pattern(g_actor_tile_id[i]);
         spr_pal(g_actor_palette[i]);
         spr_pri(1);
-        spr_ctrl(SIZE_MAS | FLIP_MAS, SZ_16x16 | NO_FLIP);
+        spr_ctrl(0xFF, SZ_16x16 | flip);
 
         // If 16x32, render bottom tile (Body & Legs) stacked at Y + 16
         if (g_actor_size[i] == SZ_16x32) {
@@ -73,7 +75,7 @@ void actor_update_all(void) {
             spr_pattern(g_actor_tile_id[i] + 0x40);
             spr_pal(g_actor_palette[i]);
             spr_pri(1);
-            spr_ctrl(SIZE_MAS | FLIP_MAS, SZ_16x16 | NO_FLIP);
+            spr_ctrl(0xFF, SZ_16x16 | flip);
         } else {
             if (g_actor_sprite_handle[i] + 16 < 64) {
                 spr_set(g_actor_sprite_handle[i] + 16);

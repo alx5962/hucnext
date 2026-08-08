@@ -560,8 +560,8 @@ export const compileScene = (
     ? scene.playerSprite.symbol
     : "spritesheet_none";
 
-  const sceneWidth = scene.type === "LOGO" ? 20 : scene.width;
-  const sceneHeight = scene.type === "LOGO" ? 18 : scene.height;
+  const sceneWidth = scene.width;
+  const sceneHeight = scene.height;
 
   return toStructDataFile(
     SCENE_TYPE,

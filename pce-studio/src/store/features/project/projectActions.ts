@@ -77,6 +77,12 @@ const loadProject = createAsyncThunk<
   string
 >("project/loadProject", async (path) => {
   const data = await API.project.loadProject();
+  if (data?.resources?.settings) {
+    if (!data.resources.settings.colorMode || data.resources.settings.colorMode === "mono") {
+      data.resources.settings.colorMode = "mixed";
+    }
+    data.resources.settings.previewAsMono = false;
+  }
   return {
     ...data,
     path,

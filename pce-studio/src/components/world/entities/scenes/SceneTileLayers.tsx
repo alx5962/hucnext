@@ -219,36 +219,39 @@ export const SceneTileLayers = ({ sceneId }: SceneTileLayersProps) => {
           priority={selected}
         />
       ) : (
-        background &&
-        (gbcEnabled && background.autoColor ? (
-          <AutoColorizedImage
-            width={width}
-            height={height}
-            src={assetURL("backgrounds", background)}
-            tilesSrc={
-              tilesOverride ? assetURL("backgrounds", tilesOverride) : undefined
-            }
-            uiPalette={
-              scene.paletteIds?.[7] === "auto" ? undefined : palettes[7]
-            }
-            previewAsMono={previewAsMono}
-            monoBGP={monoBGP}
-          />
-        ) : (
-          <ColorizedImage
-            width={width}
-            height={height}
-            src={
-              tilesOverride
-                ? assetURL("backgrounds", tilesOverride)
-                : assetURL("backgrounds", background)
-            }
-            tiles={displayTileColors}
-            palettes={palettes}
-            previewAsMono={previewAsMono}
-            monoBGP={monoBGP}
-          />
-        ))
+        background && (
+          !previewAsMono ? (
+            <img
+              src={assetURL("backgrounds", background)}
+              alt=""
+              width={width}
+              height={height}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width,
+                height,
+                imageRendering: "pixelated",
+                pointerEvents: "none",
+              }}
+            />
+          ) : (
+            <ColorizedImage
+              width={width}
+              height={height}
+              src={
+                tilesOverride
+                  ? assetURL("backgrounds", tilesOverride)
+                  : assetURL("backgrounds", background)
+              }
+              tiles={displayTileColors}
+              palettes={palettes}
+              previewAsMono={previewAsMono}
+              monoBGP={monoBGP}
+            />
+          )
+        )
       )}
 
       {showPriorityMap && (

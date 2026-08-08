@@ -11,12 +11,12 @@ const convertToIndexedPng = (convertToIndexedPngDefault || convertToIndexedPngFn
  * Must stay in sync with appData/engine/pcevm/include/engine.h
  */
 const SCENE_TYPE_MAP: Record<string, number> = {
-  TOPDOWN:     0,
-  PLATFORM:    1,
-  ADVENTURE:   2,
-  SHMUP:       3,
+  TOPDOWN: 0,
+  PLATFORM: 1,
+  ADVENTURE: 2,
+  SHMUP: 3,
   POINTNCLICK: 4,
-  LOGO:        5,
+  LOGO: 5,
 };
 
 function extractActorText(actor: any): string {
@@ -129,14 +129,19 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
   // Parse sprite gbsres files
   const spritesFromGbsres: any[] = [];
-  const spritesDir = pathModule.join(assetsDir, "sprites");
-  if (fs.existsSync(spritesDir)) {
-    const gbsFiles = fs.readdirSync(spritesDir).filter(f => typeof f === "string" && f.endsWith(".gbsres"));
-    for (const gf of gbsFiles) {
-      try {
-        const json = fs.readJsonSync(pathModule.join(spritesDir, gf));
-        spritesFromGbsres.push(json);
-      } catch (e) { }
+  const projectSpritesResDir = pathModule.join(projDir, "project", "sprites");
+  const assetsSpritesResDir = pathModule.join(projDir, "assets", "sprites");
+  for (const sDir of [projectSpritesResDir, assetsSpritesResDir]) {
+    if (fs.existsSync(sDir)) {
+      const gbsFiles = fs.readdirSync(sDir).filter(f => typeof f === "string" && f.endsWith(".gbsres"));
+      for (const gf of gbsFiles) {
+        try {
+          const json = fs.readJsonSync(pathModule.join(sDir, gf));
+          if (json) {
+            spritesFromGbsres.push(json);
+          }
+        } catch (e) { }
+      }
     }
   }
 
@@ -212,13 +217,17 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const bgsFromGbsres: any[] = [];
   const projectBgResDir = pathModule.join(projDir, "project", "backgrounds");
   const bgAssetsResDir = pathModule.join(projDir, "assets", "backgrounds");
-  for (const bDir of [projectBgResDir, bgAssetsResDir]) {
+  const bgAssetsDir = pathModule.join(outputAssetsDir, "backgrounds");
+  const projectBgDir = pathModule.join(projDir, "assets", "backgrounds");
+  const bgDirsToScan = [projectBgDir, bgAssetsDir, projectBgResDir, bgAssetsResDir];
+
+  for (const bDir of bgDirsToScan) {
     if (fs.existsSync(bDir)) {
       const gbsFiles = fs.readdirSync(bDir).filter((f: any) => typeof f === "string" && f.endsWith(".gbsres"));
       for (const gf of gbsFiles) {
         try {
           const json = fs.readJsonSync(pathModule.join(bDir, gf));
-          if (json && json.id && json.filename) {
+          if (json) {
             bgsFromGbsres.push(json);
           }
         } catch (e) { }
@@ -229,33 +238,16 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const allBackgrounds = [...(projectData.backgrounds || []), ...bgsFromGbsres];
   const bgIdMap: Record<string, string> = {};
   allBackgrounds.forEach((bg: any) => {
-    if (bg && bg.id && bg.filename) {
-      bgIdMap[bg.id] = bg.filename;
-    }
-    if (bg && bg.id && bg.name) {
-      const fn = bg.filename || (bg.name.endsWith(".png") ? bg.name : `${bg.name}.png`);
-      bgIdMap[bg.id] = fn;
-      bgIdMap[bg.name] = fn;
-    }
-  });
-
-  const bgAssetsDir = pathModule.join(outputAssetsDir, "backgrounds");
-  const projectBgDir = pathModule.join(projDir, "assets", "backgrounds");
-  const bgDirsToScan = [projectBgDir, bgAssetsDir];
-
-  for (const bDir of bgDirsToScan) {
-    if (fs.existsSync(bDir)) {
-      const gbsresFiles = fs.readdirSync(bDir).filter((f: any) => typeof f === "string" && f.endsWith(".gbsres"));
-      for (const gbf of gbsresFiles) {
-        try {
-          const bJson = fs.readJsonSync(pathModule.join(bDir, gbf));
-          if (bJson && bJson.id && bJson.filename) {
-            bgIdMap[bJson.id] = bJson.filename;
-          }
-        } catch (e) { }
+    if (bg) {
+      const fn = bg.filename || (bg.name ? (bg.name.endsWith(".png") ? bg.name : `${bg.name}.png`) : "");
+      if (fn) {
+        if (bg.id) bgIdMap[bg.id] = fn;
+        if (bg.name) bgIdMap[bg.name] = fn;
+        if (bg.symbol) bgIdMap[bg.symbol] = fn;
+        bgIdMap[fn] = fn;
       }
     }
-  }
+  });
 
   // Load platformer settings from project/engine_field_values.gbsres if present
   let engineFieldValuesMap: Record<string, any> = {};
@@ -291,18 +283,65 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       if (scene.backgroundId && bgIdMap[scene.backgroundId]) {
         return bgIdMap[scene.backgroundId];
       }
-      if (scene.background && typeof scene.background === "object" && scene.background.filename) {
-        return scene.background.filename;
+      if (scene.backgroundId) {
+        const matchedBg = allBackgrounds.find((b: any) => b.id === scene.backgroundId || b.name === scene.backgroundId || b.filename === scene.backgroundId);
+        if (matchedBg) {
+          const fn = matchedBg.filename || (matchedBg.name.endsWith(".png") ? matchedBg.name : `${matchedBg.name}.png`);
+          return fn;
+        }
+        if (typeof scene.backgroundId === "string") {
+          const checkName = scene.backgroundId.endsWith(".png") ? scene.backgroundId : `${scene.backgroundId}.png`;
+          for (const bDir of bgDirsToScan) {
+            if (fs.existsSync(pathModule.join(bDir, checkName))) {
+              return checkName;
+            }
+          }
+        }
+      }
+      if (scene.background && typeof scene.background === "object") {
+        if (scene.background.filename) return scene.background.filename;
+        if (scene.background.name) {
+          const fn = scene.background.name.endsWith(".png") ? scene.background.name : `${scene.background.name}.png`;
+          return fn;
+        }
+        if (scene.background.id && bgIdMap[scene.background.id]) {
+          return bgIdMap[scene.background.id];
+        }
       }
       if (scene.filename) {
         return scene.filename;
       }
+      if (scene.name) {
+        const nameClean = scene.name.toLowerCase().replace(/\s+/g, "");
+        const checkPng = `${nameClean}.png`;
+        for (const bDir of bgDirsToScan) {
+          if (fs.existsSync(pathModule.join(bDir, checkPng))) {
+            return checkPng;
+          }
+        }
+      }
     }
-    const projectBgDir = pathModule.join(projDir, "assets", "backgrounds");
-    if (fs.existsSync(projectBgDir)) {
-      const pngFiles = fs.readdirSync(projectBgDir).filter((f: any) => typeof f === "string" && f.endsWith(".png"));
-      if (pngFiles.length > 0) {
-        return pngFiles[idx % pngFiles.length];
+
+    for (const bDir of bgDirsToScan) {
+      if (fs.existsSync(bDir)) {
+        const pngFiles = fs.readdirSync(bDir).filter((f: any) => typeof f === "string" && f.endsWith(".png"));
+        const scNumPng = `scene${idx + 1}.png`;
+        if (pngFiles.includes(scNumPng)) {
+          return scNumPng;
+        }
+        const scPng = `scene_${idx + 1}.png`;
+        if (pngFiles.includes(scPng)) {
+          return scPng;
+        }
+      }
+    }
+
+    for (const bDir of bgDirsToScan) {
+      if (fs.existsSync(bDir)) {
+        const pngFiles = fs.readdirSync(bDir).filter((f: any) => typeof f === "string" && f.endsWith(".png"));
+        if (pngFiles.length > 0) {
+          return pngFiles[idx % pngFiles.length];
+        }
       }
     }
     return "scene.png";
@@ -377,46 +416,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     collisionIncludes += `#include "${colFileName}"\n`;
   });
 
-  // Look for sprite PNGs
-  const spritePngFiles = fs.existsSync(pathModule.join(outputAssetsDir, "sprites"))
-    ? fs.readdirSync(pathModule.join(outputAssetsDir, "sprites")).filter(f => typeof f === "string" && f.endsWith(".png"))
-    : [];
-
-  let playerSpriteFilename = "";
-  if (projectData?.settings?.playerSpriteSheetId && allSprites.length > 0) {
-    const sprObj = allSprites.find((s: any) => s.id === projectData.settings.playerSpriteSheetId);
-    if (sprObj?.filename) {
-      playerSpriteFilename = String(sprObj.filename);
-    }
-  }
-
-  if (!playerSpriteFilename && spritePngFiles.length > 0) {
-    const isoHeroMatch = spritePngFiles.find(f => String(f).includes("iso_hero"));
-    if (isoHeroMatch) {
-      playerSpriteFilename = String(isoHeroMatch);
-    } else {
-      const sprMatch = spritePngFiles.find(f => !String(f).includes("static") && !String(f).includes("actor")) || spritePngFiles[0];
-      playerSpriteFilename = String(sprMatch);
-    }
-  }
-
-  let playerPcxRelativePath = "assets/sprites/iso_hero.pcx";
-  let playerSprWidth16 = 1;
-  let playerSprHeight16 = 1;
-
-  if (playerSpriteFilename) {
-    const srcPng = pathModule.join(outputAssetsDir, "sprites", playerSpriteFilename);
-    const destPcx = srcPng.replace(/\.png$/i, ".pcx");
-    try {
-      const dims = convertPngToPcx(srcPng, destPcx);
-      playerSprWidth16 = Math.max(1, Math.min(2, Math.floor(dims.width / 16)));
-      playerSprHeight16 = Math.max(1, Math.min(2, Math.floor(dims.height / 16)));
-      playerPcxRelativePath = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcx).replace(/\\/g, "/")}`;
-    } catch (e) {
-      console.error("Error converting player sprite PNG to PCX:", e);
-    }
-  }
-
   const parseCoord = (val: any, fallback: number) => {
     if (typeof val === "number" && !isNaN(val)) return Math.floor(val) * 8;
     if (typeof val === "object" && val !== null && typeof val.value === "number" && !isNaN(val.value)) return Math.floor(val.value) * 8;
@@ -424,6 +423,203 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     if (typeof val === "string" && !isNaN(Number(val))) return Math.floor(Number(val)) * 8;
     return fallback * 8;
   };
+
+  const sceneIdToNum: Record<string, number> = {};
+  allScenes.forEach((scene: any, idx: number) => {
+    if (scene.id) {
+      sceneIdToNum[scene.id] = idx + 1;
+    }
+  });
+
+  const startSceneId = (typeof projectDirPath === "object" && projectDirPath?.settings?.startSceneId !== undefined)
+    ? projectDirPath.settings.startSceneId
+    : (settingsGbsData?.startSceneId !== undefined
+      ? settingsGbsData.startSceneId
+      : (projectData?.settings?.startSceneId ?? ""));
+
+  let startSceneNum = 1;
+  if (startSceneId) {
+    if (sceneIdToNum[startSceneId]) {
+      startSceneNum = sceneIdToNum[startSceneId];
+    } else {
+      const foundIdx = allScenes.findIndex((s: any) => s.id === startSceneId || s.name === startSceneId);
+      if (foundIdx !== -1) {
+        startSceneNum = foundIdx + 1;
+      }
+    }
+  }
+
+  // Resolve player sprite sheet ID dynamically
+  const activeStartScene = (startSceneNum > 0 && startSceneNum <= allScenes.length) ? allScenes[startSceneNum - 1] : allScenes[0];
+  const activeStartSceneType = (activeStartScene?.type || "TOPDOWN").toUpperCase();
+
+  const spritePngFiles = fs.existsSync(pathModule.join(outputAssetsDir, "sprites"))
+    ? fs.readdirSync(pathModule.join(outputAssetsDir, "sprites")).filter(f => typeof f === "string" && f.endsWith(".png"))
+    : [];
+
+  let playerSpriteSheetId = "";
+  // 1. Check starting scene's user-selected player sprite sheet ID
+  if (activeStartScene) {
+    if (activeStartScene.playerSpriteSheetId) {
+      playerSpriteSheetId = activeStartScene.playerSpriteSheetId;
+    } else if (activeStartScene.playerSprite?.id) {
+      playerSpriteSheetId = activeStartScene.playerSprite.id;
+    }
+  }
+
+  // 2. Check defaultPlayerSprites map for active scene type
+  if (!playerSpriteSheetId) {
+    const defSpritesMap = projectData?.settings?.defaultPlayerSprites || settingsGbsData?.defaultPlayerSprites || projectDirPath?.settings?.defaultPlayerSprites;
+    if (defSpritesMap && typeof defSpritesMap === "object") {
+      playerSpriteSheetId = defSpritesMap[activeStartSceneType] || defSpritesMap["TOPDOWN"] || defSpritesMap["PLATFORM"] || Object.values(defSpritesMap)[0];
+    }
+  }
+
+  // 3. Check general settings playerSpriteSheetId
+  if (!playerSpriteSheetId) {
+    if (projectData?.settings?.playerSpriteSheetId) {
+      playerSpriteSheetId = projectData.settings.playerSpriteSheetId;
+    } else if (settingsGbsData?.playerSpriteSheetId) {
+      playerSpriteSheetId = settingsGbsData.playerSpriteSheetId;
+    } else if (projectDirPath?.settings?.playerSpriteSheetId) {
+      playerSpriteSheetId = projectDirPath.settings.playerSpriteSheetId;
+    }
+  }
+
+  let playerSpriteFilename = "";
+  let playerSprObj: any = null;
+  if (playerSpriteSheetId && allSprites.length > 0) {
+    playerSprObj = allSprites.find((s: any) =>
+      s.id === playerSpriteSheetId ||
+      s.name === playerSpriteSheetId ||
+      s.symbol === playerSpriteSheetId ||
+      s.filename === playerSpriteSheetId
+    );
+    if (playerSprObj?.filename) {
+      playerSpriteFilename = String(playerSprObj.filename);
+    }
+  }
+
+  if (!playerSpriteFilename && spritePngFiles.length > 0) {
+    if (typeof playerSpriteSheetId === "string" && playerSpriteSheetId.length > 0) {
+      const matchName = spritePngFiles.find(f => f.toLowerCase().includes(playerSpriteSheetId.toLowerCase()));
+      if (matchName) playerSpriteFilename = matchName;
+    }
+    if (!playerSpriteFilename) {
+      const nonActorMatch = spritePngFiles.find(f => !String(f).includes("static") && !String(f).includes("actor"));
+      playerSpriteFilename = String(nonActorMatch || spritePngFiles[0]);
+    }
+  }
+
+  let playerPcxRelativePathR0 = "assets/sprites/player_r0.pcx";
+  let playerPcxRelativePathR1 = "";
+  let playerPcxRelativePathL0 = "assets/sprites/player_l0.pcx";
+  let playerPcxRelativePathL1 = "";
+  let hasPlayerFrame1 = false;
+  let playerSprWidth16 = 1;
+  let playerSprHeight16 = 1;
+
+  if (playerSpriteFilename) {
+    const srcPng = pathModule.join(outputAssetsDir, "sprites", playerSpriteFilename);
+    const destPcxR0 = srcPng.replace(/\.png$/i, "_r0.pcx");
+    const destPcxR1 = srcPng.replace(/\.png$/i, "_r1.pcx");
+    const destPcxL0 = srcPng.replace(/\.png$/i, "_l0.pcx");
+    const destPcxL1 = srcPng.replace(/\.png$/i, "_l1.pcx");
+
+    try {
+      let playerCropX0 = 0;
+      let playerCropY0 = 0;
+      let playerCropX1 = -1;
+      let playerCropY1 = 0;
+      let playerCropW = 16;
+      let playerCropH = 16;
+
+      if (playerSprObj) {
+        playerCropW = playerSprObj.canvasWidth || 16;
+        playerCropH = playerSprObj.canvasHeight || 16;
+        playerSprWidth16 = Math.max(1, Math.min(2, Math.floor(playerCropW / 16)));
+        playerSprHeight16 = Math.max(1, Math.min(2, Math.floor(playerCropH / 16)));
+
+        try {
+          const tile0 = playerSprObj?.states?.[0]?.animations?.[0]?.frames?.[0]?.tiles?.[0];
+          if (tile0 && typeof tile0.sliceX === "number") playerCropX0 = tile0.sliceX;
+          if (tile0 && typeof tile0.sliceY === "number") playerCropY0 = tile0.sliceY;
+        } catch (e) { }
+
+        try {
+          const animMoving = playerSprObj?.states?.[0]?.animations?.[4] || playerSprObj?.states?.[0]?.animations?.[1];
+          if (animMoving && animMoving.frames?.[0]?.tiles?.[0]) {
+            const tile1 = animMoving.frames[0].tiles[0];
+            if (typeof tile1.sliceX === "number") playerCropX1 = tile1.sliceX;
+            if (typeof tile1.sliceY === "number") playerCropY1 = tile1.sliceY;
+          } else if (playerSprObj?.states?.[0]?.animations?.[0]?.frames?.[1]?.tiles?.[0]) {
+            const tile1 = playerSprObj.states[0].animations[0].frames[1].tiles[0];
+            if (typeof tile1.sliceX === "number") playerCropX1 = tile1.sliceX;
+            if (typeof tile1.sliceY === "number") playerCropY1 = tile1.sliceY;
+          }
+        } catch (e) { }
+      }
+
+      const pngData = fs.readFileSync(srcPng);
+      const { PNG } = require("pngjs");
+      const readPng = PNG.sync.read(pngData);
+
+      if (playerCropX1 < 0) {
+        if (readPng.width >= playerCropX0 + playerCropW * 2) {
+          playerCropX1 = playerCropX0 + playerCropW;
+          playerCropY1 = playerCropY0;
+        }
+      }
+
+      // Convert Right frames
+      const dims0 = convertPngToPcx(srcPng, destPcxR0, {
+        cropX: playerCropX0,
+        cropY: playerCropY0,
+        cropW: playerCropW,
+        cropH: playerCropH,
+        flipX: false,
+      });
+
+      // Convert Left frames (software flipped!)
+      convertPngToPcx(srcPng, destPcxL0, {
+        cropX: playerCropX0,
+        cropY: playerCropY0,
+        cropW: playerCropW,
+        cropH: playerCropH,
+        flipX: true,
+      });
+
+      if (!playerSprObj) {
+        playerSprWidth16 = Math.max(1, Math.min(2, Math.floor(dims0.width / 16)));
+        playerSprHeight16 = Math.max(1, Math.min(2, Math.floor(dims0.height / 16)));
+      }
+
+      playerPcxRelativePathR0 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxR0).replace(/\\/g, "/")}`;
+      playerPcxRelativePathL0 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxL0).replace(/\\/g, "/")}`;
+
+      if (playerCropX1 >= 0 && playerCropX1 < readPng.width) {
+        convertPngToPcx(srcPng, destPcxR1, {
+          cropX: playerCropX1,
+          cropY: playerCropY1,
+          cropW: playerCropW,
+          cropH: playerCropH,
+          flipX: false,
+        });
+        convertPngToPcx(srcPng, destPcxL1, {
+          cropX: playerCropX1,
+          cropY: playerCropY1,
+          cropW: playerCropW,
+          cropH: playerCropH,
+          flipX: true,
+        });
+        playerPcxRelativePathR1 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxR1).replace(/\\/g, "/")}`;
+        playerPcxRelativePathL1 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxL1).replace(/\\/g, "/")}`;
+        hasPlayerFrame1 = true;
+      }
+    } catch (e) {
+      console.error("Error converting player sprite frames to PCX:", e);
+    }
+  }
 
   // Resolve player start position
   const rawStartX = (typeof projectDirPath === "object" && projectDirPath?.settings?.startX !== undefined)
@@ -520,13 +716,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   });
 
   // Resolve Triggers
-  const sceneIdToNum: Record<string, number> = {};
-  allScenes.forEach((scene: any, idx: number) => {
-    if (scene.id) {
-      sceneIdToNum[scene.id] = idx + 1;
-    }
-  });
-
   let triggerDefines = "";
   let triggerIndex = 1;
 
@@ -576,79 +765,80 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const musicAssetsDir = pathModule.join(outputAssetsDir, "music");
   const projectMusicDir = pathModule.join(projDir, "assets", "music");
 
-  // Map musicId to resource info from .gbsres files
+  // Map musicId to resource info from projectData.music and .gbsres files
   const musicIdMap: Record<string, { filename: string; symbol: string }> = {};
   const musicDirsToScan = [projectMusicDir, musicAssetsDir];
 
-  for (const mDir of musicDirsToScan) {
+  const musicFromGbsres: any[] = [];
+  const projectMusicResDir = pathModule.join(projDir, "project", "music");
+  const musicAssetsResDir = pathModule.join(projDir, "assets", "music");
+  for (const mDir of [projectMusicResDir, musicAssetsResDir, musicAssetsDir, projectMusicDir]) {
     if (fs.existsSync(mDir)) {
-      const gbsresFiles = fs.readdirSync(mDir).filter((f: any) => typeof f === "string" && f.endsWith(".gbsres"));
-      for (const gbf of gbsresFiles) {
+      const gbsFiles = fs.readdirSync(mDir).filter((f: any) => typeof f === "string" && f.endsWith(".gbsres"));
+      for (const gf of gbsFiles) {
         try {
-          const mJson = fs.readJsonSync(pathModule.join(mDir, gbf));
-          if (mJson && mJson.id && mJson.filename) {
-            musicIdMap[mJson.id] = {
-              filename: mJson.filename,
-              symbol: mJson.symbol || "song_0",
-            };
+          const json = fs.readJsonSync(pathModule.join(mDir, gf));
+          if (json && json.id && json.filename) {
+            musicFromGbsres.push(json);
           }
         } catch (e) { }
       }
     }
   }
 
-  // Find requested music file for Scene 1
+  const allMusic = [...(projectData.music || []), ...musicFromGbsres];
+  allMusic.forEach((m: any) => {
+    if (m && m.id) {
+      const fn = m.filename || (m.name ? (m.name.endsWith(".uge") ? m.name : `${m.name}.uge`) : "");
+      if (fn) {
+        musicIdMap[m.id] = {
+          filename: fn,
+          symbol: m.symbol || "song_0",
+        };
+      }
+    }
+  });
+
+  // Find requested music file ONLY if explicitly set in active scene or scene events
   let targetUgeFilename = "";
   let targetUgeSymbol = "song_0";
 
-  // Check Scene 1 script for EVENT_MUSIC_PLAY
-  if (allScenes[0]?.script && Array.isArray(allScenes[0].script)) {
-    const playCmd = allScenes[0].script.find((c: any) => c.command === "EVENT_MUSIC_PLAY");
-    if (playCmd && playCmd.args?.musicId && musicIdMap[playCmd.args.musicId]) {
-      targetUgeFilename = musicIdMap[playCmd.args.musicId].filename;
-      targetUgeSymbol = musicIdMap[playCmd.args.musicId].symbol;
-    }
-  }
-
-  // Fallback to adventure.uge if present in project music
-  if (!targetUgeFilename) {
-    for (const mDir of musicDirsToScan) {
-      if (fs.existsSync(pathModule.join(mDir, "adventure.uge"))) {
-        targetUgeFilename = "adventure.uge";
-        targetUgeSymbol = "song_adventure";
-        break;
+  // 1. Check starting scene script for EVENT_MUSIC_PLAY
+  if (activeStartScene?.script && Array.isArray(activeStartScene.script)) {
+    const playCmd = activeStartScene.script.find((c: any) => c.command === "EVENT_MUSIC_PLAY");
+    if (playCmd && playCmd.args?.musicId) {
+      const mInfo = musicIdMap[playCmd.args.musicId];
+      if (mInfo) {
+        targetUgeFilename = mInfo.filename;
+        targetUgeSymbol = mInfo.symbol;
+      } else {
+        targetUgeFilename = String(playCmd.args.musicId);
       }
     }
   }
 
-  // Fallback to first .uge file found
-  if (!targetUgeFilename) {
-    for (const mDir of musicDirsToScan) {
-      if (fs.existsSync(mDir)) {
-        const ugeFiles = fs.readdirSync(mDir).filter((f: any) => typeof f === "string" && f.endsWith(".uge"));
-        if (ugeFiles.length > 0) {
-          targetUgeFilename = String(ugeFiles[0]);
-          break;
-        }
-      }
+  // 2. Check starting scene.musicId
+  if (!targetUgeFilename && activeStartScene?.musicId) {
+    const mInfo = musicIdMap[activeStartScene.musicId];
+    if (mInfo) {
+      targetUgeFilename = mInfo.filename;
+      targetUgeSymbol = mInfo.symbol;
+    } else {
+      targetUgeFilename = String(activeStartScene.musicId);
     }
   }
 
   let foundUgePath = "";
   if (targetUgeFilename) {
+    if (!targetUgeFilename.endsWith(".uge")) {
+      targetUgeFilename += ".uge";
+    }
     for (const mDir of musicDirsToScan) {
       const p = pathModule.join(mDir, targetUgeFilename);
       if (fs.existsSync(p)) {
         foundUgePath = p;
         break;
       }
-    }
-  }
-
-  if (!foundUgePath) {
-    const templateUge = pathModule.resolve(__dirname, "../../appData/templates/gbs2/assets/music/Rulz_Intro.uge");
-    if (fs.existsSync(templateUge)) {
-      foundUgePath = templateUge;
     }
   }
 
@@ -670,6 +860,19 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
   }
 
+  let playerSprVramSizeHex = "0x40";
+  let playerSprSizeConst = "SZ_16x16";
+  if (playerSprWidth16 === 1 && playerSprHeight16 === 2) {
+    playerSprVramSizeHex = "0x80";
+    playerSprSizeConst = "SZ_16x32";
+  } else if (playerSprWidth16 === 2 && playerSprHeight16 === 1) {
+    playerSprVramSizeHex = "0x80";
+    playerSprSizeConst = "SZ_32x16";
+  } else if (playerSprWidth16 === 2 && playerSprHeight16 === 2) {
+    playerSprVramSizeHex = "0x100";
+    playerSprSizeConst = "SZ_32x32";
+  }
+
   const mainCContent = `
 #include <huc.h>
 
@@ -677,15 +880,20 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 ${sceneTypeDefine}
 #include "include/engine.h"
 
-#incspr(player_spr, "${playerPcxRelativePath}", 0, 0, ${playerSprWidth16}, ${playerSprHeight16})
-#incpal(player_pal, "${playerPcxRelativePath}")
+#incspr(player_spr_r0, "${playerPcxRelativePathR0}", 0, 0, ${playerSprWidth16}, ${playerSprHeight16})
+#incpal(player_pal, "${playerPcxRelativePathR0}")
+#incspr(player_spr_l0, "${playerPcxRelativePathL0}", 0, 0, ${playerSprWidth16}, ${playerSprHeight16})
+${hasPlayerFrame1 ? `#incspr(player_spr_r1, "${playerPcxRelativePathR1}", 0, 0, ${playerSprWidth16}, ${playerSprHeight16})\n#incspr(player_spr_l1, "${playerPcxRelativePathL1}", 0, 0, ${playerSprWidth16}, ${playerSprHeight16})\n#define HAS_PLAYER_FRAME_1 1\n` : ""}
 
 ${bgDirectives}
 
 ${actorDirectives}
 
+#define START_SCENE_NUM ${startSceneNum}
 #define PLAYER_START_X ${playerStartX}
 #define PLAYER_START_Y ${playerStartY}
+#define PLAYER_SPR_VRAM_SIZE ${playerSprVramSizeHex}
+#define PLAYER_SPR_SIZE ${playerSprSizeConst}
 ${hasMusicDef}
 
 ${actorDefines}

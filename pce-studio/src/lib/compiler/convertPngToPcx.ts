@@ -7,6 +7,7 @@ export type CropOptions = {
   cropY?: number;
   cropW?: number;
   cropH?: number;
+  flipX?: boolean;
 };
 
 export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: CropOptions) {
@@ -36,7 +37,8 @@ export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: Cro
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      const srcIdx = ((cropY + y) * srcPng.width + (cropX + x)) * 4;
+      const srcX = cropOpts?.flipX ? (width - 1 - x) : x;
+      const srcIdx = ((cropY + y) * srcPng.width + (cropX + srcX)) * 4;
       let r = srcPng.data[srcIdx];
       let g = srcPng.data[srcIdx + 1];
       let b = srcPng.data[srcIdx + 2];
