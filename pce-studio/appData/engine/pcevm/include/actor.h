@@ -23,6 +23,7 @@
 
 #ifndef PCE_ACTOR_C
 extern int g_actor_active[];
+extern int g_actor_hidden[];
 extern int g_actor_x[];
 extern int g_actor_y[];
 extern int g_actor_tile_id[];
@@ -39,5 +40,8 @@ int actor_spawn(int x, int y, int tile_id, int palette, int size);
 void actor_update_all(void);
 void actor_set_pos(int id, int x, int y);
 void actor_set_dir(int id, int dir);
+void actor_hide(int id);
+void actor_show(int id);
+void actor_set_hidden(int id, int hidden);
 
 #endif

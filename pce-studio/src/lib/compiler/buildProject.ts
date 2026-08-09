@@ -366,14 +366,24 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const destBgDir = pathModule.join(buildDir, "assets", "backgrounds");
   await fs.ensureDir(destBgDir);
 
+  // Build a map: bgFilename -> max colors needed (256 for Logo scenes, 16 for others)
+  const bgFileMaxColors = new Map<string, number>();
+  sceneBgFilenames.forEach((bgFile, idx) => {
+    const scType = (allScenes[idx]?.type || "TOPDOWN").toUpperCase();
+    const needed = scType === "LOGO" ? 256 : 16;
+    const prev = bgFileMaxColors.get(bgFile) ?? 0;
+    bgFileMaxColors.set(bgFile, Math.max(prev, needed));
+  });
+
   const uniqueBgFiles = Array.from(new Set(sceneBgFilenames));
   for (const bgFile of uniqueBgFiles) {
     for (const bDir of bgDirsToScan) {
       const srcPng = pathModule.join(bDir, bgFile);
       if (fs.existsSync(srcPng)) {
         const destPng = pathModule.join(destBgDir, bgFile);
+        const maxColors = bgFileMaxColors.get(bgFile) ?? 16;
         try {
-          convertToIndexedPng(srcPng, destPng);
+          convertToIndexedPng(srcPng, destPng, maxColors);
         } catch (e) {
           await fs.copy(srcPng, destPng, { overwrite: true });
         }
@@ -385,8 +395,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   let bgDirectives = "";
   sceneBgFilenames.forEach((bgFile, idx) => {
     const scNum = idx + 1;
+    const sceneType = (allScenes[idx]?.type || "TOPDOWN").toUpperCase();
+    // Logo scenes use all 16 background sub-palettes (up to 256 colors)
+    // Other scene types use only 1 sub-palette (16 colors)
+    const palArgs = sceneType === "LOGO" ? ", 0, 16" : "";
     bgDirectives += `#incchr(bg_scene${scNum}_chr, "assets/backgrounds/${bgFile}", 0, 0, 32, 28)\n`;
-    bgDirectives += `#incpal(bg_scene${scNum}_pal, "assets/backgrounds/${bgFile}")\n`;
+    bgDirectives += `#incpal(bg_scene${scNum}_pal, "assets/backgrounds/${bgFile}"${palArgs})\n`;
     bgDirectives += `#incbat(bg_scene${scNum}_bat, "assets/backgrounds/${bgFile}", 0x1000, 32, 28)\n`;
   });
 
@@ -637,6 +651,104 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const playerStartX = parseCoord(rawStartX, 13);
   const playerStartY = parseCoord(rawStartY, 14) - (playerSprHeight16 * 16) + 8;
 
+  function checkActorHiddenState(scene: any, targetActorId: string, isPlayer: boolean): boolean {
+    let isHidden = false;
+
+    if (!isPlayer && targetActorId) {
+      const actorObj = (scene.actors || []).find((a: any) => a.id === targetActorId);
+      if (actorObj) {
+        if (actorObj.isHide || actorObj.hidden || actorObj.isHide === 1 || actorObj.hidden === 1) {
+          isHidden = true;
+        }
+      }
+    }
+
+    const checkEvents = (events: any[], currentOwnerId?: string) => {
+      if (!Array.isArray(events)) return;
+      for (const evt of events) {
+        if (evt && typeof evt === "object") {
+          if (!evt.args?.__comment) {
+            if (evt.command === "EVENT_ACTOR_HIDE") {
+              const actArg = evt.args?.actorId;
+              if (
+                (isPlayer && (actArg === "player" || (actArg === "$self$" && !currentOwnerId))) ||
+                (!isPlayer && (actArg === targetActorId || (actArg === "$self$" && currentOwnerId === targetActorId)))
+              ) {
+                isHidden = true;
+              }
+            } else if (evt.command === "EVENT_ACTOR_SHOW") {
+              const actArg = evt.args?.actorId;
+              if (
+                (isPlayer && (actArg === "player" || (actArg === "$self$" && !currentOwnerId))) ||
+                (!isPlayer && (actArg === targetActorId || (actArg === "$self$" && currentOwnerId === targetActorId)))
+              ) {
+                isHidden = false;
+              }
+            }
+          }
+          if (evt.children && typeof evt.children === "object") {
+            Object.values(evt.children).forEach((childEvents: any) => {
+              checkEvents(childEvents, currentOwnerId);
+            });
+          }
+          if (evt.true && Array.isArray(evt.true)) checkEvents(evt.true, currentOwnerId);
+          if (evt.false && Array.isArray(evt.false)) checkEvents(evt.false, currentOwnerId);
+        }
+      }
+    };
+
+    // Check scene startup scripts ONLY (startScript / scene.script)
+    checkEvents(scene.script, undefined);
+    checkEvents(scene.startScript, undefined);
+
+    // Check all actors' startup scripts ONLY (startScript)
+    (scene.actors || []).forEach((act: any) => {
+      checkEvents(act.startScript, act.id);
+    });
+
+    return isHidden;
+  }
+
+  function getInteractionDefines(scene: any, scActor: any, sceneNum: number, actorNum: number): string {
+    let defs = "";
+    if (!scActor.script || !Array.isArray(scActor.script)) return defs;
+
+    const findTargetNum = (actArg: string): number => {
+      if (actArg === "player") return 0;
+      if (actArg === "$self$") return actorNum;
+      const targetIdx = (scene.actors || []).findIndex((a: any) => a.id === actArg);
+      if (targetIdx !== -1) return targetIdx + 1;
+      return -1;
+    };
+
+    const scanEvents = (events: any[]) => {
+      if (!Array.isArray(events)) return;
+      for (const evt of events) {
+        if (evt && typeof evt === "object" && !evt.args?.__comment) {
+          if (evt.command === "EVENT_ACTOR_SHOW") {
+            const targetNum = findTargetNum(evt.args?.actorId);
+            if (targetNum !== -1) {
+              defs += `#define ACTOR_SCENE_${sceneNum}_${actorNum}_SHOW_ACTOR_${targetNum} 1\n`;
+            }
+          } else if (evt.command === "EVENT_ACTOR_HIDE") {
+            const targetNum = findTargetNum(evt.args?.actorId);
+            if (targetNum !== -1) {
+              defs += `#define ACTOR_SCENE_${sceneNum}_${actorNum}_HIDE_ACTOR_${targetNum} 1\n`;
+            }
+          }
+          if (evt.children && typeof evt.children === "object") {
+            Object.values(evt.children).forEach((childEvts: any) => scanEvents(childEvts));
+          }
+          if (evt.true && Array.isArray(evt.true)) scanEvents(evt.true);
+          if (evt.false && Array.isArray(evt.false)) scanEvents(evt.false);
+        }
+      }
+    };
+
+    scanEvents(scActor.script);
+    return defs;
+  }
+
   // Dynamic actors processing for all scenes
   let actorDirectives = "";
   let actorDefines = "";
@@ -644,6 +756,11 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   allScenes.forEach((scene: any, sceneIdx: number) => {
     const sceneNum = sceneIdx + 1;
     const sceneActors = scene.actors || [];
+
+    const isPlayerHidden = checkActorHiddenState(scene, "player", true);
+    if (isPlayerHidden) {
+      actorDefines += `#define ACTOR_SCENE_${sceneNum}_PLAYER_HIDDEN 1\n`;
+    }
 
     sceneActors.forEach((scActor: any, aIdx: number) => {
       const actorNum = aIdx + 1;
@@ -704,7 +821,19 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           textDef = `#define ACTOR_SCENE_${sceneNum}_${actorNum}_TEXT "${cleanText}"\n`;
           if (aIdx === 0) textDef += `#define ACTOR_SCENE_${sceneNum}_TEXT "${cleanText}"\n`;
         }
-        actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum}_${actorNum} 1\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_SPRITE_SIZE ${sprSizeConst}\n${textDef}`;
+
+        const isActorHidden = checkActorHiddenState(scene, scActor.id, false);
+        let hiddenDef = "";
+        if (isActorHidden) {
+          hiddenDef = `#define ACTOR_SCENE_${sceneNum}_${actorNum}_HIDDEN 1\n`;
+          if (aIdx === 0) {
+            hiddenDef += `#define ACTOR_SCENE_${sceneNum}_HIDDEN 1\n`;
+          }
+        }
+
+        const interactDefs = getInteractionDefines(scene, scActor, sceneNum, actorNum);
+
+        actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum}_${actorNum} 1\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_SPRITE_SIZE ${sprSizeConst}\n${textDef}${hiddenDef}${interactDefs}`;
 
         if (aIdx === 0) {
           actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum} 1\n#define ACTOR_SCENE_${sceneNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_SPRITE_SIZE ${sprSizeConst}\n`;

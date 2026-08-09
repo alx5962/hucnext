@@ -82,6 +82,14 @@ void vm_step(void) {
             case OP_MUSIC_STOP:
                 pce_sound_stop();
                 break;
+            case OP_ACTOR_HIDE:
+                actor_id = *g_ctx.pc++;
+                actor_hide(actor_id);
+                break;
+            case OP_ACTOR_SHOW:
+                actor_id = *g_ctx.pc++;
+                actor_show(actor_id);
+                break;
             case OP_END:
                 g_ctx.active = 0;
                 break;

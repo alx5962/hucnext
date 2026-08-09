@@ -22,6 +22,9 @@ void load_scene(int scene_num, int player_x, int player_y) {
     int i;
     g_current_scene = scene_num;
 
+    for (i = 0; i < PCE_MAX_ACTORS; i++) {
+        g_actor_hidden[i] = 0;
+    }
     for (i = 1; i < PCE_MAX_ACTORS; i++) {
         g_actor_active[i] = 0;
     }
@@ -30,6 +33,10 @@ void load_scene(int scene_num, int player_x, int player_y) {
         g_current_scene_type = SCENE_1_TYPE;
         load_background(bg_scene1_chr, bg_scene1_pal, bg_scene1_bat, 32, 28);
         collision_init(scene_1_collisions, 32, 28);
+
+        #ifdef ACTOR_SCENE_1_PLAYER_HIDDEN
+        actor_hide(0);
+        #endif
 
         #ifdef HAS_ACTOR_SCENE_1_1
         load_vram(0x5400, actor_sc1_1_spr, ACTOR_SCENE_1_1_VRAM_SIZE);
@@ -40,6 +47,9 @@ void load_scene(int scene_num, int player_x, int player_y) {
             g_actor_palette[1] = 1;
             g_actor_size[1] = ACTOR_SCENE_1_1_SPRITE_SIZE;
             actor_set_pos(1, ACTOR_SCENE_1_1_X, ACTOR_SCENE_1_1_Y);
+            #ifdef ACTOR_SCENE_1_1_HIDDEN
+            actor_hide(1);
+            #endif
         }
         #else
         #ifdef HAS_ACTOR_SCENE_1
@@ -51,6 +61,9 @@ void load_scene(int scene_num, int player_x, int player_y) {
             g_actor_palette[1] = 1;
             g_actor_size[1] = ACTOR_SCENE_1_SPRITE_SIZE;
             actor_set_pos(1, ACTOR_SCENE_1_X, ACTOR_SCENE_1_Y);
+            #ifdef ACTOR_SCENE_1_HIDDEN
+            actor_hide(1);
+            #endif
         }
         #endif
         #endif
@@ -64,6 +77,9 @@ void load_scene(int scene_num, int player_x, int player_y) {
             g_actor_palette[2] = 2;
             g_actor_size[2] = ACTOR_SCENE_1_2_SPRITE_SIZE;
             actor_set_pos(2, ACTOR_SCENE_1_2_X, ACTOR_SCENE_1_2_Y);
+            #ifdef ACTOR_SCENE_1_2_HIDDEN
+            actor_hide(2);
+            #endif
         }
         #endif
     }
@@ -6230,7 +6246,10 @@ void hide_dialogue(void) {
     if (g_dialogue_active) {
         g_dialogue_active = 0;
         g_dialogue_timer = 0;
-        load_scene(g_current_scene, g_plat_sub_x / 8, g_plat_sub_y / 8);
+        set_color(15, 0x000);
+        set_font_color(0, 0);
+        put_string("                    ", 6, 22);
+        put_string("                    ", 6, 23);
     }
 }
 
@@ -6262,9 +6281,61 @@ void check_actor_interaction(unsigned int input) {
                                 show_dialogue(ACTOR_SCENE_1_TEXT);
                                 #endif
                                 #endif
+
+                                #ifdef ACTOR_SCENE_1_1_SHOW_ACTOR_0
+                                actor_show(0);
+                                #endif
+                                #ifdef ACTOR_SCENE_1_1_SHOW_ACTOR_1
+                                actor_show(1);
+                                #endif
+                                #ifdef ACTOR_SCENE_1_1_SHOW_ACTOR_2
+                                actor_show(2);
+                                #endif
+                                #ifdef ACTOR_SCENE_1_1_SHOW_ACTOR_3
+                                actor_show(3);
+                                #endif
+
+                                #ifdef ACTOR_SCENE_1_1_HIDE_ACTOR_0
+                                actor_hide(0);
+                                #endif
+                                #ifdef ACTOR_SCENE_1_1_HIDE_ACTOR_1
+                                actor_hide(1);
+                                #endif
+                                #ifdef ACTOR_SCENE_1_1_HIDE_ACTOR_2
+                                actor_hide(2);
+                                #endif
+                                #ifdef ACTOR_SCENE_1_1_HIDE_ACTOR_3
+                                actor_hide(3);
+                                #endif
                             } else if (i == 2) {
                                 #ifdef ACTOR_SCENE_1_2_TEXT
                                 show_dialogue(ACTOR_SCENE_1_2_TEXT);
+                                #endif
+
+                                #ifdef ACTOR_SCENE_1_2_SHOW_ACTOR_0
+                                actor_show(0);
+                                #endif
+                                #ifdef ACTOR_SCENE_1_2_SHOW_ACTOR_1
+                                actor_show(1);
+                                #endif
+                                #ifdef ACTOR_SCENE_1_2_SHOW_ACTOR_2
+                                actor_show(2);
+                                #endif
+                                #ifdef ACTOR_SCENE_1_2_SHOW_ACTOR_3
+                                actor_show(3);
+                                #endif
+
+                                #ifdef ACTOR_SCENE_1_2_HIDE_ACTOR_0
+                                actor_hide(0);
+                                #endif
+                                #ifdef ACTOR_SCENE_1_2_HIDE_ACTOR_1
+                                actor_hide(1);
+                                #endif
+                                #ifdef ACTOR_SCENE_1_2_HIDE_ACTOR_2
+                                actor_hide(2);
+                                #endif
+                                #ifdef ACTOR_SCENE_1_2_HIDE_ACTOR_3
+                                actor_hide(3);
                                 #endif
                             }
                         }
@@ -6278,9 +6349,61 @@ void check_actor_interaction(unsigned int input) {
                                 show_dialogue(ACTOR_SCENE_2_TEXT);
                                 #endif
                                 #endif
+
+                                #ifdef ACTOR_SCENE_2_1_SHOW_ACTOR_0
+                                actor_show(0);
+                                #endif
+                                #ifdef ACTOR_SCENE_2_1_SHOW_ACTOR_1
+                                actor_show(1);
+                                #endif
+                                #ifdef ACTOR_SCENE_2_1_SHOW_ACTOR_2
+                                actor_show(2);
+                                #endif
+                                #ifdef ACTOR_SCENE_2_1_SHOW_ACTOR_3
+                                actor_show(3);
+                                #endif
+
+                                #ifdef ACTOR_SCENE_2_1_HIDE_ACTOR_0
+                                actor_hide(0);
+                                #endif
+                                #ifdef ACTOR_SCENE_2_1_HIDE_ACTOR_1
+                                actor_hide(1);
+                                #endif
+                                #ifdef ACTOR_SCENE_2_1_HIDE_ACTOR_2
+                                actor_hide(2);
+                                #endif
+                                #ifdef ACTOR_SCENE_2_1_HIDE_ACTOR_3
+                                actor_hide(3);
+                                #endif
                             } else if (i == 2) {
                                 #ifdef ACTOR_SCENE_2_2_TEXT
                                 show_dialogue(ACTOR_SCENE_2_2_TEXT);
+                                #endif
+
+                                #ifdef ACTOR_SCENE_2_2_SHOW_ACTOR_0
+                                actor_show(0);
+                                #endif
+                                #ifdef ACTOR_SCENE_2_2_SHOW_ACTOR_1
+                                actor_show(1);
+                                #endif
+                                #ifdef ACTOR_SCENE_2_2_SHOW_ACTOR_2
+                                actor_show(2);
+                                #endif
+                                #ifdef ACTOR_SCENE_2_2_SHOW_ACTOR_3
+                                actor_show(3);
+                                #endif
+
+                                #ifdef ACTOR_SCENE_2_2_HIDE_ACTOR_0
+                                actor_hide(0);
+                                #endif
+                                #ifdef ACTOR_SCENE_2_2_HIDE_ACTOR_1
+                                actor_hide(1);
+                                #endif
+                                #ifdef ACTOR_SCENE_2_2_HIDE_ACTOR_2
+                                actor_hide(2);
+                                #endif
+                                #ifdef ACTOR_SCENE_2_2_HIDE_ACTOR_3
+                                actor_hide(3);
                                 #endif
                             }
                         }

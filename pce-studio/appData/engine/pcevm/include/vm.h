@@ -16,6 +16,8 @@
 #define OP_WAIT        0x08
 #define OP_MUSIC_PLAY  0x09
 #define OP_MUSIC_STOP  0x0A
+#define OP_ACTOR_HIDE  0x0B
+#define OP_ACTOR_SHOW  0x0C
 #define OP_END         0xFF
 
 typedef struct {

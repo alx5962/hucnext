@@ -1,7 +1,9 @@
 #define PCE_ACTOR_C 1
 #include "include/actor.h"
+#include "include/engine.h"
 
 int g_actor_active[PCE_MAX_ACTORS];
+int g_actor_hidden[PCE_MAX_ACTORS];
 int g_actor_x[PCE_MAX_ACTORS];
 int g_actor_y[PCE_MAX_ACTORS];
 int g_actor_tile_id[PCE_MAX_ACTORS];
@@ -18,6 +20,7 @@ void actor_init(void) {
     g_actor_count = 0;
     for (i = 0; i < PCE_MAX_ACTORS; i++) {
         g_actor_active[i] = 0;
+        g_actor_hidden[i] = 0;
         g_actor_x[i] = 0;
         g_actor_y[i] = 0;
         g_actor_tile_id[i] = 0;
@@ -25,7 +28,7 @@ void actor_init(void) {
         g_actor_size[i] = SZ_16x16;
         g_actor_dir[i] = 0;
         g_actor_anim_frame[i] = 0;
-        g_actor_sprite_handle[i] = i;
+        g_actor_sprite_handle[i] = i * 2;
     }
 }
 
@@ -35,6 +38,7 @@ int actor_spawn(int x, int y, int tile_id, int palette, int size) {
     id = g_actor_count;
     g_actor_count++;
     g_actor_active[id] = 1;
+    g_actor_hidden[id] = 0;
     g_actor_x[id] = x;
     g_actor_y[id] = y;
     g_actor_tile_id[id] = tile_id;
@@ -46,7 +50,7 @@ int actor_spawn(int x, int y, int tile_id, int palette, int size) {
 void actor_update_all(void) {
     int i, flip;
     for (i = 0; i < g_actor_count; i++) {
-        if (!g_actor_active[i]) {
+        if (!g_actor_active[i] || g_actor_hidden[i] || g_current_scene_type == SCENE_TYPE_LOGO) {
             spr_set(g_actor_sprite_handle[i]);
             spr_hide();
             if (g_actor_sprite_handle[i] + 16 < 64) {
@@ -96,5 +100,23 @@ void actor_set_pos(int id, int x, int y) {
 void actor_set_dir(int id, int dir) {
     if (id >= 0 && id < g_actor_count) {
         g_actor_dir[id] = dir;
+    }
+}
+
+void actor_hide(int id) {
+    if (id >= 0 && id < PCE_MAX_ACTORS) {
+        g_actor_hidden[id] = 1;
+    }
+}
+
+void actor_show(int id) {
+    if (id >= 0 && id < PCE_MAX_ACTORS) {
+        g_actor_hidden[id] = 0;
+    }
+}
+
+void actor_set_hidden(int id, int hidden) {
+    if (id >= 0 && id < PCE_MAX_ACTORS) {
+        g_actor_hidden[id] = hidden;
     }
 }
