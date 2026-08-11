@@ -296,7 +296,7 @@ const Splash = () => {
       <SplashWindow focus={windowFocus}>
         <SplashSidebar>
           <SplashLogo>
-            <img src={logoFile} alt="PCE Studio" draggable={false} />
+            <img src={logoFile} alt="ALXPCE Studio" draggable={false} />
             <SplashEasterEggButton
               onClick={() => setOpenCredits(true)}
               tabIndex={-1}
@@ -425,7 +425,7 @@ const Splash = () => {
       {openCredits && (
         <FocusLock>
           <Credits onClose={() => setOpenCredits(false)}>
-            <CreditsTitle>PCE Studio</CreditsTitle>
+            <CreditsTitle>ALXPCE Studio</CreditsTitle>
             <CreditsSubHeading>{l10n("SPLASH_CONTRIBUTORS")}</CreditsSubHeading>
             {goldContributors.map((contributor) => (
               <CreditsPerson

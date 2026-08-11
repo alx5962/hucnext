@@ -32,7 +32,7 @@ declare const VERSION: string;
 
 const corePluginRepository: PluginRepositoryEntry = {
   id: "core",
-  name: "PCE Studio",
+  name: "ALXPCE Studio",
   url: OFFICIAL_REPO_URL,
 };
 

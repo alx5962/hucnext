@@ -116,7 +116,7 @@ export const SplashAppTitle = ({ appName }: { appName?: string }) => {
           {VERSION} ({COMMITHASH})
         </div>
       ) : (
-        `${appName ?? "PCE Studio"} ${VERSION}`
+        `${appName ?? "ALXPCE Studio"} ${VERSION}`
       )}
     </SplashAppTitleWrapper>
   );

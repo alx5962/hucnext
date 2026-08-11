@@ -14,7 +14,7 @@ import { execSync } from "child_process";
 async function main() {
   const projDir = ${JSON.stringify(projDir)};
   const buildDir = ${JSON.stringify(buildDir)};
-  console.log("=== PCE Studio Dynamic Build Runner ===");
+  console.log("=== ALXPCE Studio Dynamic Build Runner ===");
   console.log("Building project dynamically from:", projDir);
   await buildProject(projDir, buildDir);
 
@@ -47,5 +47,5 @@ try {
     stdio: "inherit"
   });
 } finally {
-  try { fs.unlinkSync(path.resolve(__dirname, "temp-runner.ts")); } catch (e) {}
+  try { fs.unlinkSync(path.resolve(__dirname, "temp-runner.ts")); } catch (e) { }
 }

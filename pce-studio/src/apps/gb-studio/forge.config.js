@@ -16,11 +16,11 @@ module.exports = async () => {
       {
         name: "@electron-forge/maker-squirrel",
         config: {
-          name: "pce_studio",
-          exe: "pce-studio.exe",
+          name: "alxpce_studio",
+          exe: "alxpce-studio.exe",
           loadingGif: "src/assets/app/install.gif",
           setupIcon: "src/assets/app/icon/app_icon.ico",
-          productName: "PCE Studio",
+          productName: "ALXPCE Studio",
         },
       },
       {
@@ -29,9 +29,9 @@ module.exports = async () => {
       },
       new MakerAppImage({
         options: {
-          name: "pce-studio",
-          bin: "pce-studio",
-          productName: "PCE Studio",
+          name: "alxpce-studio",
+          bin: "alxpce-studio",
+          productName: "ALXPCE Studio",
           genericName: "Visual retro game maker",
           icon: {
             strict: true,
@@ -85,10 +85,10 @@ module.exports = async () => {
       },
       osxNotarize: process.env.APPLE_ID
         ? {
-            appleId: process.env.APPLE_ID,
-            appleIdPassword: process.env.APPLE_ID_PASSWORD,
-            teamId: process.env.APPLE_TEAM_ID,
-          }
+          appleId: process.env.APPLE_ID,
+          appleIdPassword: process.env.APPLE_ID_PASSWORD,
+          teamId: process.env.APPLE_TEAM_ID,
+        }
         : undefined,
     },
     plugins: [

@@ -210,7 +210,7 @@ const AppToolbar: FC = () => {
   } else if (saving && saveStep === "writing") {
     const writeProgress =
       saveWriteProgress.total > 0 &&
-      saveWriteProgress.completed !== saveWriteProgress.total
+        saveWriteProgress.completed !== saveWriteProgress.total
         ? ` ${saveWriteProgress.completed}/${saveWriteProgress.total}`
         : "";
     appTitle += ` (${l10n("TOOLBAR_WRITING_FILES")}${writeProgress})`;
@@ -221,7 +221,7 @@ const AppToolbar: FC = () => {
   }
 
   useEffect(() => {
-    document.title = `PCE Studio - ${appTitle}`;
+    document.title = `ALXPCE Studio - ${appTitle}`;
   }, [appTitle]);
 
   if (!loaded) {

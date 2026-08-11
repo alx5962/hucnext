@@ -34,64 +34,64 @@ const buildGame =
     startX,
     startY,
   }: BuildGameOptions = {}): AppThunk<Promise<void>> =>
-  async (dispatch, getState) => {
-    const state = getState();
+    async (dispatch, getState) => {
+      const state = getState();
 
-    if (state.console.status === "cancelled") {
-      return;
-    }
-    if (state.console.status === "running") {
-      dispatch(consoleActions.cancelConsole());
-      await API.project.buildCancel();
-      return;
-    }
+      if (state.console.status === "cancelled") {
+        return;
+      }
+      if (state.console.status === "running") {
+        dispatch(consoleActions.cancelConsole());
+        await API.project.buildCancel();
+        return;
+      }
 
-    dispatch(consoleActions.startConsole());
+      dispatch(consoleActions.startConsole());
 
-    const project = denormalizeProject(state.project.present);
-    const engineSchema = {
-      fields: state.engine.fields,
-      sceneTypes: state.engine.sceneTypes,
-      consts: state.engine.consts,
-    };
-    const selectionIds = state.editor.sceneSelectionIds;
+      const project = denormalizeProject(state.project.present);
+      const engineSchema = {
+        fields: state.engine.fields,
+        sceneTypes: state.engine.sceneTypes,
+        consts: state.engine.consts,
+      };
+      const selectionIds = state.editor.sceneSelectionIds;
 
-    try {
-      await API.project.build(
-        {
-          ...project,
-          scenes:
-            startSceneId && project.settings.runSceneSelectionOnly
-              ? project.scenes.filter(
+      try {
+        await API.project.build(
+          {
+            ...project,
+            scenes:
+              startSceneId && project.settings.runSceneSelectionOnly
+                ? project.scenes.filter(
                   (scene) =>
                     scene.id === startSceneId ||
                     selectionIds.includes(scene.id),
                 )
-              : project.scenes,
-          settings: {
-            ...project.settings,
-            startSceneId: startSceneId ?? project.settings.startSceneId,
-            startX: startX ?? project.settings.startX,
-            startY: startY ?? project.settings.startY,
+                : project.scenes,
+            settings: {
+              ...project.settings,
+              startSceneId: startSceneId ?? project.settings.startSceneId,
+              startX: startX ?? project.settings.startX,
+              startY: startY ?? project.settings.startY,
+            },
           },
-        },
-        {
-          buildType,
-          engineSchema,
-          exportBuild,
-          debugEnabled,
-        },
-      );
-    } catch {
-      openBuildLog(dispatch);
-    }
-    dispatch(consoleActions.completeConsole());
-  };
+          {
+            buildType,
+            engineSchema,
+            exportBuild,
+            debugEnabled,
+          },
+        );
+      } catch {
+        openBuildLog(dispatch);
+      }
+      dispatch(consoleActions.completeConsole());
+    };
 
 const deleteBuildCache = (): AppThunk<Promise<void>> => async (dispatch) => {
   await API.app.deleteBuildCache();
   dispatch(consoleActions.clearConsole());
-  dispatch(consoleActions.stdOut({ text: "Cleared PCE Studio caches" }));
+  dispatch(consoleActions.stdOut({ text: "Cleared ALXPCE Studio caches" }));
 };
 
 const ejectEngine = (): AppThunk => () => {
@@ -108,28 +108,28 @@ const ejectWebTemplate = (): AppThunk<Promise<void>> => async (dispatch) => {
 
 const exportProject =
   (exportType: ProjectExportType): AppThunk<Promise<void>> =>
-  async (dispatch, getState) => {
-    const state = getState();
+    async (dispatch, getState) => {
+      const state = getState();
 
-    if (state.console.status === "running") {
-      return;
-    }
-    dispatch(consoleActions.startConsole());
+      if (state.console.status === "running") {
+        return;
+      }
+      dispatch(consoleActions.startConsole());
 
-    const project = denormalizeProject(state.project.present);
-    const engineSchema = {
-      fields: state.engine.fields,
-      sceneTypes: state.engine.sceneTypes,
-      consts: state.engine.consts,
+      const project = denormalizeProject(state.project.present);
+      const engineSchema = {
+        fields: state.engine.fields,
+        sceneTypes: state.engine.sceneTypes,
+        consts: state.engine.consts,
+      };
+      try {
+        await API.project.exportProject(project, engineSchema, exportType);
+      } catch {
+        openBuildLog(dispatch);
+      }
+
+      dispatch(consoleActions.completeConsole());
     };
-    try {
-      await API.project.exportProject(project, engineSchema, exportType);
-    } catch {
-      openBuildLog(dispatch);
-    }
-
-    dispatch(consoleActions.completeConsole());
-  };
 
 const buildGameActions = {
   buildGame,

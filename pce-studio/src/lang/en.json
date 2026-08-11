@@ -1,9 +1,7 @@
 {
   "RTL": false,
-
   "GBSTUDIO_DESCRIPTION": "Visual retro game maker",
   "GBSTUDIO_COPYRIGHT": "Distributed under MIT license.",
-
   "// 1": "UI -------------------------------------------------------",
   "ACTOR": "Actor",
   "TRIGGER": "Trigger",
@@ -12,7 +10,6 @@
   "CUSTOM_EVENT": "Script",
   "CONSTANT": "Constant",
   "NOTE": "Note",
-
   "// 2": "Navigator ------------------------------------------------",
   "NAV_GAME_WORLD": "Game World",
   "NAV_SPRITES": "Sprites",
@@ -25,7 +22,6 @@
   "NAV_BUILD_AND_RUN": "Build & Run",
   "NAV_SETTINGS": "Settings",
   "NAV_IMAGES": "Images",
-
   "// 3": "Toolbar --------------------------------------------------",
   "TOOLBAR_MODIFIED": "Modified",
   "TOOLBAR_ZOOM_IN": "Zoom In",
@@ -41,7 +37,6 @@
   "TOOLBAR_SAVING": "Saving",
   "TOOLBAR_SAVING_ERROR": "Error While Saving",
   "TOOLBAR_WRITING_FILES": "Writing To Disk",
-
   "// 4": "Tools ----------------------------------------------------",
   "TOOL_SELECT_LABEL": "Select",
   "TOOL_ADD_LABEL": "Add",
@@ -66,7 +61,6 @@
   "TOOL_TILE_PRIORITY": "Tile Priority",
   "TOOL_MAGIC": "Magic Brush",
   "TOOL_SLOPE": "Slope Brush",
-
   "// 5": "Editors --------------------------------------------------",
   "SIDEBAR_NAVIGATION": "Navigation",
   "SIDEBAR_STARTING_SCENE": "Starting Scene",
@@ -98,7 +92,6 @@
   "SIDEBAR_CONSTANTS": "Constants",
   "SIDEBAR_ADD_CONSTANT": "Add Constant",
   "SIDEBAR_CONSTANT_USES": "Constant Uses",
-
   "// 6": "Form Fields ----------------------------------------------",
   "FIELD_NAME": "Name",
   "FIELD_DESCRIPTION": "Description",
@@ -646,7 +639,7 @@
   "FIELD_REPORT_BUG": "Report bug",
   "FIELD_RNG_SEED_DESCRIPTION": "Place this to run in response to user input to ensure random numbers change between playthroughs",
   "FIELD_REFERENCES": "References",
-  "FIELD_REFERENCES_DESC": "A list of the assets and entities used in your GBVM script. Use this to let PCE Studio know that a file is needed by your script, preventing it from being excluded in the final build.",
+  "FIELD_REFERENCES_DESC": "A list of the assets and entities used in your GBVM script. Use this to let ALXPCE Studio know that a file is needed by your script, preventing it from being excluded in the final build.",
   "FIELD_ADD_REFERENCE": "Add Reference",
   "FIELD_EMOTES": "Emotes",
   "FIELD_FONTS": "Fonts",
@@ -1007,7 +1000,7 @@
   "FIELD_LANGUAGE_PLUGIN_DESC": "A language plugin allows adding localization to the View/Language menu.",
   "FIELD_THEME_PLUGIN_DESC": "A theme plugin allows adding themes to the View/Theme menu.",
   "FIELD_TEMPLATE_PLUGIN_DESC": "A template plugin allows adding new starting templates. They will appear on the form when you create a new project.",
-  "FIELD_REQUIRES_GBS_VERSION": "Requires PCE Studio Version: {version}",
+  "FIELD_REQUIRES_GBS_VERSION": "Requires ALXPCE Studio Version: {version}",
   "FIELD_INSTALL_ANYWAY": "Install Anyway",
   "FIELD_REMOVE_PLUGIN": "Remove Plugin",
   "FIELD_REINSTALL_PLUGIN": "Reinstall Plugin",
@@ -1466,12 +1459,10 @@
   "FIELD_MERGE_DOWN": "Merge Down",
   "FIELD_INFO": "Info",
   "FIELD_UNIQUE_TILES": "Unique Tiles",
-
   "// 7": "Asset Viewer ---------------------------------------------",
   "ASSET_SEARCH": "Search...",
   "ASSET_EDIT": "Edit",
   "ASSET_ADD": "Add",
-
   "// 8": "Build ----------------------------------------------------",
   "BUILD_RUN": "Run",
   "BUILD_EXPORT_ROM": "Export ROM",
@@ -1482,7 +1473,6 @@
   "BUILD_CANCEL": "Cancel Build",
   "BUILD_CANCELLING": "Cancelling Build",
   "BUILD_CANCELLED": "Cancelled Build",
-
   "// 9": "Scripting Events -----------------------------------------",
   "EVENT_GROUP_ACTOR": "Actor",
   "EVENT_GROUP_CAMERA": "Camera",
@@ -1914,9 +1904,7 @@
   "EVENT_GROUP_DATA_TABLE": "Data Table",
   "EVENT_DATA_TABLE": "Data Table Lookup",
   "EVENT_DATA_TABLE_DESC": "Define a 2D array of static values that can be looked up by index, with each column loaded into a variable.",
-
   "// 10": "Menu -----------------------------------------------------",
-
   "MENU_FILE": "File",
   "MENU_NEW_PROJECT": "New Project",
   "MENU_OPEN": "Open...",
@@ -1969,7 +1957,7 @@
   "MENU_DOCUMENTATION": "Documentation",
   "MENU_LEARN_MORE": "Learn More",
   "MENU_SPEECH": "Speech",
-  "MENU_ABOUT": "About PCE Studio",
+  "MENU_ABOUT": "About ALXPCE Studio",
   "MENU_CART_TYPE": "Cartridge Type",
   "MENU_COPY_EVENT": "Copy Event",
   "MENU_RENAME_EVENT": "Rename Event",
@@ -2066,9 +2054,7 @@
   "MENU_DELETE_NOTE": "Delete Note",
   "MENU_DELETE_SELECTION": "Delete Selection",
   "MENU_INPUT": "Input",
-
   "// 11": "Warnings -----------------------------------------------------",
-
   "WARNING_BACKGROUND_TOO_SMALL": "Background is too small, must be at least 160px x 144px",
   "WARNING_BACKGROUND_TOO_LARGE": "Background is too large, must be at most 256px x 256px",
   "WARNING_BACKGROUND_NOT_MULTIPLE_OF_8": "Background width or height is not a multiple of 8px",
@@ -2091,7 +2077,7 @@
   "WARNING_NO_PLAYER_SET_FOR_SCENE_TYPE": "No Default Player Sprite has been set for \"{type}\" scenes. Set one in the \"Settings\" section.",
   "WARNING_LOGO_ENTITIES": "Logo scenes cannot contain Triggers",
   "WARNING_TOO_MANY_UNIQUE_PROJECTILES": "Too many unique projectiles used in scene \"{name}\". Scene contained {num} unique projectiles when max per scene is {max}.",
-  "WARNING_ENGINE_PLUGIN_OUT_OF_DATE": "Plugin \"{pluginName}\" was created for an older version of PCE Studio and may not work correctly. Plugin uses engine \"{pluginEngineVersion}\" but PCE Studio is using engine \"{expectedEngineVersion}\".",
+  "WARNING_ENGINE_PLUGIN_OUT_OF_DATE": "Plugin \"{pluginName}\" was created for an older version of ALXPCE Studio and may not work correctly. Plugin uses engine \"{pluginEngineVersion}\" but ALXPCE Studio is using engine \"{expectedEngineVersion}\".",
   "WARNING_ENGINE_PLUGIN_MISSING_MANIFEST": "Plugin \"{pluginName}\" is based on an unknown engine version and may not work correctly. Plugin authors can fix this issue by making sure `engine/engine.json` exists in the plugin containing at least `{\"version\": \"{expectedEngineVersion}\"}`.",
   "WARNING_BACKGROUND_TOO_MANY_PALETTES": "Background contains too many unique four color palettes ({paletteLength} where limit is {maxPaletteLength}) meaning it may not display correctly. Consider reducing the amount of colors used in this image.",
   "WARNING_BACKGROUND_IS_NOT_A_VALID_PNG": "Background \"{filename}\" is not a valid PNG file",
@@ -2109,9 +2095,7 @@
   "WARNING_PLUGIN_OVERWROTE_FILE": "Plugin \"{pluginName}\" overwrote \"{filename}\" which was already written by \"{previousPlugin}\"",
   "WARNING_PLUGIN_PATCH_CONFLICT_OVERWRITTEN": "Plugin \"{pluginName}\" could not patch \"{filename}\" because it was already overwritten by plugin \"{previousPlugin}\"",
   "WARNING_TILEMAP_TOO_MANY_TILES": "Tilemap contains too many unique 8x8px tiles ({tilesetLength} where limit is {maxTilesetLength}) meaning it may not display correctly.",
-
   "// 12": "Errors -------------------------------------------------------",
-
   "ERROR_PLEASE_ENTER_PROJECT_NAME": "Please enter a project name",
   "ERROR_PLEASE_ENTER_PROJECT_PATH": "Please enter a project path",
   "ERROR_PROJECT_ALREADY_EXISTS": "Project already exists",
@@ -2141,9 +2125,7 @@
   "ERROR_DATA_TABLE_CSV_NO_VARIABLES": "Imported CSV contains no variables.",
   "ERROR_DATA_TABLE_CSV_NO_ROW_DATA": "Imported CSV contains no row data.",
   "ERROR_SCENE_TARGET_LAYER_HIDDEN": "Could not edit as the target layer is hidden.",
-
   "// 13": "Splash -------------------------------------------------------",
-
   "SPLASH_NEW": "New",
   "SPLASH_OPEN": "Open Project",
   "SPLASH_RECENT": "Recent",
@@ -2154,7 +2136,7 @@
   "SPLASH_SAMPLE_PROJECT": "Sample Project",
   "SPLASH_BLANK_PROJECT": "Blank Project",
   "SPLASH_SAMPLE_PROJECT_DESCRIPTION": "A GBC template containing examples of top down, platformer, point and click and shooter scenes",
-  "SPLASH_SAMPLE_PROJECT_ORIGINAL_DESCRIPTION": "The original PCE Studio template. A short 4 color top down game",
+  "SPLASH_SAMPLE_PROJECT_ORIGINAL_DESCRIPTION": "The original ALXPCE Studio template. A short 4 color top down game",
   "SPLASH_BLANK_PROJECT_DESCRIPTION": "A completely blank canvas",
   "SPLASH_PATH": "Path",
   "SPLASH_CREATE": "Create Project",
@@ -2164,17 +2146,13 @@
   "SPLASH_NO_RECENT_PROJECTS": "No projects have been opened recently.",
   "SPLASH_CREDITS": "Credits",
   "SPLASH_CONTRIBUTORS": "Contributors",
-
   "// 14": "Dialogue Review ------------------------------------------------",
-
   "DIALOGUE_REVIEW": "Dialogue Review",
   "DIALOGUE_LINE": "Line",
   "DIALOGUE_LINES": "Lines",
   "DIALOGUE_WORD": "Word",
   "DIALOGUE_WORDS": "Words",
-
   "// 15": "Dialogs ------------------------------------------------------",
-
   "DIALOG_SAVE_CHANGES": "Do you want to save the changes you made to \"{name}\"?",
   "DIALOG_SAVE_WARNING": "Your changes will be lost if you don't save them.",
   "DIALOG_DOWNLOAD": "Download",
@@ -2188,27 +2166,27 @@
   "DIALOG_REPLACE": "Replace",
   "DIALOG_KEEP": "Keep Existing",
   "DIALOG_UPDATE_AVAILABLE": "Update available",
-  "DIALOG_UPDATE_DESCRIPTION": "PCE Studio {version} available. Would you like to update?",
+  "DIALOG_UPDATE_DESCRIPTION": "ALXPCE Studio {version} available. Would you like to update?",
   "DIALOG_UPDATE_DONT_ASK_AGAIN": "Dont ask me again",
   "DIALOG_UP_TO_DATE": "You’re up-to-date!",
-  "DIALOG_NEWEST_VERSION_AVAILABLE": "PCE Studio {version} is currently the newest version available.",
+  "DIALOG_NEWEST_VERSION_AVAILABLE": "ALXPCE Studio {version} is currently the newest version available.",
   "DIALOG_UNABLE_TO_CHECK_LATEST_VERSION": "Unable to check latest version at the moment",
-  "DIALOG_PROJECT_NEED_MIGRATION": "PCE Studio Project Requires Migrating",
-  "DIALOG_MIGRATION_DESCRIPTION": "Your project was created with version {currentVersion} and needs to be migrated to version {version}. This may prevent your project being opened in older versions of PCE Studio.\n\nIt is recommended to back up your project before continuing.\n\nSome manual changes to your project may be required, see migration guide for more details.",
+  "DIALOG_PROJECT_NEED_MIGRATION": "ALXPCE Studio Project Requires Migrating",
+  "DIALOG_MIGRATION_DESCRIPTION": "Your project was created with version {currentVersion} and needs to be migrated to version {version}. This may prevent your project being opened in older versions of ALXPCE Studio.\n\nIt is recommended to back up your project before continuing.\n\nSome manual changes to your project may be required, see migration guide for more details.",
   "DIALOG_MIGRATE": "Migrate to {version}",
-  "DIALOG_FUTURE": "PCE Studio Project Not Supported",
-  "DIALOG_FUTURE_DESCRIPTION": "This project file was created with version {currentVersion} which is newer than this version of PCE Studio supports. Maximum supported is {version}.\n\nYou may need to update PCE Studio.",
+  "DIALOG_FUTURE": "ALXPCE Studio Project Not Supported",
+  "DIALOG_FUTURE_DESCRIPTION": "This project file was created with version {currentVersion} which is newer than this version of ALXPCE Studio supports. Maximum supported is {version}.\n\nYou may need to update ALXPCE Studio.",
   "DIALOG_OPEN_ANYWAY": "Open Anyway",
-  "DIALOG_LANGUAGE_CHANGES_NEED_RESTART": "PCE Studio needs to restart before language changes can take effect",
+  "DIALOG_LANGUAGE_CHANGES_NEED_RESTART": "ALXPCE Studio needs to restart before language changes can take effect",
   "DIALOG_LANGUAGE_SAVE_AND_RESTART": "Please save your project and restart the application.",
   "DIALOG_DELETE_CUSTOM_EVENT": "Delete Script \"{name}\"?",
   "DIALOG_DELETE_CUSTOM_EVENT_USED": "{count} uses of this script will also be removed.\n\nFound in: {sceneNames}",
   "DIALOG_DELETE_CUSTOM_EVENT_USED_SINGLAR": "{count} use of this script will also be removed.\n\nFound in: {sceneNames}",
   "DIALOG_EJECT_ENGINE": "Eject game engine?",
-  "DIALOG_EJECT_ENGINE_DESCRIPTION": "The latest PCE Studio engine files will be copied to 'assets/engine'. You can make changes to any of these files and they will replace the default engine during builds.\n\nTo restore the default engine delete 'assets/engine'",
+  "DIALOG_EJECT_ENGINE_DESCRIPTION": "The latest ALXPCE Studio engine files will be copied to 'assets/engine'. You can make changes to any of these files and they will replace the default engine during builds.\n\nTo restore the default engine delete 'assets/engine'",
   "DIALOG_EJECT": "Eject",
   "DIALOG_EJECT_ENGINE_REPLACE": "Ejected game engine already found",
-  "DIALOG_EJECT_ENGINE_REPLACE_DESCRIPTION": "You have already ejected the PCE Studio engine to your project.\n\nIf you continue the previously ejected files will be replaced and any changes you made will be lost.",
+  "DIALOG_EJECT_ENGINE_REPLACE_DESCRIPTION": "You have already ejected the ALXPCE Studio engine to your project.\n\nIf you continue the previously ejected files will be replaced and any changes you made will be lost.",
   "DIALOG_EJECT_REPLACE": "Replace Engine",
   "DIALOG_EJECT_WEB_TEMPLATE": "Eject default web template?",
   "DIALOG_EJECT_WEB_TEMPLATE_DESCRIPTION": "The default web template files will be copied to 'assets/web/binjgb'. You can then modify the files used for web export.",
@@ -2242,14 +2220,14 @@
   "DIALOG_DELETE_CONSTANT": "Delete Constant \"{name}\"?",
   "DIALOG_DELETE_CONSTANT_USED": "{count} uses of this constant will be set to '0'.\n\nFound in: {foundReferences}",
   "DIALOG_DELETE_CONSTANT_USED_SINGLAR": "{count} use of this constant will be set to '0'.\n\nFound in: {foundReferences}",
-  "DIALOG_LEAVING_GBSTUDIO": "Leaving PCE Studio",
+  "DIALOG_LEAVING_GBSTUDIO": "Leaving ALXPCE Studio",
   "DIALOG_THIS_LINK_IS_TAKING_YOU_TO": "This link is taking you to the following website",
   "DIALOG_VISIT_SITE": "Visit Site",
   "DIALOG_DELETE_PLUGIN": "Delete Plugin \"{name}\"?",
   "DIALOG_DELETE_PLUGIN_DESCRIPTION": "The folder \n{filename}\nwill be removed from your file system. This action cannot be undone.",
   "DIALOG_DELETE_PLUGIN_REPO": "Delete Plugin Repository \"{name}\"?",
   "DIALOG_DELETE_PLUGIN_REPO_DESCRIPTION": "The repository \n{url}\nwill be removed.",
-  "DIALOG_PLUGIN_INCOMPATIBLE_WITH_YOUR_GBSTUDIO": "This plugin may be incompatible with your version of PCE Studio",
+  "DIALOG_PLUGIN_INCOMPATIBLE_WITH_YOUR_GBSTUDIO": "This plugin may be incompatible with your version of ALXPCE Studio",
   "DIALOG_PLUGIN_INCOMPATIBLE_WITH_YOUR_GBSTUDIO_DESC": "This plugin is listed as supporting versions {pluginSupportedVersion} but your are using version {version}.",
   "DIALOG_PLUGIN_INCOMPATIBLE_WITH_YOUR_GBSTUDIO_PRERELEASE_DESC": "This plugin is listed as supporting versions {pluginSupportedVersion} but your are using a prerelease version {version}.",
   "DIALOG_REPLACE_MONO_TILES": "Replace Monochrome Tiles Image \"{name}\"?",
@@ -2257,9 +2235,7 @@
   "DIALOG_CONVERT_MOD_REPLACE": "Converted .uge already found",
   "DIALOG_CONVERT_MOD_REPLACE_DESCRIPTION": "A .uge file named \"{filename}\" already exists. Do you want to replace it?",
   "DIALOG_UGE_REPLACE": "Replace .uge",
-
   "// 16": "Settings ----------------------------------------------------",
-
   "SETTINGS": "Settings",
   "SETTINGS_SCENES": "Scenes",
   "SETTINGS_SCENE": "Scene",
@@ -2281,31 +2257,23 @@
   "SETTINGS_WEB_EXPORT": "Web Export Settings",
   "SETTINGS_SPRITE": "Sprite Options",
   "SETTINGS_PROJECTILES": "Projectiles Options",
-
   "// 17 ": "Palettes ---------------------------------------------------",
-
   "PALETTES_EDITOR": "Palettes Editor",
-
   "// 18 ": "Error ------------------------------------------------------",
-
-  "ERROR_TITLE": "PCE Studio encountered an error",
+  "ERROR_TITLE": "ALXPCE Studio encountered an error",
   "ERROR_WHAT_CAN_I_DO": "What can I do?",
   "ERROR_VIEW_STACK_TRACE": "View Stack Trace",
   "ERROR_CLOSE": "Close",
   "ERROR_UNABLE_TO_SAVE_MUSIC_FILE": "Unable to save music file",
   "ERROR_UNABLE_TO_SAVE_MUSIC_FILE_DESC": "Double check the file you're trying to edit isn't Read-only",
-
   "// 19 ": "Game Type --------------------------------------------------",
-
   "GAMETYPE_TOP_DOWN": "Top Down 2D",
   "GAMETYPE_PLATFORMER": "Platformer",
   "GAMETYPE_ADVENTURE": "Adventure",
   "GAMETYPE_SHMUP": "Shoot Em' Up",
   "GAMETYPE_POINT_N_CLICK": "Point and Click",
   "GAMETYPE_LOGO": "Logo",
-
   "// 20": "Compiler -----------------------------------------------------",
-
   "COMPILER_COMPILING": "Compiling",
   "COMPILER_LINKING": "Linking",
   "COMPILER_PACKING": "Packing Data",
@@ -2336,9 +2304,7 @@
   "COMPILER_LOOKING_FOR_ENGINE_PLUGINS": "Looking for engine plugins in {path}",
   "COMPILER_USING_ENGINE_PLUGIN": "Using engine plugin: {path}",
   "COMPILER_USING_ENGINE_PLUGIN_VERSION": "Using version: {path}",
-
   "// 21": "Messages -----------------------------------------------------",
-
   "MESSAGE_NO_TILESETS_FOUND": "No tilesets found",
   "MESSAGE_ADD_TILESET_FILES": "Add tileset .png files to the project assets/tilesets folder to create tilemaps.",
   "MESSAGE_NO_SONGS_FOUND": "No songs found",
