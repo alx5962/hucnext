@@ -8,8 +8,9 @@ const rendererPreloadConfig = {
 
 module.exports = {
   packagerConfig: {
-    name: "PCE Studio",
-    executableName: "pce-studio",
+    name: "ALXPCE Studio",
+    executableName: "alxpce-studio",
+    icon: "src/assets/app/icon/app_icon.ico",
     asar: true,
     ignore: (path) => {
       if (!path) return false;

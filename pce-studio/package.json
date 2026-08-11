@@ -1,6 +1,6 @@
 {
-  "name": "pce-studio",
-  "productName": "PCE Studio",
+  "name": "alxpce-studio",
+  "productName": "ALXPCE Studio",
   "version": "1.0.0",
   "description": "Visual retro game maker for PC Engine / TurboGrafx-16",
   "main": ".webpack/main",
@@ -18,10 +18,11 @@
     "pcengine",
     "turbografx16",
     "huc",
+    "nex",
     "pceas",
     "game-maker"
   ],
-  "author": "PCE Studio Team",
+  "author": "Alx5962",
   "license": "MIT",
   "config": {
     "forge": "./forge.config.js"

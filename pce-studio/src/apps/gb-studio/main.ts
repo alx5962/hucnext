@@ -261,7 +261,8 @@ if (isDevMode) {
 export const createSplash = async (forceTab?: SplashTab) => {
   // Create the browser window.
   splashWindow = new BrowserWindow({
-    title: "PCE Studio",
+    title: "ALXPCE Studio",
+    icon: Path.join(assetsRoot, "app/icon/app_icon.ico"),
     width: 640,
     height: 430,
     useContentSize: true,
@@ -301,7 +302,8 @@ export const createSplash = async (forceTab?: SplashTab) => {
 export const createPreferences = async () => {
   // Create the browser window.
   preferencesWindow = new BrowserWindow({
-    title: "PCE Studio",
+    title: "ALXPCE Studio",
+    icon: Path.join(assetsRoot, "app/icon/app_icon.ico"),
     width: 600,
     height: 400,
     resizable: false,
@@ -333,7 +335,8 @@ export const createPreferences = async () => {
 
 export const createPluginsWindow = async () => {
   pluginsWindow = new BrowserWindow({
-    title: "PCE Studio",
+    title: "ALXPCE Studio",
+    icon: Path.join(assetsRoot, "app/icon/app_icon.ico"),
     width: 600,
     height: 700,
     resizable: false,
@@ -370,7 +373,8 @@ export const createProjectWindow = async () => {
 
   // Create the browser window.
   projectWindow = new BrowserWindow({
-    title: "PCE Studio",
+    title: "ALXPCE Studio",
+    icon: Path.join(assetsRoot, "app/icon/app_icon.ico"),
     x: projectWindowState.x,
     y: projectWindowState.y,
     width: Math.max(900, projectWindowState.width),
@@ -698,6 +702,7 @@ export const createPlay = async (
   if (!playWindow) {
     // Create the browser window.
     playWindow = new BrowserWindow({
+      icon: Path.join(assetsRoot, "app/icon/app_icon.ico"),
       width: sgb ? 512 : 480,
       height: sgb ? 448 : 432,
       fullscreenable: false,
