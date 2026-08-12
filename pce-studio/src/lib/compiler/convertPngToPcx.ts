@@ -19,10 +19,6 @@ export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: Cro
   let width = cropOpts?.cropW ?? srcPng.width;
   let height = cropOpts?.cropH ?? srcPng.height;
 
-  // Boundary checks
-  if (cropX + width > srcPng.width) width = srcPng.width - cropX;
-  if (cropY + height > srcPng.height) height = srcPng.height - cropY;
-
   // Detect transparent background color from top-left pixel (0,0) or alpha
   const bgR = srcPng.data[0];
   const bgG = srcPng.data[1];
@@ -37,14 +33,21 @@ export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: Cro
 
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
+      const dstIdx = y * width + x;
       const srcX = cropOpts?.flipX ? (width - 1 - x) : x;
-      const srcIdx = ((cropY + y) * srcPng.width + (cropX + srcX)) * 4;
+      const realX = cropX + srcX;
+      const realY = cropY + y;
+
+      if (realX >= srcPng.width || realY >= srcPng.height) {
+        pixels[dstIdx] = 0; // Transparent padding
+        continue;
+      }
+
+      const srcIdx = (realY * srcPng.width + realX) * 4;
       let r = srcPng.data[srcIdx];
       let g = srcPng.data[srcIdx + 1];
       let b = srcPng.data[srcIdx + 2];
       const a = srcPng.data[srcIdx + 3];
-
-      const dstIdx = y * width + x;
 
       // Check alpha transparency OR exact top-left background color match
       const isTopLeftBg = Math.abs(r - bgR) <= 5 && Math.abs(g - bgG) <= 5 && Math.abs(b - bgB) <= 5;

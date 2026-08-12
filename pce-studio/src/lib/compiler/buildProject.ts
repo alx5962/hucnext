@@ -561,8 +561,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       if (playerSprObj) {
         playerCropW = playerSprObj.canvasWidth || 16;
         playerCropH = playerSprObj.canvasHeight || 16;
-        playerSprWidth16 = Math.max(1, Math.min(2, Math.floor(playerCropW / 16)));
-        playerSprHeight16 = Math.max(1, Math.min(2, Math.floor(playerCropH / 16)));
+        playerSprWidth16 = Math.max(1, Math.min(2, Math.ceil(playerCropW / 16)));
+        playerSprHeight16 = Math.max(1, Math.min(2, Math.ceil(playerCropH / 16)));
 
         try {
           const tile0 = playerSprObj?.states?.[0]?.animations?.[0]?.frames?.[0]?.tiles?.[0];
@@ -796,16 +796,16 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           const canvasH = sprObj.canvasHeight || 16;
           cropW = canvasW;
           cropH = canvasH;
-          w16 = Math.max(1, Math.min(2, Math.floor(canvasW / 16)));
-          h16 = Math.max(1, Math.min(2, Math.floor(canvasH / 16)));
+          w16 = Math.max(1, Math.min(2, Math.ceil(canvasW / 16)));
+          h16 = Math.max(1, Math.min(2, Math.ceil(canvasH / 16)));
           cropX = getCropXForActor(scActor, sprObj, canvasW);
         } else {
           cropX = getCropXForActor(scActor, null, 16);
         }
 
         const dims = convertPngToPcx(srcPng, destPcx, { cropX, cropY, cropW, cropH });
-        w16 = Math.max(1, Math.min(2, Math.floor(dims.width / 16)));
-        h16 = Math.max(1, Math.min(2, Math.floor(dims.height / 16)));
+        w16 = Math.max(1, Math.min(2, Math.ceil(dims.width / 16)));
+        h16 = Math.max(1, Math.min(2, Math.ceil(dims.height / 16)));
 
         const vramSizeHex = `0x${((w16 * h16) * 0x40).toString(16).toUpperCase()}`;
         let sprSizeConst = "SZ_16x16";
