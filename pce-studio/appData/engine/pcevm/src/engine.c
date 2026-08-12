@@ -20,6 +20,7 @@ int g_shmup_scroll_x = 0;
 
 void load_scene(int scene_num, int player_x, int player_y) {
   int i;
+  hide_dialogue();
   g_current_scene = scene_num;
 
   for (i = 0; i < PCE_MAX_ACTORS; i++) {
@@ -6489,25 +6490,86 @@ int g_dialogue_active = 0;
 int g_dialogue_timer = 0;
 
 void show_dialogue(const char *msg) {
+  int i;
+  char line_buf[33];
+  const char *p;
+
   if (!msg || !*msg)
     return;
+
   g_dialogue_active = 1;
   g_dialogue_timer = 180;
   set_color(15, 0x1FF);
   set_font_color(0, 15);
-  put_string("                    ", 6, 22);
-  put_string("                    ", 6, 23);
-  put_string(msg, 6, 22);
+
+  /* Top border at y = 22 */
+  line_buf[0] = '+';
+  for (i = 1; i <= 30; i++) line_buf[i] = '-';
+  line_buf[31] = '+';
+  line_buf[32] = '\0';
+  put_string(line_buf, 0, 22);
+
+  /* Text line 1 at y = 23 */
+  line_buf[0] = '|';
+  p = msg;
+  for (i = 1; i <= 30; i++) {
+    if (*p && *p != '\n') {
+      line_buf[i] = *p++;
+    } else {
+      line_buf[i] = ' ';
+    }
+  }
+  line_buf[31] = '|';
+  line_buf[32] = '\0';
+  put_string(line_buf, 0, 23);
+
+  /* Text line 2 at y = 24 */
+  line_buf[0] = '|';
+  if (*p == '\n') p++;
+  for (i = 1; i <= 30; i++) {
+    if (*p && *p != '\n') {
+      line_buf[i] = *p++;
+    } else {
+      line_buf[i] = ' ';
+    }
+  }
+  line_buf[31] = '|';
+  line_buf[32] = '\0';
+  put_string(line_buf, 0, 24);
+
+  /* Text line 3 at y = 25 */
+  line_buf[0] = '|';
+  if (*p == '\n') p++;
+  for (i = 1; i <= 30; i++) {
+    if (*p && *p != '\n') {
+      line_buf[i] = *p++;
+    } else {
+      line_buf[i] = ' ';
+    }
+  }
+  if (line_buf[30] == ' ') line_buf[30] = 'v';
+  line_buf[31] = '|';
+  line_buf[32] = '\0';
+  put_string(line_buf, 0, 25);
+
+  /* Bottom border at y = 26 */
+  line_buf[0] = '+';
+  for (i = 1; i <= 30; i++) line_buf[i] = '-';
+  line_buf[31] = '+';
+  line_buf[32] = '\0';
+  put_string(line_buf, 0, 26);
 }
 
 void hide_dialogue(void) {
+  int y;
   if (g_dialogue_active) {
     g_dialogue_active = 0;
     g_dialogue_timer = 0;
     set_color(15, 0x000);
     set_font_color(0, 0);
-    put_string("                    ", 6, 22);
-    put_string("                    ", 6, 23);
+    for (y = 22; y <= 26; y++) {
+      put_string("                                ", 0, y);
+    }
   }
 }
 
@@ -6528,7 +6590,7 @@ void check_actor_interaction(unsigned int input) {
           dx = -dx;
         if (dy < 0)
           dy = -dy;
-        if (dx <= 48 && dy <= 48) {
+        if (dx <= 24 && dy <= 24) {
           if (g_dialogue_active) {
             hide_dialogue();
           } else {

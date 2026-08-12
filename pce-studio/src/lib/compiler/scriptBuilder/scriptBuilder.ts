@@ -1245,7 +1245,7 @@ class ScriptBuilder extends ScriptBuilderBase {
         this._overlaySetScroll(
           textX + (avatarId ? 2 : 0),
           textY,
-          (showFrame ? 19 : 20) - (avatarId ? 2 : 0) - textX,
+          20 - (avatarId ? 2 : 0) - textX - (showFrame ? 1 : 0),
           textHeight,
           ".UI_COLOR_WHITE",
         );
