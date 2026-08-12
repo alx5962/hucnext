@@ -27,6 +27,27 @@ void camera_update_x(int target_x) {
     if (g_cam_x > CAM_MAX_X) g_cam_x = CAM_MAX_X;
 }
 
+int g_camera_shake_timer = 0;
+int g_camera_shake_mag = 0;
+
+void camera_shake(int frames, int magnitude) {
+    g_camera_shake_timer = frames;
+    g_camera_shake_mag = magnitude;
+}
+
 void camera_apply(void) {
-    scroll(0, g_cam_x, g_cam_y, 0, 223, 0xC0);
+    int sx;
+    int sy;
+    sx = g_cam_x;
+    sy = g_cam_y;
+    if (g_camera_shake_timer > 0) {
+        g_camera_shake_timer--;
+        if (g_camera_shake_mag > 0) {
+            sx += (rand() % (g_camera_shake_mag * 2 + 1)) - g_camera_shake_mag;
+            sy += (rand() % (g_camera_shake_mag * 2 + 1)) - g_camera_shake_mag;
+            if (sx < 0) sx = 0;
+            if (sy < 0) sy = 0;
+        }
+    }
+    scroll(0, sx, sy, 0, 223, 0xC0);
 }

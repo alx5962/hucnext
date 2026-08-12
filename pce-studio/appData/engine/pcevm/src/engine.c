@@ -1,6 +1,21 @@
 #include "include/engine.h"
 #include "include/pce_sound.h"
 
+void show_dialogue(const char *msg);
+void hide_dialogue(void);
+
+int g_script_scene = 0;
+int g_script_step = -1;
+int g_wait_timer = 0;
+
+#ifndef HAS_SCENE_STEP_EVENTS
+int run_scene_step(int scene_num, int step) {
+  (void)scene_num;
+  (void)step;
+  return -1;
+}
+#endif
+
 #ifndef PLAYER_START_X
 #define PLAYER_START_X 104
 #endif
@@ -5666,6 +5681,10 @@ void load_scene(int scene_num, int player_x, int player_y) {
   if (g_actor_count > 0) {
     actor_set_pos(0, player_x, player_y);
   }
+
+  g_script_scene = scene_num;
+  g_script_step = 0;
+  g_wait_timer = 0;
 }
 
 const unsigned int font_pal[16] = {0x000, 0x1FF, 0x1FF, 0x1FF, 0x1FF, 0x1FF,
@@ -6971,6 +6990,14 @@ void engine_update(void) {
       if (g_dialogue_timer == 0) {
         hide_dialogue();
       }
+    }
+  }
+
+  if (g_script_step >= 0) {
+    if (g_wait_timer > 0) {
+      g_wait_timer--;
+    } else if (!g_dialogue_active) {
+      g_script_step = run_scene_step(g_script_scene, g_script_step);
     }
   }
 

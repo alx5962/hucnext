@@ -893,6 +893,103 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     });
   });
 
+  // Dynamic scene step runner generation for ALL scenes in allScenes
+  let sceneInitCases = "";
+  allScenes.forEach((scene: any, idx: number) => {
+    const scNum = idx + 1;
+    const events = [
+      ...(Array.isArray(scene.script) ? scene.script : []),
+      ...(Array.isArray(scene.startScript) ? scene.startScript : [])
+    ];
+
+    const findTargetNum = (actArg: string): number => {
+      if (actArg === "player" || actArg === "$self$") return 0;
+      const targetIdx = (scene.actors || []).findIndex((a: any) => a.id === actArg);
+      if (targetIdx !== -1) return targetIdx + 1;
+      return 0;
+    };
+
+    let stepIndex = 0;
+    let stepCases = "";
+
+    const processEventList = (evts: any[]) => {
+      if (!Array.isArray(evts)) return;
+      for (const evt of evts) {
+        if (!evt || typeof evt !== "object" || evt.args?.__comment) continue;
+
+        if (evt.command === "EVENT_TEXT" || evt.command === "EVENT_TEXT_DIALOGUE" || evt.command === "EVENT_DISPLAY_TEXT") {
+          let textVal = "";
+          if (typeof evt.args?.text === "string") {
+            textVal = evt.args.text;
+          } else if (Array.isArray(evt.args?.text)) {
+            textVal = evt.args.text.join("\\n");
+          }
+          if (textVal) {
+            const escaped = textVal.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n");
+            stepCases += `      case ${stepIndex}:\n        show_dialogue("${escaped}");\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
+          }
+        } else if (evt.command === "EVENT_WAIT") {
+          let seconds = 1;
+          if (typeof evt.args?.time === "number") seconds = evt.args.time;
+          else if (typeof evt.args?.time === "object" && evt.args?.time?.value !== undefined) seconds = Number(evt.args.time.value);
+          const frames = Math.max(1, Math.round(seconds * 60));
+          stepCases += `      case ${stepIndex}:\n        g_wait_timer = ${frames};\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_CAMERA_SHAKE") {
+          let seconds = 0.5;
+          if (typeof evt.args?.time === "number") seconds = evt.args.time;
+          else if (typeof evt.args?.time === "object" && evt.args?.time?.value !== undefined) seconds = Number(evt.args.time.value);
+          let mag = 5;
+          if (typeof evt.args?.magnitude === "number") mag = evt.args.magnitude;
+          else if (typeof evt.args?.magnitude === "object" && evt.args?.magnitude?.value !== undefined) mag = Number(evt.args.magnitude.value);
+          const frames = Math.max(1, Math.round(seconds * 60));
+          stepCases += `      case ${stepIndex}:\n        camera_shake(${frames}, ${mag});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_SWITCH_SCENE") {
+          let targetScene = 1;
+          if (evt.args?.sceneId && sceneIdToNum[evt.args.sceneId]) {
+            targetScene = sceneIdToNum[evt.args.sceneId];
+          }
+          let rawX = 0;
+          let rawY = 0;
+          if (typeof evt.args?.x === "number") rawX = evt.args.x;
+          else if (typeof evt.args?.x === "object" && evt.args?.x?.value !== undefined) rawX = Number(evt.args.x.value);
+          if (typeof evt.args?.y === "number") rawY = evt.args.y;
+          else if (typeof evt.args?.y === "object" && evt.args?.y?.value !== undefined) rawY = Number(evt.args.y.value);
+
+          stepCases += `      case ${stepIndex}:\n        load_scene(${targetScene}, ${rawX * 8}, ${(rawY * 8) - (playerSprHeight16 * 16) + 8});\n        return -1;\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_MUSIC_PLAY" || evt.command === "EVENT_PLAY_MUSIC") {
+          stepCases += `      case ${stepIndex}:\n#ifdef HAS_MUSIC_DATA\n        pce_sound_play(song_0_Data);\n#endif\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_SHOW") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          stepCases += `      case ${stepIndex}:\n        actor_show(${targetNum});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_HIDE") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          stepCases += `      case ${stepIndex}:\n        actor_hide(${targetNum});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        }
+
+        if (evt.children && typeof evt.children === "object") {
+          Object.values(evt.children).forEach((cEvts: any) => processEventList(cEvts));
+        }
+        if (evt.true && Array.isArray(evt.true)) processEventList(evt.true);
+        if (evt.false && Array.isArray(evt.false)) processEventList(evt.false);
+      }
+    };
+
+    processEventList(events);
+
+    if (stepCases) {
+      sceneInitCases += `  if (scene_num == ${scNum}) {\n    switch (step) {\n${stepCases}      default:\n        return -1;\n    }\n  }\n`;
+    }
+  });
+
+  const sceneInitFunctionC = `#define HAS_SCENE_STEP_EVENTS 1\nint run_scene_step(int scene_num, int step) {\n${sceneInitCases}  return -1;\n}\n`;
+
   // Look for music tracks (.uge files)
   let musicIncludes = "";
   let hasMusicDef = "";
@@ -933,32 +1030,39 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
   });
 
-  // Find requested music file ONLY if explicitly set in active scene or scene events
+  // Find requested music file across ALL scenes or starting scene
   let targetUgeFilename = "";
   let targetUgeSymbol = "song_0";
 
-  // 1. Check starting scene script for EVENT_MUSIC_PLAY
-  if (activeStartScene?.script && Array.isArray(activeStartScene.script)) {
-    const playCmd = activeStartScene.script.find((c: any) => c.command === "EVENT_MUSIC_PLAY");
-    if (playCmd && playCmd.args?.musicId) {
-      const mInfo = musicIdMap[playCmd.args.musicId];
+  for (const sc of allScenes) {
+    if (targetUgeFilename) break;
+    const events = [
+      ...(Array.isArray(sc.script) ? sc.script : []),
+      ...(Array.isArray(sc.startScript) ? sc.startScript : [])
+    ];
+    for (const evt of events) {
+      if (evt && (evt.command === "EVENT_MUSIC_PLAY" || evt.command === "EVENT_PLAY_MUSIC")) {
+        const musicId = evt.args?.musicId || evt.args?.music;
+        if (musicId) {
+          const mInfo = musicIdMap[musicId];
+          if (mInfo) {
+            targetUgeFilename = mInfo.filename;
+            targetUgeSymbol = mInfo.symbol;
+          } else {
+            targetUgeFilename = String(musicId);
+          }
+          break;
+        }
+      }
+    }
+    if (!targetUgeFilename && sc.musicId) {
+      const mInfo = musicIdMap[sc.musicId];
       if (mInfo) {
         targetUgeFilename = mInfo.filename;
         targetUgeSymbol = mInfo.symbol;
       } else {
-        targetUgeFilename = String(playCmd.args.musicId);
+        targetUgeFilename = String(sc.musicId);
       }
-    }
-  }
-
-  // 2. Check starting scene.musicId
-  if (!targetUgeFilename && activeStartScene?.musicId) {
-    const mInfo = musicIdMap[activeStartScene.musicId];
-    if (mInfo) {
-      targetUgeFilename = mInfo.filename;
-      targetUgeSymbol = mInfo.symbol;
-    } else {
-      targetUgeFilename = String(activeStartScene.musicId);
     }
   }
 
@@ -972,6 +1076,19 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       if (fs.existsSync(p)) {
         foundUgePath = p;
         break;
+      }
+    }
+  }
+
+  // Fallback scan for any .uge file if target filename didn't match directly
+  if (!foundUgePath) {
+    for (const mDir of musicDirsToScan) {
+      if (fs.existsSync(mDir)) {
+        const ugeFiles = fs.readdirSync(mDir).filter((f: any) => typeof f === "string" && f.endsWith(".uge"));
+        if (ugeFiles.length > 0) {
+          foundUgePath = pathModule.join(mDir, ugeFiles[0]);
+          break;
+        }
       }
     }
   }
@@ -1042,6 +1159,9 @@ ${musicIncludes}
 #include "src/collision.c"
 #include "src/trigger.c"
 #include "src/vm.c"
+
+${sceneInitFunctionC}
+
 #include "src/engine.c"
 
 main() {

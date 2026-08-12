@@ -10,6 +10,11 @@
 
 extern int g_current_scene;
 extern int g_current_scene_type;
+extern int g_wait_timer;
+
+void show_dialogue(const char *msg);
+void hide_dialogue(void);
+void load_scene(int scene_num, int player_x, int player_y);
 
 /* Scene type constants */
 #define SCENE_TYPE_TOPDOWN      0
