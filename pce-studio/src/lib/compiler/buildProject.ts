@@ -1066,7 +1066,31 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         } else if (evt.command === "EVENT_DIALOGUE_CLOSE_NONMODAL") {
           stepCases += `      case ${stepIndex}:\n        hide_dialogue();\n        return ${stepIndex + 1};\n`;
           stepIndex++;
+        } else if (evt.command === "EVENT_HIDE_SPRITES") {
+          stepCases += `      case ${stepIndex}:\n        actor_hide_all();\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
         } else if (
+          evt.command === "EVENT_IDLE" ||
+          evt.command === "EVENT_IF" ||
+          evt.command === "EVENT_IF_ACTOR_AT_POSITION" ||
+          evt.command === "EVENT_IF_ACTOR_DIRECTION" ||
+          evt.command === "EVENT_IF_ACTOR_DISTANCE_FROM_ACTOR" ||
+          evt.command === "EVENT_IF_ACTOR_RELATIVE_TO_ACTOR" ||
+          evt.command === "EVENT_IF_COLOR_SUPPORTED" ||
+          evt.command === "EVENT_IF_CURRENT_SCENE_IS" ||
+          evt.command === "EVENT_IF_ENGINE_FIELD" ||
+          evt.command === "EVENT_IF_ENGINE_FIELD_COMPARE" ||
+          evt.command === "EVENT_IF_EXPRESSION" ||
+          evt.command === "EVENT_IF_FALSE" ||
+          evt.command === "EVENT_IF_FLAGS_COMPARE" ||
+          evt.command === "EVENT_IF_INPUT" ||
+          evt.command === "EVENT_IF_SAVED_DATA" ||
+          evt.command === "EVENT_IF_TRUE" ||
+          evt.command === "EVENT_IF_VALUE" ||
+          evt.command === "EVENT_IF_VALUE_COMPARE" ||
+          evt.command === "EVENT_INC_VALUE" ||
+          evt.command === "EVENT_LAUNCH_PROJECTILE" ||
+          evt.command === "EVENT_LAUNCH_PROJECTILE_SLOT" ||
           evt.command === "EVENT_ACTOR_EFFECTS" ||
           evt.command === "EVENT_ACTOR_MOVE_CANCEL" ||
           evt.command === "EVENT_ACTOR_GET_DIRECTION" ||

@@ -192,3 +192,10 @@ void actor_effects(int id, int effect_id) {
     (void)id;
     (void)effect_id;
 }
+
+void actor_hide_all(void) {
+    int i;
+    for (i = 0; i < g_actor_count; i++) {
+        g_actor_hidden[i] = 1;
+    }
+}
