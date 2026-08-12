@@ -17,6 +17,13 @@ int g_actor_count;
 void actor_init(void) {
     int i;
     init_satb();
+    for (i = 0; i < 64; i++) {
+        spr_set(i);
+        spr_x(512);
+        spr_y(512);
+        spr_hide();
+    }
+    satb_update();
     g_actor_count = 0;
     for (i = 0; i < PCE_MAX_ACTORS; i++) {
         g_actor_active[i] = 0;
@@ -52,9 +59,13 @@ void actor_update_all(void) {
     for (i = 0; i < g_actor_count; i++) {
         if (!g_actor_active[i] || g_actor_hidden[i] || g_current_scene_type == SCENE_TYPE_LOGO) {
             spr_set(g_actor_sprite_handle[i]);
+            spr_x(512);
+            spr_y(512);
             spr_hide();
             if (g_actor_sprite_handle[i] + 16 < 64) {
                 spr_set(g_actor_sprite_handle[i] + 16);
+                spr_x(512);
+                spr_y(512);
                 spr_hide();
             }
             continue;

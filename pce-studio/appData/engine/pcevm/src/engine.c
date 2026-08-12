@@ -45,6 +45,25 @@ void load_scene(int scene_num, int player_x, int player_y) {
     g_actor_active[i] = 0;
   }
 
+  load_vram(0x5000, player_spr_r0, PLAYER_SPR_VRAM_SIZE);
+  load_palette(16, player_pal, 1);
+#ifdef HAS_PLAYER_FRAME_1
+  load_vram(0x5000 + PLAYER_SPR_VRAM_SIZE, player_spr_r1, PLAYER_SPR_VRAM_SIZE);
+  load_vram(0x5000 + 2 * PLAYER_SPR_VRAM_SIZE, player_spr_l0, PLAYER_SPR_VRAM_SIZE);
+  load_vram(0x5000 + 3 * PLAYER_SPR_VRAM_SIZE, player_spr_l1, PLAYER_SPR_VRAM_SIZE);
+#else
+  load_vram(0x5000 + PLAYER_SPR_VRAM_SIZE, player_spr_l0, PLAYER_SPR_VRAM_SIZE);
+#endif
+
+  if (g_actor_count > 0) {
+    g_actor_active[0] = 1;
+    g_actor_tile_id[0] = 0x5000;
+    g_actor_palette[0] = 0;
+    g_actor_size[0] = PLAYER_SPR_SIZE;
+    g_actor_dir[0] = 0;
+    actor_set_pos(0, player_x, player_y);
+  }
+
   if (scene_num == 1) {
     g_current_scene_type = SCENE_1_TYPE;
     load_background(bg_scene1_chr, bg_scene1_pal, bg_scene1_bat, 32, 28);

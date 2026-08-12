@@ -479,31 +479,34 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     : [];
 
   let playerSpriteSheetId = "";
-  // 1. Check starting scene's user-selected player sprite sheet ID
-  if (activeStartScene) {
-    if (activeStartScene.playerSpriteSheetId) {
-      playerSpriteSheetId = activeStartScene.playerSpriteSheetId;
-    } else if (activeStartScene.playerSprite?.id) {
-      playerSpriteSheetId = activeStartScene.playerSprite.id;
-    }
+
+  // 1. Check gameplay scenes (non-LOGO) for user-specified playerSpriteSheetId
+  const gameSceneWithPlayer = allScenes.find((s: any) => s && String(s.type).toUpperCase() !== "LOGO" && (s.playerSpriteSheetId || s.playerSprite?.id));
+  if (gameSceneWithPlayer) {
+    playerSpriteSheetId = gameSceneWithPlayer.playerSpriteSheetId || gameSceneWithPlayer.playerSprite?.id;
   }
 
-  // 2. Check defaultPlayerSprites map for active scene type
+  // 2. Check defaultPlayerSprites map for gameplay scene types
   if (!playerSpriteSheetId) {
     const defSpritesMap = projectData?.settings?.defaultPlayerSprites || settingsGbsData?.defaultPlayerSprites || projectDirPath?.settings?.defaultPlayerSprites;
     if (defSpritesMap && typeof defSpritesMap === "object") {
-      playerSpriteSheetId = defSpritesMap[activeStartSceneType] || defSpritesMap["TOPDOWN"] || defSpritesMap["PLATFORM"] || Object.values(defSpritesMap)[0];
+      playerSpriteSheetId = defSpritesMap["PLATFORM"] || defSpritesMap["TOPDOWN"] || defSpritesMap["ADVENTURE"] || Object.values(defSpritesMap)[0];
     }
   }
 
-  // 3. Check general settings playerSpriteSheetId
+  // 3. Fallback to start scene or general settings
   if (!playerSpriteSheetId) {
-    if (projectData?.settings?.playerSpriteSheetId) {
-      playerSpriteSheetId = projectData.settings.playerSpriteSheetId;
-    } else if (settingsGbsData?.playerSpriteSheetId) {
-      playerSpriteSheetId = settingsGbsData.playerSpriteSheetId;
-    } else if (projectDirPath?.settings?.playerSpriteSheetId) {
-      playerSpriteSheetId = projectDirPath.settings.playerSpriteSheetId;
+    if (activeStartScene) {
+      playerSpriteSheetId = activeStartScene.playerSpriteSheetId || activeStartScene.playerSprite?.id;
+    }
+    if (!playerSpriteSheetId) {
+      if (projectData?.settings?.playerSpriteSheetId) {
+        playerSpriteSheetId = projectData.settings.playerSpriteSheetId;
+      } else if (settingsGbsData?.playerSpriteSheetId) {
+        playerSpriteSheetId = settingsGbsData.playerSpriteSheetId;
+      } else if (projectDirPath?.settings?.playerSpriteSheetId) {
+        playerSpriteSheetId = projectDirPath.settings.playerSpriteSheetId;
+      }
     }
   }
 
@@ -1049,6 +1052,20 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           else if (dStr === "left") dNum = 3;
           stepCases += `      case ${stepIndex}:\n        actor_push(${targetNum}, ${dNum});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
+        } else if (evt.command === "EVENT_CAMERA_MOVE_TO" || evt.command === "EVENT_CAMERA_SET_POSITION") {
+          const cx = parseCoord(evt.args?.x, 0) * 8;
+          const cy = parseCoord(evt.args?.y, 0) * 8;
+          stepCases += `      case ${stepIndex}:\n        camera_update(${cx}, ${cy});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_AWAIT_INPUT") {
+          stepCases += `      case ${stepIndex}:\n        g_wait_timer = 30;\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_CHOICE") {
+          stepCases += `      case ${stepIndex}:\n        show_dialogue("Choice...");\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_DIALOGUE_CLOSE_NONMODAL") {
+          stepCases += `      case ${stepIndex}:\n        hide_dialogue();\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
         } else if (
           evt.command === "EVENT_ACTOR_EFFECTS" ||
           evt.command === "EVENT_ACTOR_MOVE_CANCEL" ||
@@ -1060,7 +1077,26 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           evt.command === "EVENT_ACTOR_SET_COLLISION_BOX" ||
           evt.command === "EVENT_ACTOR_INVOKE" ||
           evt.command === "EVENT_ACTOR_START_UPDATE" ||
-          evt.command === "EVENT_ACTOR_STOP_UPDATE"
+          evt.command === "EVENT_ACTOR_STOP_UPDATE" ||
+          evt.command === "EVENT_ADD_FLAGS" ||
+          evt.command === "EVENT_ADVENTURE_STATE_SET" ||
+          evt.command === "EVENT_CALL_CUSTOM_EVENT" ||
+          evt.command === "EVENT_CAMERA_LOCK" ||
+          evt.command === "EVENT_CAMERA_PROPERTY_SET" ||
+          evt.command === "EVENT_CAMERA_SET_BOUNDS" ||
+          evt.command === "EVENT_CAMERA_SET_LOCK" ||
+          evt.command === "EVENT_CLEAR_DATA" ||
+          evt.command === "EVENT_CLEAR_FLAGS" ||
+          evt.command === "EVENT_CODE" ||
+          evt.command === "EVENT_COMMENT" ||
+          evt.command === "EVENT_COPY_VALUE" ||
+          evt.command === "EVENT_DATA_TABLE" ||
+          evt.command === "EVENT_DEC_VALUE" ||
+          evt.command === "EVENT_ENGINE_FIELD_SET" ||
+          evt.command === "EVENT_ENGINE_FIELD_STORE" ||
+          evt.command === "EVENT_FADE_IN" ||
+          evt.command === "EVENT_FADE_OUT" ||
+          evt.command === "EVENT_FADE_SETTINGS"
         ) {
           stepCases += `      case ${stepIndex}:\n        return ${stepIndex + 1};\n`;
           stepIndex++;
