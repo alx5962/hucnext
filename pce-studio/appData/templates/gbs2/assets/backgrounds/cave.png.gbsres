@@ -5,9 +5,9 @@
   "symbol": "bg_cave",
   "tileColors": "002a+0410+004+0410+004+0410+004+0410+004+0410+004+0410+004+0410+004+0410+004+0410+004+0410+004+0410+004+0410+004+0410+004+0410+00b+042+0012+042+009+",
   "filename": "cave.png",
-  "width": 20,
-  "height": 18,
-  "imageWidth": 160,
-  "imageHeight": 144,
+  "width": 32,
+  "height": 28,
+  "imageWidth": 256,
+  "imageHeight": 224
   "autoColor": false
 }

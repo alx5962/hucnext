@@ -5,9 +5,9 @@
   "symbol": "bg_house",
   "tileColors": "002a+0110+004+0110+0011a+",
   "filename": "house.png",
-  "width": 20,
-  "height": 18,
-  "imageWidth": 160,
-  "imageHeight": 144,
+  "width": 32,
+  "height": 28,
+  "imageWidth": 256,
+  "imageHeight": 224
   "autoColor": false
 }
