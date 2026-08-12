@@ -5,9 +5,9 @@
   "symbol": "bg_menu_page2",
   "tileColors": "00168+",
   "filename": "menu_page2.png",
-  "width": 20,
-  "height": 18,
-  "imageWidth": 160,
-  "imageHeight": 144,
+  "width": 32,
+  "height": 28,
+  "imageWidth": 256,
+  "imageHeight": 224
   "autoColor": false
 }
