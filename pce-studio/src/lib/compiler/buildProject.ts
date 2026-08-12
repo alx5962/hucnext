@@ -456,7 +456,14 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     if (sceneIdToNum[startSceneId]) {
       startSceneNum = sceneIdToNum[startSceneId];
     } else {
-      const foundIdx = allScenes.findIndex((s: any) => s.id === startSceneId || s.name === startSceneId);
+      const targetStr = String(startSceneId).trim().toLowerCase().replace(/\s+/g, "");
+      const foundIdx = allScenes.findIndex((s: any) => {
+        if (!s) return false;
+        if (s.id === startSceneId || s.name === startSceneId) return true;
+        const sName = String(s.name || "").trim().toLowerCase().replace(/\s+/g, "");
+        const sId = String(s.id || "").trim().toLowerCase().replace(/\s+/g, "");
+        return sName === targetStr || sId === targetStr || sName.endsWith(targetStr) || targetStr.endsWith(sName);
+      });
       if (foundIdx !== -1) {
         startSceneNum = foundIdx + 1;
       }
@@ -794,10 +801,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         }
 
         const dims = convertPngToPcx(srcPng, destPcx, { cropX, cropY, cropW, cropH });
-        if (!sprObj) {
-          w16 = Math.max(1, Math.min(2, Math.floor(dims.width / 16)));
-          h16 = Math.max(1, Math.min(2, Math.floor(dims.height / 16)));
-        }
+        w16 = Math.max(1, Math.min(2, Math.floor(dims.width / 16)));
+        h16 = Math.max(1, Math.min(2, Math.floor(dims.height / 16)));
 
         const vramSizeHex = `0x${((w16 * h16) * 0x40).toString(16).toUpperCase()}`;
         let sprSizeConst = "SZ_16x16";
