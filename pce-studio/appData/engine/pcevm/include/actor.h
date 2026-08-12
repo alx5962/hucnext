@@ -43,5 +43,16 @@ void actor_set_dir(int id, int dir);
 void actor_hide(int id);
 void actor_show(int id);
 void actor_set_hidden(int id, int hidden);
+void actor_activate(int id);
+void actor_deactivate(int id);
+void actor_set_collisions(int id, int enable);
+void actor_set_pos_rel(int id, int dx, int dy);
+void actor_move_to(int id, int target_x, int target_y);
+void actor_set_move_speed(int id, int speed);
+void actor_set_anim_speed(int id, int speed);
+void actor_set_frame(int id, int frame);
+void actor_emote(int id, int emote_id);
+void actor_push(int id, int dir);
+void actor_effects(int id, int effect_id);
 
 #endif

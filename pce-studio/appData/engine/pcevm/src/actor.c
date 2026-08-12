@@ -120,3 +120,64 @@ void actor_set_hidden(int id, int hidden) {
         g_actor_hidden[id] = hidden;
     }
 }
+
+int g_actor_collisions_disabled[PCE_MAX_ACTORS];
+int g_actor_move_speed[PCE_MAX_ACTORS];
+int g_actor_anim_speed[PCE_MAX_ACTORS];
+
+void actor_activate(int id) {
+    if (id >= 0 && id < PCE_MAX_ACTORS) g_actor_active[id] = 1;
+}
+
+void actor_deactivate(int id) {
+    if (id >= 0 && id < PCE_MAX_ACTORS) g_actor_active[id] = 0;
+}
+
+void actor_set_collisions(int id, int enable) {
+    if (id >= 0 && id < PCE_MAX_ACTORS) g_actor_collisions_disabled[id] = !enable;
+}
+
+void actor_set_pos_rel(int id, int dx, int dy) {
+    if (id >= 0 && id < PCE_MAX_ACTORS) {
+        g_actor_x[id] += dx;
+        g_actor_y[id] += dy;
+    }
+}
+
+void actor_move_to(int id, int target_x, int target_y) {
+    if (id >= 0 && id < PCE_MAX_ACTORS) {
+        g_actor_x[id] = target_x;
+        g_actor_y[id] = target_y;
+    }
+}
+
+void actor_set_move_speed(int id, int speed) {
+    if (id >= 0 && id < PCE_MAX_ACTORS) g_actor_move_speed[id] = speed;
+}
+
+void actor_set_anim_speed(int id, int speed) {
+    if (id >= 0 && id < PCE_MAX_ACTORS) g_actor_anim_speed[id] = speed;
+}
+
+void actor_set_frame(int id, int frame) {
+    if (id >= 0 && id < PCE_MAX_ACTORS) g_actor_anim_frame[id] = frame;
+}
+
+void actor_emote(int id, int emote_id) {
+    (void)id;
+    (void)emote_id;
+}
+
+void actor_push(int id, int dir) {
+    if (id >= 0 && id < PCE_MAX_ACTORS) {
+        if (dir == 0) g_actor_y[id] += 16;
+        else if (dir == 1) g_actor_x[id] += 16;
+        else if (dir == 2) g_actor_y[id] -= 16;
+        else if (dir == 3) g_actor_x[id] -= 16;
+    }
+}
+
+void actor_effects(int id, int effect_id) {
+    (void)id;
+    (void)effect_id;
+}

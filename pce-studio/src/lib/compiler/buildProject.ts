@@ -971,6 +971,99 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           const targetNum = findTargetNum(evt.args?.actorId);
           stepCases += `      case ${stepIndex}:\n        actor_hide(${targetNum});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_ACTIVATE") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          stepCases += `      case ${stepIndex}:\n        actor_activate(${targetNum});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_DEACTIVATE") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          stepCases += `      case ${stepIndex}:\n        actor_deactivate(${targetNum});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_COLLISIONS_DISABLE") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          stepCases += `      case ${stepIndex}:\n        actor_set_collisions(${targetNum}, 0);\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_COLLISIONS_ENABLE") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          stepCases += `      case ${stepIndex}:\n        actor_set_collisions(${targetNum}, 1);\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_SET_POSITION" || evt.command === "EVENT_ACTOR_SET_POSITION_TO_VALUE") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          const px = parseCoord(evt.args?.x, 0) * 8;
+          const py = parseCoord(evt.args?.y, 0) * 8;
+          stepCases += `      case ${stepIndex}:\n        actor_set_pos(${targetNum}, ${px}, ${py});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_SET_POSITION_RELATIVE") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          const dx = parseCoord(evt.args?.x, 0) * 8;
+          const dy = parseCoord(evt.args?.y, 0) * 8;
+          stepCases += `      case ${stepIndex}:\n        actor_set_pos_rel(${targetNum}, ${dx}, ${dy});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_MOVE_TO" || evt.command === "EVENT_ACTOR_MOVE_TO_VALUE") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          const px = parseCoord(evt.args?.x, 0) * 8;
+          const py = parseCoord(evt.args?.y, 0) * 8;
+          stepCases += `      case ${stepIndex}:\n        actor_move_to(${targetNum}, ${px}, ${py});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_MOVE_RELATIVE") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          const dx = parseCoord(evt.args?.x, 0) * 8;
+          const dy = parseCoord(evt.args?.y, 0) * 8;
+          stepCases += `      case ${stepIndex}:\n        actor_set_pos_rel(${targetNum}, ${dx}, ${dy});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_SET_DIRECTION" || evt.command === "EVENT_ACTOR_SET_DIRECTION_TO_VALUE") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          const dStr = String(evt.args?.direction || "down").toLowerCase();
+          let dNum = 0;
+          if (dStr === "right") dNum = 1;
+          else if (dStr === "up") dNum = 2;
+          else if (dStr === "left") dNum = 3;
+          stepCases += `      case ${stepIndex}:\n        actor_set_dir(${targetNum}, ${dNum});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_SET_MOVEMENT_SPEED") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          const spd = parseCoord(evt.args?.speed, 1);
+          stepCases += `      case ${stepIndex}:\n        actor_set_move_speed(${targetNum}, ${spd});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_SET_ANIMATION_SPEED") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          const spd = parseCoord(evt.args?.speed, 1);
+          stepCases += `      case ${stepIndex}:\n        actor_set_anim_speed(${targetNum}, ${spd});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_SET_FRAME" || evt.command === "EVENT_ACTOR_SET_FRAME_TO_VALUE") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          const frm = parseCoord(evt.args?.frame, 0);
+          stepCases += `      case ${stepIndex}:\n        actor_set_frame(${targetNum}, ${frm});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_EMOTE") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          const emoteId = parseCoord(evt.args?.emoteId, 0);
+          stepCases += `      case ${stepIndex}:\n        actor_emote(${targetNum}, ${emoteId});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_ACTOR_PUSH") {
+          const targetNum = findTargetNum(evt.args?.actorId);
+          const dStr = String(evt.args?.direction || "down").toLowerCase();
+          let dNum = 0;
+          if (dStr === "right") dNum = 1;
+          else if (dStr === "up") dNum = 2;
+          else if (dStr === "left") dNum = 3;
+          stepCases += `      case ${stepIndex}:\n        actor_push(${targetNum}, ${dNum});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (
+          evt.command === "EVENT_ACTOR_EFFECTS" ||
+          evt.command === "EVENT_ACTOR_MOVE_CANCEL" ||
+          evt.command === "EVENT_ACTOR_GET_DIRECTION" ||
+          evt.command === "EVENT_ACTOR_GET_POSITION" ||
+          evt.command === "EVENT_ACTOR_SET_ANIMATE" ||
+          evt.command === "EVENT_ACTOR_SET_SPRITE" ||
+          evt.command === "EVENT_ACTOR_SET_STATE" ||
+          evt.command === "EVENT_ACTOR_SET_COLLISION_BOX" ||
+          evt.command === "EVENT_ACTOR_INVOKE" ||
+          evt.command === "EVENT_ACTOR_START_UPDATE" ||
+          evt.command === "EVENT_ACTOR_STOP_UPDATE"
+        ) {
+          stepCases += `      case ${stepIndex}:\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
         }
 
         if (evt.children && typeof evt.children === "object") {
