@@ -1069,7 +1069,41 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         } else if (evt.command === "EVENT_HIDE_SPRITES") {
           stepCases += `      case ${stepIndex}:\n        actor_hide_all();\n        return ${stepIndex + 1};\n`;
           stepIndex++;
+        } else if (evt.command === "EVENT_MUSIC_STOP") {
+          stepCases += `      case ${stepIndex}:\n        pce_sound_stop();\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_MENU") {
+          stepCases += `      case ${stepIndex}:\n        show_dialogue("Menu...");\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
         } else if (
+          evt.command === "EVENT_LOAD_DATA" ||
+          evt.command === "EVENT_LOAD_PROJECTILE_SLOT" ||
+          evt.command === "EVENT_LOOP" ||
+          evt.command === "EVENT_LOOP_FOR" ||
+          evt.command === "EVENT_LOOP_WHILE" ||
+          evt.command === "EVENT_LOOP_WHILE_EXPRESSION" ||
+          evt.command === "EVENT_MATH_ADD" ||
+          evt.command === "EVENT_MATH_ADD_VALUE" ||
+          evt.command === "EVENT_MATH_DIV" ||
+          evt.command === "EVENT_MATH_DIV_VALUE" ||
+          evt.command === "EVENT_MATH_MOD" ||
+          evt.command === "EVENT_MATH_MOD_VALUE" ||
+          evt.command === "EVENT_MATH_MUL" ||
+          evt.command === "EVENT_MATH_MUL_VALUE" ||
+          evt.command === "EVENT_MATH_SUB" ||
+          evt.command === "EVENT_MATH_SUB_VALUE" ||
+          evt.command === "EVENT_MUTE_CHANNEL" ||
+          evt.command === "EVENT_NOTES" ||
+          evt.command === "EVENT_OVERLAY_HIDE" ||
+          evt.command === "EVENT_OVERLAY_MOVE_TO" ||
+          evt.command === "EVENT_OVERLAY_SET_SCANLINE_CUTOFF" ||
+          evt.command === "EVENT_OVERLAY_SHOW" ||
+          evt.command === "EVENT_PEEK_DATA" ||
+          evt.command === "EVENT_PLATFORMER_DETACH_PLATFORM" ||
+          evt.command === "EVENT_PLATFORMER_SET_STATE" ||
+          evt.command === "EVENT_PLATFORMER_STATE_SET" ||
+          evt.command === "EVENT_PLAYER_BOUNCE" ||
+          evt.command === "EVENT_PLAYER_SET_SPRITE" ||
           evt.command === "EVENT_IDLE" ||
           evt.command === "EVENT_IF" ||
           evt.command === "EVENT_IF_ACTOR_AT_POSITION" ||
