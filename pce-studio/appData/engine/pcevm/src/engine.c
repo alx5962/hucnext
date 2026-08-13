@@ -33,37 +33,7 @@ int g_plat_vy = 0;
 int g_plat_on_ground = 0;
 int g_shmup_scroll_x = 0;
 
-void load_scene(int scene_num, int player_x, int player_y) {
-  int i;
-  hide_dialogue();
-  g_current_scene = scene_num;
-
-  for (i = 0; i < PCE_MAX_ACTORS; i++) {
-    g_actor_hidden[i] = 0;
-  }
-  for (i = 1; i < PCE_MAX_ACTORS; i++) {
-    g_actor_active[i] = 0;
-  }
-
-  load_vram(0x5000, player_spr_r0, PLAYER_SPR_VRAM_SIZE);
-  load_palette(16, player_pal, 1);
-#ifdef HAS_PLAYER_FRAME_1
-  load_vram(0x5000 + PLAYER_SPR_VRAM_SIZE, player_spr_r1, PLAYER_SPR_VRAM_SIZE);
-  load_vram(0x5000 + 2 * PLAYER_SPR_VRAM_SIZE, player_spr_l0, PLAYER_SPR_VRAM_SIZE);
-  load_vram(0x5000 + 3 * PLAYER_SPR_VRAM_SIZE, player_spr_l1, PLAYER_SPR_VRAM_SIZE);
-#else
-  load_vram(0x5000 + PLAYER_SPR_VRAM_SIZE, player_spr_l0, PLAYER_SPR_VRAM_SIZE);
-#endif
-
-  if (g_actor_count > 0) {
-    g_actor_active[0] = 1;
-    g_actor_tile_id[0] = 0x5000;
-    g_actor_palette[0] = 0;
-    g_actor_size[0] = PLAYER_SPR_SIZE;
-    g_actor_dir[0] = 0;
-    actor_set_pos(0, player_x, player_y);
-  }
-
+void load_scene_part1(int scene_num) {
   if (scene_num == 1) {
     g_current_scene_type = SCENE_1_TYPE;
     load_background(bg_scene1_chr, bg_scene1_pal, bg_scene1_bat, 32, 28);
@@ -791,8 +761,11 @@ void load_scene(int scene_num, int player_x, int player_y) {
   }
 #endif
 
+}
+
+void load_scene_part2(int scene_num) {
 #ifdef HAS_SCENE_26
-  else if (scene_num == 26) {
+  if (scene_num == 26) {
 #ifdef SCENE_26_TYPE
     g_current_scene_type = SCENE_26_TYPE;
 #else
@@ -1491,8 +1464,11 @@ void load_scene(int scene_num, int player_x, int player_y) {
   }
 #endif
 
+}
+
+void load_scene_part3(int scene_num) {
 #ifdef HAS_SCENE_51
-  else if (scene_num == 51) {
+  if (scene_num == 51) {
 #ifdef SCENE_51_TYPE
     g_current_scene_type = SCENE_51_TYPE;
 #else
@@ -2191,8 +2167,11 @@ void load_scene(int scene_num, int player_x, int player_y) {
   }
 #endif
 
+}
+
+void load_scene_part4(int scene_num) {
 #ifdef HAS_SCENE_76
-  else if (scene_num == 76) {
+  if (scene_num == 76) {
 #ifdef SCENE_76_TYPE
     g_current_scene_type = SCENE_76_TYPE;
 #else
@@ -2891,8 +2870,11 @@ void load_scene(int scene_num, int player_x, int player_y) {
   }
 #endif
 
+}
+
+void load_scene_part5(int scene_num) {
 #ifdef HAS_SCENE_101
-  else if (scene_num == 101) {
+  if (scene_num == 101) {
 #ifdef SCENE_101_TYPE
     g_current_scene_type = SCENE_101_TYPE;
 #else
@@ -3591,8 +3573,11 @@ void load_scene(int scene_num, int player_x, int player_y) {
   }
 #endif
 
+}
+
+void load_scene_part6(int scene_num) {
 #ifdef HAS_SCENE_126
-  else if (scene_num == 126) {
+  if (scene_num == 126) {
 #ifdef SCENE_126_TYPE
     g_current_scene_type = SCENE_126_TYPE;
 #else
@@ -4291,8 +4276,11 @@ void load_scene(int scene_num, int player_x, int player_y) {
   }
 #endif
 
+}
+
+void load_scene_part7(int scene_num) {
 #ifdef HAS_SCENE_151
-  else if (scene_num == 151) {
+  if (scene_num == 151) {
 #ifdef SCENE_151_TYPE
     g_current_scene_type = SCENE_151_TYPE;
 #else
@@ -4991,8 +4979,11 @@ void load_scene(int scene_num, int player_x, int player_y) {
   }
 #endif
 
+}
+
+void load_scene_part8(int scene_num) {
 #ifdef HAS_SCENE_176
-  else if (scene_num == 176) {
+  if (scene_num == 176) {
 #ifdef SCENE_176_TYPE
     g_current_scene_type = SCENE_176_TYPE;
 #else
@@ -5690,6 +5681,57 @@ void load_scene(int scene_num, int player_x, int player_y) {
 #endif
   }
 #endif
+
+}
+
+void load_scene(int scene_num, int player_x, int player_y) {
+  int i;
+  hide_dialogue();
+  g_current_scene = scene_num;
+
+  for (i = 0; i < PCE_MAX_ACTORS; i++) {
+    g_actor_hidden[i] = 0;
+  }
+  for (i = 1; i < PCE_MAX_ACTORS; i++) {
+    g_actor_active[i] = 0;
+  }
+
+  load_vram(0x5000, player_spr_r0, PLAYER_SPR_VRAM_SIZE);
+  load_palette(16, player_pal, 1);
+#ifdef HAS_PLAYER_FRAME_1
+  load_vram(0x5000 + PLAYER_SPR_VRAM_SIZE, player_spr_r1, PLAYER_SPR_VRAM_SIZE);
+  load_vram(0x5000 + 2 * PLAYER_SPR_VRAM_SIZE, player_spr_l0, PLAYER_SPR_VRAM_SIZE);
+  load_vram(0x5000 + 3 * PLAYER_SPR_VRAM_SIZE, player_spr_l1, PLAYER_SPR_VRAM_SIZE);
+#else
+  load_vram(0x5000 + PLAYER_SPR_VRAM_SIZE, player_spr_l0, PLAYER_SPR_VRAM_SIZE);
+#endif
+
+  if (g_actor_count > 0) {
+    g_actor_active[0] = 1;
+    g_actor_tile_id[0] = 0x5000;
+    g_actor_palette[0] = 0;
+    g_actor_size[0] = PLAYER_SPR_SIZE;
+    g_actor_dir[0] = 0;
+    actor_set_pos(0, player_x, player_y);
+  }
+
+  if (scene_num <= 25) {
+    load_scene_part1(scene_num);
+  } else if (scene_num <= 50) {
+    load_scene_part2(scene_num);
+  } else if (scene_num <= 75) {
+    load_scene_part3(scene_num);
+  } else if (scene_num <= 100) {
+    load_scene_part4(scene_num);
+  } else if (scene_num <= 125) {
+    load_scene_part5(scene_num);
+  } else if (scene_num <= 150) {
+    load_scene_part6(scene_num);
+  } else if (scene_num <= 175) {
+    load_scene_part7(scene_num);
+  } else {
+    load_scene_part8(scene_num);
+  }
 
   g_plat_sub_x = player_x * 8;
   g_plat_sub_y = player_y * 8;

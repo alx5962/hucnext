@@ -70,7 +70,7 @@ const main = async (
 
   const romFilename = getROMFilename(
     project.settings.romFilename,
-    project.metadata.name,
+    (project as any).name || project.metadata?.name || "",
     colorOnly,
     buildType,
   );

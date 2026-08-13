@@ -393,18 +393,33 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   }
 
   let bgDirectives = "";
+  const bgSymbolMap = new Map<string, string>();
+  let bgUniqueIndex = 0;
+
   sceneBgFilenames.forEach((bgFile, idx) => {
     const scNum = idx + 1;
     const sceneType = (allScenes[idx]?.type || "TOPDOWN").toUpperCase();
-    // Logo scenes use all 16 background sub-palettes (up to 256 colors)
-    // Other scene types use only 1 sub-palette (16 colors)
     const palArgs = sceneType === "LOGO" ? ", 0, 16" : "";
-    bgDirectives += `#incchr(bg_scene${scNum}_chr, "assets/backgrounds/${bgFile}", 0, 0, 32, 28)\n`;
-    bgDirectives += `#incpal(bg_scene${scNum}_pal, "assets/backgrounds/${bgFile}"${palArgs})\n`;
-    bgDirectives += `#incbat(bg_scene${scNum}_bat, "assets/backgrounds/${bgFile}", 0x1000, 32, 28)\n`;
+    const key = `${bgFile}|${palArgs}`;
+
+    if (!bgSymbolMap.has(key)) {
+      const symPrefix = `bg_file_${bgUniqueIndex++}`;
+      bgSymbolMap.set(key, symPrefix);
+      bgDirectives += `#incchr(${symPrefix}_chr, "assets/backgrounds/${bgFile}", 0, 0, 32, 28)\n`;
+      bgDirectives += `#incpal(${symPrefix}_pal, "assets/backgrounds/${bgFile}"${palArgs})\n`;
+      bgDirectives += `#incbat(${symPrefix}_bat, "assets/backgrounds/${bgFile}", 0x1000, 32, 28)\n`;
+    }
+
+    const symPrefix = bgSymbolMap.get(key)!;
+    bgDirectives += `#define bg_scene${scNum}_chr ${symPrefix}_chr\n`;
+    bgDirectives += `#define bg_scene${scNum}_pal ${symPrefix}_pal\n`;
+    bgDirectives += `#define bg_scene${scNum}_bat ${symPrefix}_bat\n`;
   });
 
   let collisionIncludes = "";
+  const colSymbolMap = new Map<string, string>();
+  let colUniqueIndex = 0;
+
   allScenes.forEach((scene: any, idx: number) => {
     const scNum = idx + 1;
     const colFileName = `scene_${scNum}_collisions.c`;
@@ -418,13 +433,26 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       }
     }
 
-    const lines: string[] = [];
-    for (let i = 0; i < colBytes.length; i += 16) {
-      const chunk = Array.from(colBytes.slice(i, i + 16)).map(c => `0x${c.toString(16).padStart(2, "0").toUpperCase()}`);
-      lines.push(`  ${chunk.join(", ")}`);
+    const key = Array.from(colBytes).join(",");
+    let symName = "";
+    let colHeaderContent = "";
+
+    if (!colSymbolMap.has(key)) {
+      symName = `col_data_${colUniqueIndex++}`;
+      colSymbolMap.set(key, symName);
+
+      const lines: string[] = [];
+      for (let i = 0; i < colBytes.length; i += 16) {
+        const chunk = Array.from(colBytes.slice(i, i + 16)).map(c => `0x${c.toString(16).padStart(2, "0").toUpperCase()}`);
+        lines.push(`  ${chunk.join(", ")}`);
+      }
+      colHeaderContent = `#include "include/gbs_types.h"\n\nconst unsigned char ${symName}[] = {\n${lines.join(",\n")}\n};\n#define scene_${scNum}_collisions ${symName}\n`;
+    } else {
+      symName = colSymbolMap.get(key)!;
+      colHeaderContent = `#define scene_${scNum}_collisions ${symName}\n`;
     }
-    const cContent = `#include "include/gbs_types.h"\n\nconst unsigned char scene_${scNum}_collisions[] = {\n${lines.join(",\n")}\n};\n`;
-    fs.writeFileSync(colFilePath, cContent, "utf8");
+
+    fs.writeFileSync(colFilePath, colHeaderContent, "utf8");
 
     collisionIncludes += `#define HAS_SCENE_${scNum}_COLLISIONS 1\n`;
     collisionIncludes += `#include "${colFileName}"\n`;
@@ -892,11 +920,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_SCENE ${targetScene}\n`;
       triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_X ${targetX}\n`;
       triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_Y ${targetY}\n`;
-      triggerIndex++;
+            triggerIndex++;
     });
   });
 
   // Dynamic scene step runner generation for ALL scenes in allScenes
+  let sceneStepHelpers = "";
   let sceneInitCases = "";
   allScenes.forEach((scene: any, idx: number) => {
     const scNum = idx + 1;
@@ -925,7 +954,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           if (typeof evt.args?.text === "string") {
             textVal = evt.args.text;
           } else if (Array.isArray(evt.args?.text)) {
-            textVal = evt.args.text.join("\\n");
+            textVal = evt.args.text.join("\n");
           }
           if (textVal) {
             const escaped = textVal.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n");
@@ -945,7 +974,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           else if (typeof evt.args?.time === "object" && evt.args?.time?.value !== undefined) seconds = Number(evt.args.time.value);
           let mag = 5;
           if (typeof evt.args?.magnitude === "number") mag = evt.args.magnitude;
-          else if (typeof evt.args?.magnitude === "object" && evt.args?.magnitude?.value !== undefined) mag = Number(evt.args.magnitude.value);
           const frames = Math.max(1, Math.round(seconds * 60));
           stepCases += `      case ${stepIndex}:\n        camera_shake(${frames}, ${mag});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
@@ -974,14 +1002,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           const targetNum = findTargetNum(evt.args?.actorId);
           stepCases += `      case ${stepIndex}:\n        actor_hide(${targetNum});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
-        } else if (evt.command === "EVENT_ACTOR_ACTIVATE") {
-          const targetNum = findTargetNum(evt.args?.actorId);
-          stepCases += `      case ${stepIndex}:\n        actor_activate(${targetNum});\n        return ${stepIndex + 1};\n`;
-          stepIndex++;
-        } else if (evt.command === "EVENT_ACTOR_DEACTIVATE") {
-          const targetNum = findTargetNum(evt.args?.actorId);
-          stepCases += `      case ${stepIndex}:\n        actor_deactivate(${targetNum});\n        return ${stepIndex + 1};\n`;
-          stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_COLLISIONS_DISABLE") {
           const targetNum = findTargetNum(evt.args?.actorId);
           stepCases += `      case ${stepIndex}:\n        actor_set_collisions(${targetNum}, 0);\n        return ${stepIndex + 1};\n`;
@@ -989,18 +1009,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         } else if (evt.command === "EVENT_ACTOR_COLLISIONS_ENABLE") {
           const targetNum = findTargetNum(evt.args?.actorId);
           stepCases += `      case ${stepIndex}:\n        actor_set_collisions(${targetNum}, 1);\n        return ${stepIndex + 1};\n`;
-          stepIndex++;
-        } else if (evt.command === "EVENT_ACTOR_SET_POSITION" || evt.command === "EVENT_ACTOR_SET_POSITION_TO_VALUE") {
-          const targetNum = findTargetNum(evt.args?.actorId);
-          const px = parseCoord(evt.args?.x, 0) * 8;
-          const py = parseCoord(evt.args?.y, 0) * 8;
-          stepCases += `      case ${stepIndex}:\n        actor_set_pos(${targetNum}, ${px}, ${py});\n        return ${stepIndex + 1};\n`;
-          stepIndex++;
-        } else if (evt.command === "EVENT_ACTOR_SET_POSITION_RELATIVE") {
-          const targetNum = findTargetNum(evt.args?.actorId);
-          const dx = parseCoord(evt.args?.x, 0) * 8;
-          const dy = parseCoord(evt.args?.y, 0) * 8;
-          stepCases += `      case ${stepIndex}:\n        actor_set_pos_rel(${targetNum}, ${dx}, ${dy});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_MOVE_TO" || evt.command === "EVENT_ACTOR_MOVE_TO_VALUE") {
           const targetNum = findTargetNum(evt.args?.actorId);
@@ -1171,11 +1179,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     processEventList(events);
 
     if (stepCases) {
-      sceneInitCases += `  if (scene_num == ${scNum}) {\n    switch (step) {\n${stepCases}      default:\n        return -1;\n    }\n  }\n`;
+      sceneStepHelpers += `int run_scene_${scNum}_step(int step) {\n  switch (step) {\n${stepCases}    default:\n      return -1;\n  }\n}\n\n`;
+      sceneInitCases += `  if (scene_num == ${scNum}) return run_scene_${scNum}_step(step);\n`;
     }
   });
 
-  const sceneInitFunctionC = `#define HAS_SCENE_STEP_EVENTS 1\nint run_scene_step(int scene_num, int step) {\n${sceneInitCases}  return -1;\n}\n`;
+  const sceneInitFunctionC = `#define HAS_SCENE_STEP_EVENTS 1\n${sceneStepHelpers}int run_scene_step(int scene_num, int step) {\n${sceneInitCases}  return -1;\n}\n`;
 
   // Look for music tracks (.uge files)
   let musicIncludes = "";
@@ -1361,7 +1370,10 @@ main() {
 
   const makeBuildModule = require("./makeBuild");
   const makeBuildFn = makeBuildModule.default || makeBuildModule.makeBuild || makeBuildModule;
-  const romFilename = typeof outputBuildDir === "object" && outputBuildDir?.romFilename ? outputBuildDir.romFilename : "pcetest1.pce";
+  const defaultRomName = (projectData.name || pathModule.basename(projDir) || "game").toLowerCase().replace(/[^a-z0-9_-]/g, "");
+  const romFilename = (typeof outputBuildDir === "object" && outputBuildDir?.romFilename)
+    ? outputBuildDir.romFilename
+    : (projectData.settings?.romFilename ? `${projectData.settings.romFilename}.pce` : `${defaultRomName || "game"}.pce`);
 
   if (typeof makeBuildFn === "function") {
     try {

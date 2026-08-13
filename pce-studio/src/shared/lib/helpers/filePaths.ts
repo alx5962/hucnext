@@ -1,13 +1,16 @@
 import stripInvalidFilenameCharacters from "./stripInvalidFilenameCharacters";
 
 export const getROMFileStem = (
-  overrideName: string,
-  projectName: string,
+  overrideName: string = "",
+  projectName: string = "",
 ): string => {
+  const safeOverride = typeof overrideName === "string" ? overrideName : "";
+  const safeProject = typeof projectName === "string" ? projectName : "";
+
   const source =
-    stripInvalidFilenameCharacters(overrideName).trim().length > 0
-      ? overrideName
-      : kebabCase(projectName.trim());
+    stripInvalidFilenameCharacters(safeOverride).trim().length > 0
+      ? safeOverride
+      : kebabCase(safeProject.trim());
 
   const stem = stripInvalidFilenameCharacters(source)
     .replace(/(\.gb|\.gbc|\.pocket|\.pce)$/i, "")

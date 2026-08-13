@@ -13,6 +13,7 @@ import Path, { relative } from "path";
 import {
   copy,
   copyFile,
+  emptyDir,
   ensureDir,
   pathExists,
   readFile,
@@ -1578,13 +1579,14 @@ ipcMain.handle(
         buildErr(message);
       }
     };
+    const projectName = (project as any).name || project.metadata?.name || "";
     const romStem = getROMFileStem(
       project.settings.romFilename,
-      project.metadata.name,
+      projectName,
     );
     const romFilename = getROMFilename(
       project.settings.romFilename,
-      project.metadata.name,
+      projectName,
       colorOnly,
       buildType,
     );
@@ -1601,13 +1603,16 @@ ipcMain.handle(
         warnings,
       });
 
+      const projectRomDir = Path.join(projectRoot, "build", "rom");
       const projectRomPath = Path.join(
-        projectRoot,
-        "build",
-        "rom",
+        projectRomDir,
         romFilename,
       );
       const tmpRomPath = Path.join(outputRoot, "build", "rom", romFilename);
+
+      if (exportBuild && buildType === "rom") {
+        await emptyDir(projectRomDir);
+      }
 
       if (await pathExists(tmpRomPath)) {
         await ensureDir(Path.dirname(projectRomPath));
@@ -1615,10 +1620,12 @@ ipcMain.handle(
       }
 
       if (exportBuild) {
-        await copy(
-          `${outputRoot}/build/${buildType}`,
-          `${projectRoot}/build/${buildType}`,
-        );
+        if (buildType !== "rom") {
+          await copy(
+            `${outputRoot}/build/${buildType}`,
+            `${projectRoot}/build/${buildType}`,
+          );
+        }
         if (project.settings.openBuildFolderOnExport) {
           shell.openPath(Path.join(projectRoot, "build", buildType));
         }
@@ -1736,9 +1743,10 @@ ipcMain.handle(
 
       const colorOnly = project.settings.colorMode === "color";
 
+      const projectName = (project as any).name || project.metadata?.name || "";
       const romFilename = getROMFilename(
         project.settings.romFilename,
-        project.metadata.name,
+        projectName,
         colorOnly,
         "rom",
       );

@@ -150,8 +150,8 @@ const makeWebBuildConfig = (project: ProjectResources, romPath: string) => ({
   version: 1,
   rom: romPath,
   project: {
-    name: project.metadata.name,
-    author: project.metadata.author,
+    name: (project as any).name || project.metadata?.name || "",
+    author: (project as any).author || project.metadata?.author || "",
   },
   colorCorrection: project.settings.colorCorrection,
   customControls: {
@@ -332,8 +332,8 @@ export const exportWebBuild = async ({
   await copy(romPath, romOutputPath);
 
   const sanitize = (s: string) => String(s || "").replace(/["<>]/g, "");
-  const projectName = sanitize(project.metadata.name);
-  const author = sanitize(project.metadata.author);
+  const projectName = sanitize((project as any).name || project.metadata?.name);
+  const author = sanitize((project as any).author || project.metadata?.author);
   const colorsHead =
     project.settings.colorMode !== "mono"
       ? `<style type="text/css"> body { background-color:#${project.settings.customColorsBlack}; }</style>`
