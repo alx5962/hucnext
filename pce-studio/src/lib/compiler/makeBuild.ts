@@ -63,8 +63,10 @@ export const makeBuild = async ({
 
   progress(`HuC compilation output:\n${stdout}`);
 
-  // Create target build/rom directory inside buildRoot
-  const romDir = Path.join(buildRoot, "build", "rom");
+  // Create target rom directory (build/rom)
+  const romDir = Path.basename(buildRoot) === "build"
+    ? Path.join(buildRoot, "rom")
+    : Path.join(buildRoot, "build", "rom");
   await fs.ensureDir(romDir);
 
   const defaultOutputPce = Path.join(buildRoot, "main.pce");
