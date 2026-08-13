@@ -6,8 +6,8 @@
   "tileColors": "009f6+013+00fc+014+00fb+015+00fa+015+00fa+015+00fa+015+00fa+015+00fa+015+00fa+",
   "filename": "leaving_earth.png",
   "width": 255,
-  "height": 18,
+  "height": 28,
   "imageWidth": 2040,
-  "imageHeight": 144,
+  "imageHeight": 224,
   "autoColor": false
 }
