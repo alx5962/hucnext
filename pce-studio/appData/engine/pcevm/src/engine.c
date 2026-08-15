@@ -5805,6 +5805,9 @@ void show_dialogue(const char *msg) {
 
   g_dialogue_active = 1;
   g_dialogue_timer = 180;
+  actor_update_all();
+  satb_update();
+
   set_color(15, 0x1FF);
   set_font_color(0, 15);
 
@@ -5867,15 +5870,12 @@ void show_dialogue(const char *msg) {
 }
 
 void hide_dialogue(void) {
-  int y;
   if (g_dialogue_active) {
     g_dialogue_active = 0;
     g_dialogue_timer = 0;
-    set_color(15, 0x000);
-    set_font_color(0, 0);
-    for (y = 22; y <= 26; y++) {
-      put_string("                                ", 0, y);
-    }
+    load_scene_background(g_current_scene);
+    actor_update_all();
+    satb_update();
   }
 }
 
@@ -5887,6 +5887,13 @@ void check_actor_interaction(unsigned int input) {
   pressed = input & ~g_last_input;
   g_last_input = input;
 
+  if (g_dialogue_active) {
+    if (pressed & (JOY_I | JOY_II | JOY_A | JOY_B | JOY_STRT | JOY_SEL)) {
+      hide_dialogue();
+    }
+    return;
+  }
+
   if (pressed & (JOY_I | JOY_II)) {
     for (i = 1; i < g_actor_count; i++) {
       if (g_actor_active[i]) {
@@ -5897,10 +5904,7 @@ void check_actor_interaction(unsigned int input) {
         if (dy < 0)
           dy = -dy;
         if (dx <= 24 && dy <= 24) {
-          if (g_dialogue_active) {
-            hide_dialogue();
-          } else {
-            if (g_current_scene == 1) {
+          if (g_current_scene == 1) {
               if (i == 1) {
 #ifdef ACTOR_SCENE_1_1_TEXT
                 show_dialogue(ACTOR_SCENE_1_1_TEXT);
@@ -6036,7 +6040,6 @@ void check_actor_interaction(unsigned int input) {
               }
             }
 #endif
-          }
           break;
         }
       }
@@ -6086,6 +6089,11 @@ void update_topdown(void) {
 
   input = pce_sys_read_joy(0);
   check_actor_interaction(input);
+  if (g_dialogue_active) {
+    update_player_anim(0);
+    actor_update_all();
+    return;
+  }
   if (g_actor_count > 0 && g_actor_active[0]) {
     dx = 0;
     dy = 0;
@@ -6127,6 +6135,11 @@ void update_platform(void) {
 
   input = pce_sys_read_joy(0);
   check_actor_interaction(input);
+  if (g_dialogue_active) {
+    update_player_anim(0);
+    actor_update_all();
+    return;
+  }
   if (g_actor_count > 0 && g_actor_active[0]) {
     dx_sub = 0;
     if (input & JOY_LEFT) {

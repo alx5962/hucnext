@@ -1417,6 +1417,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
   });
 
+  let sceneBackgroundCases = "";
+  allScenes.forEach((scene: any, idx: number) => {
+    const scNum = idx + 1;
+    sceneBackgroundCases += `    case ${scNum}:\n      load_background(bg_scene${scNum}_chr, bg_scene${scNum}_pal, bg_scene${scNum}_bat, 32, 28);\n      break;\n`;
+  });
+
   const sceneInitFunctionC = `#define HAS_SCENE_STEP_EVENTS 1
 ${sceneStepHelpers}int run_scene_step(int scene_num, int step) {
 ${sceneInitCases}  return -1;
@@ -1433,6 +1439,13 @@ ${sceneMusicCases}    default:
 void load_scene_player_sprite(int scene_num) {
   switch (scene_num) {
 ${scenePlayerSpriteCases}    default:
+      break;
+  }
+}
+
+void load_scene_background(int scene_num) {
+  switch (scene_num) {
+${sceneBackgroundCases}    default:
       break;
   }
 }

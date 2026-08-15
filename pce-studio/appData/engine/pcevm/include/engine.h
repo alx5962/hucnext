@@ -13,11 +13,13 @@ extern int g_current_scene_type;
 extern int g_wait_timer;
 extern int g_player_spr_vram_size;
 extern int g_player_spr_size;
+extern int g_dialogue_active;
 
 void show_dialogue(const char *msg);
 void hide_dialogue(void);
 void load_scene(int scene_num, int player_x, int player_y);
 void load_scene_music(int scene_num);
+void load_scene_background(int scene_num);
 
 /* Scene type constants */
 #define SCENE_TYPE_TOPDOWN      0
