@@ -5746,6 +5746,8 @@ void load_scene(int scene_num, int player_x, int player_y) {
   g_script_scene = scene_num;
   g_script_step = 0;
   g_wait_timer = 0;
+
+  load_scene_music(scene_num);
 }
 
 const unsigned int font_pal[16] = {0x000, 0x1FF, 0x1FF, 0x1FF, 0x1FF, 0x1FF,
@@ -5758,8 +5760,6 @@ void engine_init(void) {
 #ifdef HAS_MUSIC_DATA
 #ifdef START_MUSIC_DATA
   pce_sound_play(START_MUSIC_DATA);
-#else
-  pce_sound_play(song_0_Data);
 #endif
 #endif
   actor_init();

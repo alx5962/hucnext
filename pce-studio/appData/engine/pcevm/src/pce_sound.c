@@ -336,9 +336,14 @@ void pce_sound_init(void) {
 }
 
 void pce_sound_play(unsigned int *song) {
-  pce_sound_init();
-  if (!song)
+  if (!song) {
+    pce_sound_stop();
     return;
+  }
+  if (g_pce_music_playing && g_pce_song == song) {
+    return;
+  }
+  pce_sound_init();
   g_pce_song = song;
   g_ticks_per_row = (unsigned char)(song[0]);
   if (g_ticks_per_row == 0) g_ticks_per_row = 6;

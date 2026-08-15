@@ -15,6 +15,7 @@ extern int g_wait_timer;
 void show_dialogue(const char *msg);
 void hide_dialogue(void);
 void load_scene(int scene_num, int player_x, int player_y);
+void load_scene_music(int scene_num);
 
 /* Scene type constants */
 #define SCENE_TYPE_TOPDOWN      0

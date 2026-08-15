@@ -1081,8 +1081,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     if (compiledTrackSymbols.includes(startSym)) {
       startMusicDef = `#define START_MUSIC_DATA ${startSym}_Data\n`;
     }
-  } else if (compiledTrackSymbols.length > 0) {
-    startMusicDef = `#define START_MUSIC_DATA ${compiledTrackSymbols[0]}_Data\n`;
   }
 
   // Dynamic scene step runner generation for ALL scenes in allScenes
@@ -1360,7 +1358,18 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
   });
 
-  const sceneInitFunctionC = `#define HAS_SCENE_STEP_EVENTS 1\n${sceneStepHelpers}int run_scene_step(int scene_num, int step) {\n${sceneInitCases}  return -1;\n}\n`;
+  let sceneMusicCases = "";
+  allScenes.forEach((scene: any, idx: number) => {
+    const scNum = idx + 1;
+    if (scene.musicId && musicIdMap[scene.musicId] && compiledTrackSymbols.includes(musicIdMap[scene.musicId].symbol)) {
+      const sym = musicIdMap[scene.musicId].symbol;
+      sceneMusicCases += `    case ${scNum}:\n#ifdef HAS_MUSIC_DATA\n      pce_sound_play(${sym}_Data);\n#endif\n      break;\n`;
+    } else {
+      sceneMusicCases += `    case ${scNum}:\n      pce_sound_stop();\n      break;\n`;
+    }
+  });
+
+  const sceneInitFunctionC = `#define HAS_SCENE_STEP_EVENTS 1\n${sceneStepHelpers}int run_scene_step(int scene_num, int step) {\n${sceneInitCases}  return -1;\n}\n\nvoid load_scene_music(int scene_num) {\n  switch (scene_num) {\n${sceneMusicCases}    default:\n      pce_sound_stop();\n      break;\n  }\n}\n`;
 
   let playerSprVramSizeHex = "0x40";
   let playerSprSizeConst = "SZ_16x16";
