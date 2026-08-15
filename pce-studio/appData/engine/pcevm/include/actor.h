@@ -21,6 +21,19 @@
 #define SZ_32x32 0x11
 #endif
 
+#ifndef DIR_RIGHT
+#define DIR_RIGHT 0
+#endif
+#ifndef DIR_LEFT
+#define DIR_LEFT  1
+#endif
+#ifndef DIR_UP
+#define DIR_UP    2
+#endif
+#ifndef DIR_DOWN
+#define DIR_DOWN  3
+#endif
+
 #ifndef PCE_ACTOR_C
 extern int g_actor_active[];
 extern int g_actor_hidden[];

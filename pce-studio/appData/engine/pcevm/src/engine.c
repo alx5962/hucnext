@@ -5696,22 +5696,18 @@ void load_scene(int scene_num, int player_x, int player_y) {
     g_actor_active[i] = 0;
   }
 
-  load_vram(0x5000, player_spr_r0, PLAYER_SPR_VRAM_SIZE);
-  load_palette(16, player_pal, 1);
-#ifdef HAS_PLAYER_FRAME_1
-  load_vram(0x5000 + PLAYER_SPR_VRAM_SIZE, player_spr_r1, PLAYER_SPR_VRAM_SIZE);
-  load_vram(0x5000 + 2 * PLAYER_SPR_VRAM_SIZE, player_spr_l0, PLAYER_SPR_VRAM_SIZE);
-  load_vram(0x5000 + 3 * PLAYER_SPR_VRAM_SIZE, player_spr_l1, PLAYER_SPR_VRAM_SIZE);
-#else
-  load_vram(0x5000 + PLAYER_SPR_VRAM_SIZE, player_spr_l0, PLAYER_SPR_VRAM_SIZE);
-#endif
+  load_scene_player_sprite(scene_num);
 
   if (g_actor_count > 0) {
     g_actor_active[0] = 1;
-    g_actor_tile_id[0] = 0x5000;
     g_actor_palette[0] = 0;
     g_actor_size[0] = PLAYER_SPR_SIZE;
-    g_actor_dir[0] = 0;
+    if (g_current_scene_type == SCENE_TYPE_PLATFORM) {
+      if (g_actor_dir[0] != DIR_LEFT && g_actor_dir[0] != DIR_RIGHT) {
+        g_actor_dir[0] = DIR_RIGHT;
+      }
+    }
+    g_actor_tile_id[0] = 0x5000 + g_actor_dir[0] * 2 * PLAYER_SPR_VRAM_SIZE;
     actor_set_pos(0, player_x, player_y);
   }
 
@@ -5780,17 +5776,7 @@ void engine_init(void) {
 #define PLAYER_SPR_SIZE SZ_16x16
 #endif
 
-  load_vram(0x5000, player_spr_r0, PLAYER_SPR_VRAM_SIZE);
-  load_palette(16, player_pal, 1);
-#ifdef HAS_PLAYER_FRAME_1
-  load_vram(0x5000 + PLAYER_SPR_VRAM_SIZE, player_spr_r1, PLAYER_SPR_VRAM_SIZE);
-  load_vram(0x5000 + 2 * PLAYER_SPR_VRAM_SIZE, player_spr_l0,
-            PLAYER_SPR_VRAM_SIZE);
-  load_vram(0x5000 + 3 * PLAYER_SPR_VRAM_SIZE, player_spr_l1,
-            PLAYER_SPR_VRAM_SIZE);
-#else
-  load_vram(0x5000 + PLAYER_SPR_VRAM_SIZE, player_spr_l0, PLAYER_SPR_VRAM_SIZE);
-#endif
+  load_scene_player_sprite(START_SCENE_NUM);
 
   actor_spawn(PLAYER_START_X, PLAYER_START_Y, 0x5000, 0, PLAYER_SPR_SIZE);
 
@@ -6063,8 +6049,6 @@ void update_player_anim(int is_moving) {
   int dir;
   int base_vram;
   dir = g_actor_dir[0];
-#ifdef HAS_PLAYER_FRAME_1
-  base_vram = (dir == 1) ? (0x5000 + 2 * PLAYER_SPR_VRAM_SIZE) : 0x5000;
   if (is_moving) {
     g_player_anim_timer++;
     if (g_player_anim_timer >= 8) {
@@ -6076,6 +6060,12 @@ void update_player_anim(int is_moving) {
     g_player_anim_frame = 0;
   }
 
+#ifdef HAS_PLAYER_4DIR
+  /* dir: 0=Right, 1=Left, 2=Up, 3=Down */
+  g_actor_tile_id[0] = 0x5000 + (dir * 2 + g_player_anim_frame) * PLAYER_SPR_VRAM_SIZE;
+#else
+#ifdef HAS_PLAYER_FRAME_1
+  base_vram = (dir == 1) ? (0x5000 + 2 * PLAYER_SPR_VRAM_SIZE) : 0x5000;
   if (g_player_anim_frame == 1) {
     g_actor_tile_id[0] = base_vram + PLAYER_SPR_VRAM_SIZE;
   } else {
@@ -6084,6 +6074,7 @@ void update_player_anim(int is_moving) {
 #else
   base_vram = (dir == 1) ? (0x5000 + PLAYER_SPR_VRAM_SIZE) : 0x5000;
   g_actor_tile_id[0] = base_vram;
+#endif
 #endif
 }
 
@@ -6098,16 +6089,17 @@ void update_topdown(void) {
     dy = 0;
     if (input & JOY_LEFT) {
       dx -= TOPDOWN_SPEED;
-      g_actor_dir[0] = 1;
-    }
-    if (input & JOY_RIGHT) {
+      g_actor_dir[0] = DIR_LEFT;
+    } else if (input & JOY_RIGHT) {
       dx += TOPDOWN_SPEED;
-      g_actor_dir[0] = 0;
-    }
-    if (input & JOY_UP)
+      g_actor_dir[0] = DIR_RIGHT;
+    } else if (input & JOY_UP) {
       dy -= TOPDOWN_SPEED;
-    if (input & JOY_DOWN)
+      g_actor_dir[0] = DIR_UP;
+    } else if (input & JOY_DOWN) {
       dy += TOPDOWN_SPEED;
+      g_actor_dir[0] = DIR_DOWN;
+    }
 
     update_player_anim(dx != 0 || dy != 0);
 
