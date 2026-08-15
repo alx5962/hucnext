@@ -182,7 +182,14 @@ export const createEmulator = (): EmulatorController => {
     chIsNoise[pceCh] = track === 3;
 
     if (note < 72 && pceNote2Freq[note]) {
-      const period = pceNote2Freq[note];
+      let period = pceNote2Freq[note];
+      if (track === 2) {
+        if (note >= 12 && pceNote2Freq[note - 12]) {
+          period = pceNote2Freq[note - 12];
+        } else {
+          period = pceNote2Freq[note] * 2;
+        }
+      }
       chFreq[pceCh] = 3580000 / (32 * period);
     } else {
       chFreq[pceCh] = 440;

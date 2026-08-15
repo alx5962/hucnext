@@ -158,13 +158,25 @@ static void load_wave_ram_ch(unsigned char ch) {
   }
 }
 
+static unsigned short get_track_note_freq(unsigned char track, unsigned char note) {
+  if (note >= 72) return 0;
+  if (track == 2) {
+    if (note >= 12) {
+      return g_pce_note_freq[note - 12];
+    } else {
+      return g_pce_note_freq[note] << 1;
+    }
+  }
+  return g_pce_note_freq[note];
+}
+
 static void trigger_note_core_current(void) {
   if (g_t_note >= 72)
     return;
 
   g_t_pce_ch = (g_t_track < 3) ? g_t_track : 4;
   g_ch_note[g_t_track] = g_t_note;
-  g_ch_period[g_t_track] = g_pce_note_freq[g_t_note];
+  g_ch_period[g_t_track] = get_track_note_freq(g_t_track, g_t_note);
 
   g_duty_instrs = (unsigned char *)(g_pce_song[6]);
   g_wave_instrs = (unsigned char *)(g_pce_song[7]);
@@ -407,7 +419,7 @@ static void process_row_channel_cur(void) {
   } else if (g_r_effect == 0x03) {
     /* Tone Portamento: set target period without re-triggering envelope */
     if (g_r_note != 0xFF && g_r_note < 72) {
-      g_ch_target_period[g_r_track] = g_pce_note_freq[g_r_note];
+      g_ch_target_period[g_r_track] = get_track_note_freq(g_r_track, g_r_note);
     }
   } else {
     if (g_r_note != 0xFF) {
@@ -451,7 +463,7 @@ static void process_tick_effects(unsigned char tick) {
       g_eff_note_idx = g_ch_note[g_eff_t] + g_eff_arpoffset;
       if (g_eff_note_idx < 72) {
         hw_set_ch(g_eff_pce_ch);
-        hw_set_freq(g_pce_note_freq[g_eff_note_idx]);
+        hw_set_freq(get_track_note_freq(g_eff_t, g_eff_note_idx));
       }
     }
 
