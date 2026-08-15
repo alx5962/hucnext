@@ -680,7 +680,20 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 #incspr(${symPrefix}_d0, "${relD0}", 0, 0, ${width16}, ${height16})
 #incspr(${symPrefix}_d1, "${relD1}", 0, 0, ${width16}, ${height16})
 `;
-      compiledPlayerSprites.set(key, { symPrefix, palName, width16, height16, filename });
+      let vramSizeHex = "0x40";
+      let sizeConst = "SZ_16x16";
+      if (width16 === 1 && height16 === 2) {
+        vramSizeHex = "0x80";
+        sizeConst = "SZ_16x32";
+      } else if (width16 === 2 && height16 === 1) {
+        vramSizeHex = "0x80";
+        sizeConst = "SZ_32x16";
+      } else if (width16 === 2 && height16 === 2) {
+        vramSizeHex = "0x100";
+        sizeConst = "SZ_32x32";
+      }
+
+      compiledPlayerSprites.set(key, { symPrefix, palName, width16, height16, filename, vramSizeHex, sizeConst });
     } catch (e) {
       console.error("Error converting player sprite frames to PCX:", e);
     }
@@ -699,14 +712,16 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     const compiled = compiledPlayerSprites.get(String(sheetId)) || firstCompiled;
     if (compiled) {
       scenePlayerSpriteCases += `    case ${scNum}:
-      load_vram(0x5000 + 0 * PLAYER_SPR_VRAM_SIZE, ${compiled.symPrefix}_r0, PLAYER_SPR_VRAM_SIZE);
-      load_vram(0x5000 + 1 * PLAYER_SPR_VRAM_SIZE, ${compiled.symPrefix}_r1, PLAYER_SPR_VRAM_SIZE);
-      load_vram(0x5000 + 2 * PLAYER_SPR_VRAM_SIZE, ${compiled.symPrefix}_l0, PLAYER_SPR_VRAM_SIZE);
-      load_vram(0x5000 + 3 * PLAYER_SPR_VRAM_SIZE, ${compiled.symPrefix}_l1, PLAYER_SPR_VRAM_SIZE);
-      load_vram(0x5000 + 4 * PLAYER_SPR_VRAM_SIZE, ${compiled.symPrefix}_u0, PLAYER_SPR_VRAM_SIZE);
-      load_vram(0x5000 + 5 * PLAYER_SPR_VRAM_SIZE, ${compiled.symPrefix}_u1, PLAYER_SPR_VRAM_SIZE);
-      load_vram(0x5000 + 6 * PLAYER_SPR_VRAM_SIZE, ${compiled.symPrefix}_d0, PLAYER_SPR_VRAM_SIZE);
-      load_vram(0x5000 + 7 * PLAYER_SPR_VRAM_SIZE, ${compiled.symPrefix}_d1, PLAYER_SPR_VRAM_SIZE);
+      g_player_spr_vram_size = ${compiled.vramSizeHex};
+      g_player_spr_size = ${compiled.sizeConst};
+      load_vram(0x5000 + 0 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r0, ${compiled.vramSizeHex});
+      load_vram(0x5000 + 1 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r1, ${compiled.vramSizeHex});
+      load_vram(0x5000 + 2 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_l0, ${compiled.vramSizeHex});
+      load_vram(0x5000 + 3 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_l1, ${compiled.vramSizeHex});
+      load_vram(0x5000 + 4 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_u0, ${compiled.vramSizeHex});
+      load_vram(0x5000 + 5 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_u1, ${compiled.vramSizeHex});
+      load_vram(0x5000 + 6 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_d0, ${compiled.vramSizeHex});
+      load_vram(0x5000 + 7 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_d1, ${compiled.vramSizeHex});
       load_palette(16, ${compiled.palName}, 1);
       break;\n`;
     }

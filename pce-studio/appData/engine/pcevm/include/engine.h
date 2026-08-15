@@ -11,6 +11,8 @@
 extern int g_current_scene;
 extern int g_current_scene_type;
 extern int g_wait_timer;
+extern int g_player_spr_vram_size;
+extern int g_player_spr_size;
 
 void show_dialogue(const char *msg);
 void hide_dialogue(void);

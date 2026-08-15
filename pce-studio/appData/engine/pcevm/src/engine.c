@@ -26,6 +26,8 @@ int run_scene_step(int scene_num, int step) {
 
 int g_current_scene = 1;
 int g_current_scene_type = SCENE_1_TYPE;
+int g_player_spr_vram_size = 0x40;
+int g_player_spr_size = SZ_16x16;
 
 int g_plat_sub_x = 0;
 int g_plat_sub_y = 0;
@@ -5701,13 +5703,13 @@ void load_scene(int scene_num, int player_x, int player_y) {
   if (g_actor_count > 0) {
     g_actor_active[0] = 1;
     g_actor_palette[0] = 0;
-    g_actor_size[0] = PLAYER_SPR_SIZE;
+    g_actor_size[0] = g_player_spr_size;
     if (g_current_scene_type == SCENE_TYPE_PLATFORM) {
       if (g_actor_dir[0] != DIR_LEFT && g_actor_dir[0] != DIR_RIGHT) {
         g_actor_dir[0] = DIR_RIGHT;
       }
     }
-    g_actor_tile_id[0] = 0x5000 + g_actor_dir[0] * 2 * PLAYER_SPR_VRAM_SIZE;
+    g_actor_tile_id[0] = 0x5000 + g_actor_dir[0] * 2 * g_player_spr_vram_size;
     actor_set_pos(0, player_x, player_y);
   }
 
@@ -5778,7 +5780,7 @@ void engine_init(void) {
 
   load_scene_player_sprite(START_SCENE_NUM);
 
-  actor_spawn(PLAYER_START_X, PLAYER_START_Y, 0x5000, 0, PLAYER_SPR_SIZE);
+  actor_spawn(PLAYER_START_X, PLAYER_START_Y, 0x5000, 0, g_player_spr_size);
 
   actor_spawn(0, 0, 0x5400, 1, SZ_16x16);
   actor_spawn(0, 0, 0x5600, 2, SZ_16x16);
@@ -6062,17 +6064,17 @@ void update_player_anim(int is_moving) {
 
 #ifdef HAS_PLAYER_4DIR
   /* dir: 0=Right, 1=Left, 2=Up, 3=Down */
-  g_actor_tile_id[0] = 0x5000 + (dir * 2 + g_player_anim_frame) * PLAYER_SPR_VRAM_SIZE;
+  g_actor_tile_id[0] = 0x5000 + (dir * 2 + g_player_anim_frame) * g_player_spr_vram_size;
 #else
 #ifdef HAS_PLAYER_FRAME_1
-  base_vram = (dir == 1) ? (0x5000 + 2 * PLAYER_SPR_VRAM_SIZE) : 0x5000;
+  base_vram = (dir == 1) ? (0x5000 + 2 * g_player_spr_vram_size) : 0x5000;
   if (g_player_anim_frame == 1) {
-    g_actor_tile_id[0] = base_vram + PLAYER_SPR_VRAM_SIZE;
+    g_actor_tile_id[0] = base_vram + g_player_spr_vram_size;
   } else {
     g_actor_tile_id[0] = base_vram;
   }
 #else
-  base_vram = (dir == 1) ? (0x5000 + PLAYER_SPR_VRAM_SIZE) : 0x5000;
+  base_vram = (dir == 1) ? (0x5000 + g_player_spr_vram_size) : 0x5000;
   g_actor_tile_id[0] = base_vram;
 #endif
 #endif
