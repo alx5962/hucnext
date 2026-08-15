@@ -57,7 +57,7 @@ const SplitPatternIcon = styled(Grid2x2Icon)`
 
 const defaultPaneLayout: SplitPaneLayout[] = [
   { type: "fill", initialMinSize: 200 },
-  { type: "fixed", size: 190, minSize: 190, maxSize: 190 },
+  { type: "fixed", size: 270, minSize: 270, maxSize: 270 },
   { type: "fixed", size: 485 },
 ];
 

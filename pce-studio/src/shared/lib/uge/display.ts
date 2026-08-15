@@ -23,15 +23,19 @@ export const noteName = [
 /**
  * Get localised channel name
  */
-export const getL10NChannelName = (channelId: 0 | 1 | 2 | 3): string => {
+export const getL10NChannelName = (channelId: number): string => {
   if (channelId === 0) {
-    return l10n("FIELD_CHANNEL_DUTY_1");
+    return "PCE CH1 (Duty 1)";
   } else if (channelId === 1) {
-    return l10n("FIELD_CHANNEL_DUTY_2");
+    return "PCE CH2 (Duty 2)";
   } else if (channelId === 2) {
-    return l10n("FIELD_CHANNEL_WAVE");
+    return "PCE CH3 (Wave 1)";
+  } else if (channelId === 3) {
+    return "PCE CH4 (Wave 2)";
+  } else if (channelId === 4) {
+    return "PCE CH5 (Noise 1)";
   } else {
-    return l10n("FIELD_CHANNEL_NOISE");
+    return "PCE CH6 (Noise 2)";
   }
 };
 

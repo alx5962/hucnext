@@ -149,13 +149,6 @@ export const InstrumentDutyProperties = ({
           />
         </FormField>
       </FormRow>
-      {Number(instrument.frequencySweepTime) !== 0 && selectedChannel === 1 && (
-        <FormRow>
-          <Alert variant="info">
-            <AlertItem>{l10n("MESSAGE_SWEEP_ONLY_DUTY1")}</AlertItem>
-          </Alert>
-        </FormRow>
-      )}
       <FlexGrow />
     </>
   );

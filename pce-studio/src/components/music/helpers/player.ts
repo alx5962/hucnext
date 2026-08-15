@@ -112,12 +112,12 @@ const isPlayerPaused = (targetEmulator: EmulatorController = emulator) => {
 };
 
 const doPause = (targetEmulator: EmulatorController = emulator) => {
-  const _if = targetEmulator.readMem(0xff0f);
-  targetEmulator.writeMem(0xff0f, _if | 0b00001000);
-
-  while (!isPlayerPaused(targetEmulator)) {
-    targetEmulator.step("frame");
+  const isPlayerPausedAddr = getRamAddress("is_player_paused");
+  if (isPlayerPausedAddr >= 0) {
+    targetEmulator.writeMem(isPlayerPausedAddr, 1);
   }
+  targetEmulator.writeMem(0xff0f, 0b00001000);
+  targetEmulator.resetAudio();
 };
 
 const doResume = (targetEmulator: EmulatorController = emulator) => {
@@ -244,6 +244,10 @@ const setSolo = (
 };
 
 const loadSong = (song: Song) => {
+  currentSong = song;
+  if (emulator.setSongForPlayback) {
+    emulator.setSongForPlayback(song);
+  }
   stopPreview();
   if (!romFile) {
     initPlayer(() => {
@@ -362,6 +366,10 @@ const playPreview = (song: Song, length: number) => {
 
   stopPreview();
 
+  if (previewEmulator.setSongForPlayback) {
+    previewEmulator.setSongForPlayback(song);
+  }
+
   const previewRomFile = new Uint8Array(romFile);
   const addr = getRomAddress("SONG_DESCRIPTOR");
   patchRom(previewRomFile, song, addr);
@@ -460,6 +468,9 @@ const stop = (position?: MusicPosition) => {
   if (!isPlayerPaused()) {
     doPause();
   }
+
+  emulator.resetAudio();
+  previewEmulator.resetAudio();
 
   if (position) {
     setStartPosition(position);

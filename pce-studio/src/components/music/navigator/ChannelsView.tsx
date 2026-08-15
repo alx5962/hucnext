@@ -33,7 +33,7 @@ import { getL10NChannelName } from "shared/lib/uge/display";
 
 interface ChannelNavigatorItem {
   id: string;
-  index: 0 | 1 | 2 | 3;
+  index: number;
   name: string;
   shortName: string;
   type: string;
@@ -141,11 +141,15 @@ const Row = ({
 
   const setSolo = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.preventDefault();
       e.stopPropagation();
-      dispatch(trackerActions.setSelectedChannel(toValidChannelId(index)));
+      dispatch(
+        trackerActions.setChannelSolo({
+          channel: index,
+          solo: !solo,
+        }),
+      );
       API.music.sendToMusicWindow({
-        action: "set-solo",
+        action: "set-channel-status",
         channel: index,
         enabled: !solo,
       });
@@ -187,7 +191,9 @@ const Row = ({
           {item.index === 0 && <Duty1Icon />}
           {item.index === 1 && <Duty2Icon />}
           {item.index === 2 && <Wave3Icon />}
-          {item.index === 3 && <Noise4Icon />}
+          {item.index === 3 && <Wave3Icon />}
+          {item.index === 4 && <Noise4Icon />}
+          {item.index === 5 && <Noise4Icon />}
         </StyledChannelIcon>
 
         <StyledChannelName data-selected={selectedId === item.id}>

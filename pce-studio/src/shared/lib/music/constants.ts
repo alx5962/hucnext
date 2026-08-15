@@ -8,34 +8,48 @@ export const channels = [
   {
     id: "0",
     index: 0,
-    name: "Duty 1",
-    shortName: "D1",
+    name: "PCE CH1 (Duty 1)",
+    shortName: "CH1",
     type: "duty",
   },
   {
     id: "1",
     index: 1,
-    name: "Duty 2",
-    shortName: "D2",
+    name: "PCE CH2 (Duty 2)",
+    shortName: "CH2",
     type: "duty",
   },
   {
     id: "2",
     index: 2,
-    name: "Wave",
-    shortName: "W",
+    name: "PCE CH3 (Wave 1)",
+    shortName: "CH3",
     type: "wave",
   },
   {
     id: "3",
     index: 3,
-    name: "Noise",
-    shortName: "N",
+    name: "PCE CH4 (Wave 2)",
+    shortName: "CH4",
+    type: "wave",
+  },
+  {
+    id: "4",
+    index: 4,
+    name: "PCE CH5 (Noise 1)",
+    shortName: "CH5",
+    type: "noise",
+  },
+  {
+    id: "5",
+    index: 5,
+    name: "PCE CH6 (Noise 2)",
+    shortName: "CH6",
     type: "noise",
   },
 ] as {
   id: string;
-  index: 0 | 1 | 2 | 3;
+  index: 0 | 1 | 2 | 3 | 4 | 5;
   name: string;
   shortName: string;
   type: "duty" | "wave" | "noise";
@@ -68,7 +82,33 @@ export const note2freq = [
   /*G_8*/ 2006, /*Gs8*/ 2009, /*A_8*/ 2011, /*As8*/ 2013, /*B_8*/ 2015,
 ];
 
-// Sound controller registers
+// PC Engine 12-bit frequency divisor table for 72 notes (C_3 to B_8) (3.58MHz / 32 / freq)
+export const pceNote2Freq = [
+  /*C_3*/ 855, /*Cs3*/ 807, /*D_3*/ 762, /*Ds3*/ 719, /*E_3*/ 679, /*F_3*/ 641,
+  /*Fs3*/ 605, /*G_3*/ 571, /*Gs3*/ 539, /*A_3*/ 508, /*As3*/ 480, /*B_3*/ 453,
+  /*C_4*/ 428, /*Cs4*/ 404, /*D_4*/ 381, /*Ds4*/ 360, /*E_4*/ 339, /*F_4*/ 320,
+  /*Fs4*/ 302, /*G_4*/ 285, /*Gs4*/ 269, /*A_4*/ 254, /*As4*/ 240, /*B_4*/ 227,
+  /*C_5*/ 214, /*Cs5*/ 202, /*D_5*/ 190, /*Ds5*/ 180, /*E_5*/ 170, /*F_5*/ 160,
+  /*Fs5*/ 151, /*G_5*/ 143, /*Gs5*/ 135, /*A_5*/ 127, /*As5*/ 120, /*B_5*/ 113,
+  /*C_6*/ 107, /*Cs6*/ 101, /*D_6*/ 95,  /*Ds6*/ 90,  /*E_6*/ 85,  /*F_6*/ 80,
+  /*Fs6*/ 76,  /*G_6*/ 71,  /*Gs6*/ 67,  /*A_6*/ 64,  /*As6*/ 60,  /*B_6*/ 57,
+  /*C_7*/ 53,  /*Cs7*/ 50,  /*D_7*/ 48,  /*Ds7*/ 45,  /*E_7*/ 42,  /*F_7*/ 40,
+  /*Fs7*/ 38,  /*G_7*/ 36,  /*Gs7*/ 34,  /*A_7*/ 32,  /*As7*/ 30,  /*B_7*/ 28,
+  /*C_8*/ 27,  /*Cs8*/ 25,  /*D_8*/ 24,  /*Ds8*/ 22,  /*E_8*/ 21,  /*F_8*/ 20,
+  /*Fs8*/ 19,  /*G_8*/ 18,  /*Gs8*/ 17,  /*A_8*/ 16,  /*As8*/ 15,  /*B_8*/ 14,
+];
+
+// PC Engine HuC6280 PSG Sound Controller registers (Page $FF: 0x0800 - 0x0807)
+export const PSG_CH = 0x0800;
+export const PSG_MAINVOL = 0x0801;
+export const PSG_FREQLO = 0x0802;
+export const PSG_FREQHI = 0x0803;
+export const PSG_CTRL = 0x0804;
+export const PSG_PAN = 0x0805;
+export const PSG_WAVEBUF = 0x0806;
+export const PSG_NOISE = 0x0807;
+
+// Game Boy sound controller registers (for GB compatibility fallback)
 export const NR10 = 0xff10;
 export const NR11 = 0xff11;
 export const NR12 = 0xff12;
@@ -88,3 +128,4 @@ export const NR42 = 0xff21;
 export const NR43 = 0xff22;
 export const NR44 = 0xff23;
 export const AUD3_WAVE_RAM = 0xff30;
+

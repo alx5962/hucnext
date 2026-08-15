@@ -290,6 +290,37 @@ export const WaveEditorForm = ({ waveId, onChange }: WaveEditorFormProps) => {
     wavesLength,
   ]);
 
+  const pcePresets: { name: string; wave: number[] }[] = [
+    {
+      name: "Piano",
+      wave: [8, 10, 13, 14, 15, 15, 15, 14, 12, 9, 7, 5, 3, 2, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 7, 8, 8, 8, 8, 8, 8, 8],
+    },
+    {
+      name: "Harpsichord",
+      wave: [8, 11, 13, 15, 15, 15, 13, 11, 8, 6, 4, 3, 2, 2, 1, 1, 2, 2, 3, 4, 5, 6, 7, 7, 8, 8, 8, 8, 8, 8, 8, 8],
+    },
+    {
+      name: "Flute",
+      wave: [8, 10, 12, 14, 15, 15, 15, 15, 15, 15, 15, 14, 12, 10, 8, 5, 3, 2, 1, 0, 0, 0, 0, 0, 1, 2, 3, 5, 6, 7, 7, 8],
+    },
+    {
+      name: "String",
+      wave: [8, 9, 11, 13, 14, 15, 15, 15, 15, 15, 15, 14, 13, 11, 9, 8, 6, 5, 3, 2, 1, 1, 0, 0, 1, 1, 2, 4, 5, 6, 7, 8],
+    },
+    {
+      name: "Sine",
+      wave: [8, 9, 11, 12, 13, 14, 15, 15, 15, 15, 14, 13, 12, 11, 9, 8, 7, 6, 4, 3, 2, 1, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7],
+    },
+    {
+      name: "Triangle",
+      wave: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
+    },
+    {
+      name: "Saw",
+      wave: [0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15],
+    },
+  ];
+
   return (
     <>
       <FormRow>
@@ -301,6 +332,28 @@ export const WaveEditorForm = ({ waveId, onChange }: WaveEditorFormProps) => {
             onChange={(e) => e && onChange(e.value)}
           />
         </FormField>
+      </FormRow>
+      <FormRow>
+        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 6 }}>
+          {pcePresets.map((preset) => (
+            <button
+              key={preset.name}
+              type="button"
+              style={{
+                fontSize: "11px",
+                padding: "2px 8px",
+                borderRadius: "3px",
+                border: "1px solid #444",
+                background: "#222",
+                color: "#ddd",
+                cursor: "pointer",
+              }}
+              onClick={() => onEditWave(new Uint8Array(preset.wave))}
+            >
+              {preset.name}
+            </button>
+          ))}
+        </div>
       </FormRow>
       <FormRow>
         <canvas
