@@ -21,6 +21,7 @@ extern int g_trigger_count;
 #endif
 
 void trigger_init(void);
+void trigger_load_all(void);
 void trigger_add(int scene_id, int x, int y, int w, int h, int target_scene, int target_x, int target_y, unsigned char* script);
 void trigger_check(int px, int py);
 

@@ -123,6 +123,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   // Load gbsres files if present
   const assetsDir = pathModule.join(projDir, "assets");
   const outputAssetsDir = pathModule.join(buildDir, "assets");
+  if (fs.existsSync(outputAssetsDir)) {
+    await fs.remove(outputAssetsDir);
+  }
   if (fs.existsSync(assetsDir)) {
     await fs.copy(assetsDir, outputAssetsDir, { overwrite: true });
   }
@@ -217,9 +220,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const bgsFromGbsres: any[] = [];
   const projectBgResDir = pathModule.join(projDir, "project", "backgrounds");
   const bgAssetsResDir = pathModule.join(projDir, "assets", "backgrounds");
-  const bgAssetsDir = pathModule.join(outputAssetsDir, "backgrounds");
   const projectBgDir = pathModule.join(projDir, "assets", "backgrounds");
-  const bgDirsToScan = [projectBgDir, bgAssetsDir, projectBgResDir, bgAssetsResDir];
+  const bgDirsToScan = [projectBgDir, projectBgResDir, bgAssetsResDir];
 
   for (const bDir of bgDirsToScan) {
     if (fs.existsSync(bDir)) {
@@ -502,8 +504,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const activeStartScene = (startSceneNum > 0 && startSceneNum <= allScenes.length) ? allScenes[startSceneNum - 1] : allScenes[0];
   const activeStartSceneType = (activeStartScene?.type || "TOPDOWN").toUpperCase();
 
-  const spritePngFiles = fs.existsSync(pathModule.join(outputAssetsDir, "sprites"))
-    ? fs.readdirSync(pathModule.join(outputAssetsDir, "sprites")).filter(f => typeof f === "string" && f.endsWith(".png"))
+  const projectSpritesDir = pathModule.join(projDir, "assets", "sprites");
+  const destSpritesDir = pathModule.join(outputAssetsDir, "sprites");
+  await fs.ensureDir(destSpritesDir);
+
+  const spritePngFiles = fs.existsSync(projectSpritesDir)
+    ? fs.readdirSync(projectSpritesDir).filter(f => typeof f === "string" && f.endsWith(".png"))
     : [];
 
   let playerSpriteSheetId = "";
@@ -572,11 +578,11 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   let playerSprHeight16 = 1;
 
   if (playerSpriteFilename) {
-    const srcPng = pathModule.join(outputAssetsDir, "sprites", playerSpriteFilename);
-    const destPcxR0 = srcPng.replace(/\.png$/i, "_r0.pcx");
-    const destPcxR1 = srcPng.replace(/\.png$/i, "_r1.pcx");
-    const destPcxL0 = srcPng.replace(/\.png$/i, "_l0.pcx");
-    const destPcxL1 = srcPng.replace(/\.png$/i, "_l1.pcx");
+    const srcPng = pathModule.join(projectSpritesDir, playerSpriteFilename);
+    const destPcxR0 = pathModule.join(destSpritesDir, playerSpriteFilename.replace(/\.png$/i, "_r0.pcx"));
+    const destPcxR1 = pathModule.join(destSpritesDir, playerSpriteFilename.replace(/\.png$/i, "_r1.pcx"));
+    const destPcxL0 = pathModule.join(destSpritesDir, playerSpriteFilename.replace(/\.png$/i, "_l0.pcx"));
+    const destPcxL1 = pathModule.join(destSpritesDir, playerSpriteFilename.replace(/\.png$/i, "_l1.pcx"));
 
     try {
       let playerCropX0 = 0;
@@ -809,8 +815,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         if (sprObj?.filename) sprFilename = String(sprObj.filename);
       }
 
-      const srcPng = pathModule.join(outputAssetsDir, "sprites", sprFilename);
-      const destPcx = srcPng.replace(/\.png$/i, `_sc${sceneNum}_${actorNum}.pcx`);
+      const srcPng = pathModule.join(projectSpritesDir, sprFilename);
+      const destPcx = pathModule.join(destSpritesDir, sprFilename.replace(/\.png$/i, `_sc${sceneNum}_${actorNum}.pcx`));
       try {
         let cropX = 0;
         let cropY = 0;
@@ -881,9 +887,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   });
 
   // Resolve Triggers
-  let triggerDefines = "";
-  let triggerIndex = 1;
-
+  const triggerRows: string[] = [];
   allScenes.forEach((scene: any, sceneIdx: number) => {
     const sceneNum = sceneIdx + 1;
     const sceneTriggers = scene.triggers || [];
@@ -911,18 +915,175 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       const tw = parseCoord(tr.width, 2);
       const th = parseCoord(tr.height, 2);
 
-      triggerDefines += `#define HAS_TRIGGER_${triggerIndex} 1\n`;
-      triggerDefines += `#define TRIGGER_${triggerIndex}_SCENE ${sceneNum}\n`;
-      triggerDefines += `#define TRIGGER_${triggerIndex}_X ${tx}\n`;
-      triggerDefines += `#define TRIGGER_${triggerIndex}_Y ${ty}\n`;
-      triggerDefines += `#define TRIGGER_${triggerIndex}_W ${tw}\n`;
-      triggerDefines += `#define TRIGGER_${triggerIndex}_H ${th}\n`;
-      triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_SCENE ${targetScene}\n`;
-      triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_X ${targetX}\n`;
-      triggerDefines += `#define TRIGGER_${triggerIndex}_TARGET_Y ${targetY}\n`;
-            triggerIndex++;
+      triggerRows.push(`  ${sceneNum}, ${tx}, ${ty}, ${tw}, ${th}, ${targetScene}, ${targetX}, ${targetY}`);
     });
   });
+
+  let triggerDefines = "";
+  if (triggerRows.length > 0) {
+    triggerDefines = `#define HAS_TRIGGER_TABLE 1\n#define TRIGGER_COUNT ${triggerRows.length}\nconst int g_trigger_table[] = {\n${triggerRows.join(",\n")}\n};\n`;
+  }
+
+  // Look for music tracks (.uge files) and build symbol mapping BEFORE processing scene steps
+  let musicIncludes = "";
+  let hasMusicDef = "";
+  let startMusicDef = "";
+  const musicIdMap: Record<string, { filename: string; symbol: string }> = {};
+  const musicByFilenameMap: Record<string, { id: string; symbol: string }> = {};
+  const musicBySymbolMap: Record<string, { id: string; filename: string }> = {};
+  const projectMusicDir = pathModule.join(projDir, "assets", "music");
+  const projectMusicResDir = pathModule.join(projDir, "project", "music");
+  const musicDirsToScan = [projectMusicResDir, projectMusicDir];
+
+  const musicFromGbsres: any[] = [];
+  for (const mDir of musicDirsToScan) {
+    if (fs.existsSync(mDir)) {
+      const gbsFiles = fs.readdirSync(mDir).filter((f: any) => typeof f === "string" && f.endsWith(".gbsres"));
+      for (const gf of gbsFiles) {
+        try {
+          const json = fs.readJsonSync(pathModule.join(mDir, gf));
+          if (json && json.id && json.filename) {
+            musicFromGbsres.push(json);
+          }
+        } catch (e) { }
+      }
+    }
+  }
+
+  const allMusic = [...(projectData.music || []), ...musicFromGbsres];
+  const usedSymbols = new Set<string>();
+
+  allMusic.forEach((m: any, idx: number) => {
+    if (m && m.id) {
+      const fn = m.filename || (m.name ? (m.name.endsWith(".uge") ? m.name : `${m.name}.uge`) : "");
+      if (fn) {
+        let sym = m.symbol;
+        if (!sym || usedSymbols.has(sym)) {
+          const cleanName = (m.name || fn.replace(/\.uge$/i, "") || `song_${idx}`).replace(/[^a-zA-Z0-9_]/g, "_");
+          sym = cleanName.startsWith("song_") ? cleanName : `song_${cleanName}`;
+          if (usedSymbols.has(sym)) {
+            sym = `${sym}_${idx}`;
+          }
+        }
+        usedSymbols.add(sym);
+        const info = { filename: fn, symbol: sym };
+        musicIdMap[m.id] = info;
+        musicByFilenameMap[fn] = { id: m.id, symbol: sym };
+        const fnNoExt = fn.replace(/\.uge$/i, "");
+        musicByFilenameMap[fnNoExt] = { id: m.id, symbol: sym };
+        musicBySymbolMap[sym] = { id: m.id, filename: fn };
+      }
+    }
+  });
+
+  const compiledTrackSymbols: string[] = [];
+  const compiledFiles = new Set<string>();
+
+  const compileUgeTrack = async (ugePath: string, symbol: string) => {
+    if (compiledFiles.has(ugePath)) return;
+    compiledFiles.add(ugePath);
+    try {
+      const { loadUGESong, exportToC } = require("shared/lib/uge/ugeHelper");
+      const ugeBuf = await fs.readFile(ugePath);
+      const song = loadUGESong(ugeBuf);
+      if (song) {
+        const musicC = exportToC(song, symbol);
+        const musicOutDir = pathModule.join(buildDir, "music");
+        await fs.ensureDir(musicOutDir);
+        await fs.writeFile(pathModule.join(musicOutDir, `${symbol}.c`), musicC, "utf8");
+        musicIncludes += `#include "music/${symbol}.c"\n`;
+        hasMusicDef = `#define HAS_MUSIC_DATA 1\n`;
+        compiledTrackSymbols.push(symbol);
+      }
+    } catch (e) {
+      console.error(`Error processing UGE music file ${ugePath}:`, e);
+    }
+  };
+
+  // Collect all music IDs actually used in scenes and events
+  const usedMusicIds = new Set<string>();
+  if (activeStartScene && activeStartScene.musicId) {
+    usedMusicIds.add(activeStartScene.musicId);
+  }
+  for (const sc of allScenes) {
+    if (sc.musicId) usedMusicIds.add(sc.musicId);
+    const events = [
+      ...(Array.isArray(sc.script) ? sc.script : []),
+      ...(Array.isArray(sc.startScript) ? sc.startScript : [])
+    ];
+    const checkEvts = (evts: any[]) => {
+      if (!Array.isArray(evts)) return;
+      for (const evt of evts) {
+        if (evt && (evt.command === "EVENT_MUSIC_PLAY" || evt.command === "EVENT_PLAY_MUSIC")) {
+          const mId = evt.args?.musicId || evt.args?.music;
+          if (mId && mId !== "LAST_MUSIC") {
+            usedMusicIds.add(mId);
+          }
+        }
+        if (evt?.children && typeof evt.children === "object") {
+          Object.values(evt.children).forEach((cEvts: any) => checkEvts(cEvts));
+        }
+        if (evt?.true && Array.isArray(evt.true)) checkEvts(evt.true);
+        if (evt?.false && Array.isArray(evt.false)) checkEvts(evt.false);
+      }
+    };
+    checkEvts(events);
+  }
+
+  // Compile used music tracks (or fallback to first available if none specified)
+  const targetMusicKeys = Array.from(usedMusicIds);
+  if (targetMusicKeys.length > 0) {
+    for (const mId of targetMusicKeys) {
+      let info = musicIdMap[mId];
+      if (!info && musicByFilenameMap[mId]) info = musicByFilenameMap[mId];
+      if (info) {
+        let fn = info.filename;
+        if (!fn.endsWith(".uge")) fn += ".uge";
+        for (const mDir of musicDirsToScan) {
+          const p = pathModule.join(mDir, fn);
+          if (fs.existsSync(p)) {
+            await compileUgeTrack(p, info.symbol);
+            break;
+          }
+        }
+      } else {
+        let fn = mId.endsWith(".uge") ? mId : `${mId}.uge`;
+        for (const mDir of musicDirsToScan) {
+          const p = pathModule.join(mDir, fn);
+          if (fs.existsSync(p)) {
+            const sym = musicByFilenameMap[fn]?.symbol || `song_${compiledTrackSymbols.length}`;
+            await compileUgeTrack(p, sym);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // Fallback scan for at least one .uge file if no tracks were compiled yet
+  if (compiledTrackSymbols.length === 0) {
+    for (const mDir of musicDirsToScan) {
+      if (fs.existsSync(mDir)) {
+        const ugeFiles = fs.readdirSync(mDir).filter((f: any) => typeof f === "string" && f.endsWith(".uge"));
+        if (ugeFiles.length > 0) {
+          const p = pathModule.join(mDir, ugeFiles[0]);
+          const fn = ugeFiles[0];
+          const sym = musicByFilenameMap[fn]?.symbol || `song_0`;
+          await compileUgeTrack(p, sym);
+          break;
+        }
+      }
+    }
+  }
+
+  if (activeStartScene && activeStartScene.musicId && musicIdMap[activeStartScene.musicId]) {
+    const startSym = musicIdMap[activeStartScene.musicId].symbol;
+    if (compiledTrackSymbols.includes(startSym)) {
+      startMusicDef = `#define START_MUSIC_DATA ${startSym}_Data\n`;
+    }
+  } else if (compiledTrackSymbols.length > 0) {
+    startMusicDef = `#define START_MUSIC_DATA ${compiledTrackSymbols[0]}_Data\n`;
+  }
 
   // Dynamic scene step runner generation for ALL scenes in allScenes
   let sceneStepHelpers = "";
@@ -992,7 +1153,22 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           stepCases += `      case ${stepIndex}:\n        load_scene(${targetScene}, ${rawX * 8}, ${(rawY * 8) - (playerSprHeight16 * 16) + 8});\n        return -1;\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_MUSIC_PLAY" || evt.command === "EVENT_PLAY_MUSIC") {
-          stepCases += `      case ${stepIndex}:\n#ifdef HAS_MUSIC_DATA\n        pce_sound_play(song_0_Data);\n#endif\n        return ${stepIndex + 1};\n`;
+          const musicId = evt.args?.musicId || evt.args?.music;
+          let songSymbol = "";
+          if (musicId && musicIdMap[musicId]) {
+            songSymbol = musicIdMap[musicId].symbol;
+          } else if (musicId && musicByFilenameMap[musicId]) {
+            songSymbol = musicByFilenameMap[musicId].symbol;
+          } else if (musicId && musicBySymbolMap[musicId]) {
+            songSymbol = musicId;
+          } else if (scene.musicId && musicIdMap[scene.musicId]) {
+            songSymbol = musicIdMap[scene.musicId].symbol;
+          } else if (compiledTrackSymbols.length > 0) {
+            songSymbol = compiledTrackSymbols[0];
+          } else {
+            songSymbol = "song_0";
+          }
+          stepCases += `      case ${stepIndex}:\n#ifdef HAS_MUSIC_DATA\n        pce_sound_play(${songSymbol}_Data);\n#endif\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_SHOW") {
           const targetNum = findTargetNum(evt.args?.actorId);
@@ -1186,127 +1362,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
   const sceneInitFunctionC = `#define HAS_SCENE_STEP_EVENTS 1\n${sceneStepHelpers}int run_scene_step(int scene_num, int step) {\n${sceneInitCases}  return -1;\n}\n`;
 
-  // Look for music tracks (.uge files)
-  let musicIncludes = "";
-  let hasMusicDef = "";
-  const musicAssetsDir = pathModule.join(outputAssetsDir, "music");
-  const projectMusicDir = pathModule.join(projDir, "assets", "music");
-
-  // Map musicId to resource info from projectData.music and .gbsres files
-  const musicIdMap: Record<string, { filename: string; symbol: string }> = {};
-  const musicDirsToScan = [projectMusicDir, musicAssetsDir];
-
-  const musicFromGbsres: any[] = [];
-  const projectMusicResDir = pathModule.join(projDir, "project", "music");
-  const musicAssetsResDir = pathModule.join(projDir, "assets", "music");
-  for (const mDir of [projectMusicResDir, musicAssetsResDir, musicAssetsDir, projectMusicDir]) {
-    if (fs.existsSync(mDir)) {
-      const gbsFiles = fs.readdirSync(mDir).filter((f: any) => typeof f === "string" && f.endsWith(".gbsres"));
-      for (const gf of gbsFiles) {
-        try {
-          const json = fs.readJsonSync(pathModule.join(mDir, gf));
-          if (json && json.id && json.filename) {
-            musicFromGbsres.push(json);
-          }
-        } catch (e) { }
-      }
-    }
-  }
-
-  const allMusic = [...(projectData.music || []), ...musicFromGbsres];
-  allMusic.forEach((m: any) => {
-    if (m && m.id) {
-      const fn = m.filename || (m.name ? (m.name.endsWith(".uge") ? m.name : `${m.name}.uge`) : "");
-      if (fn) {
-        musicIdMap[m.id] = {
-          filename: fn,
-          symbol: m.symbol || "song_0",
-        };
-      }
-    }
-  });
-
-  // Find requested music file across ALL scenes or starting scene
-  let targetUgeFilename = "";
-  let targetUgeSymbol = "song_0";
-
-  for (const sc of allScenes) {
-    if (targetUgeFilename) break;
-    const events = [
-      ...(Array.isArray(sc.script) ? sc.script : []),
-      ...(Array.isArray(sc.startScript) ? sc.startScript : [])
-    ];
-    for (const evt of events) {
-      if (evt && (evt.command === "EVENT_MUSIC_PLAY" || evt.command === "EVENT_PLAY_MUSIC")) {
-        const musicId = evt.args?.musicId || evt.args?.music;
-        if (musicId) {
-          const mInfo = musicIdMap[musicId];
-          if (mInfo) {
-            targetUgeFilename = mInfo.filename;
-            targetUgeSymbol = mInfo.symbol;
-          } else {
-            targetUgeFilename = String(musicId);
-          }
-          break;
-        }
-      }
-    }
-    if (!targetUgeFilename && sc.musicId) {
-      const mInfo = musicIdMap[sc.musicId];
-      if (mInfo) {
-        targetUgeFilename = mInfo.filename;
-        targetUgeSymbol = mInfo.symbol;
-      } else {
-        targetUgeFilename = String(sc.musicId);
-      }
-    }
-  }
-
-  let foundUgePath = "";
-  if (targetUgeFilename) {
-    if (!targetUgeFilename.endsWith(".uge")) {
-      targetUgeFilename += ".uge";
-    }
-    for (const mDir of musicDirsToScan) {
-      const p = pathModule.join(mDir, targetUgeFilename);
-      if (fs.existsSync(p)) {
-        foundUgePath = p;
-        break;
-      }
-    }
-  }
-
-  // Fallback scan for any .uge file if target filename didn't match directly
-  if (!foundUgePath) {
-    for (const mDir of musicDirsToScan) {
-      if (fs.existsSync(mDir)) {
-        const ugeFiles = fs.readdirSync(mDir).filter((f: any) => typeof f === "string" && f.endsWith(".uge"));
-        if (ugeFiles.length > 0) {
-          foundUgePath = pathModule.join(mDir, ugeFiles[0]);
-          break;
-        }
-      }
-    }
-  }
-
-  if (foundUgePath && fs.existsSync(foundUgePath)) {
-    try {
-      const { loadUGESong, exportToC } = require("shared/lib/uge/ugeHelper");
-      const ugeBuf = await fs.readFile(foundUgePath);
-      const song = loadUGESong(ugeBuf);
-      if (song) {
-        const musicC = exportToC(song, "song_0");
-        const musicOutDir = pathModule.join(buildDir, "music");
-        await fs.ensureDir(musicOutDir);
-        await fs.writeFile(pathModule.join(musicOutDir, "song_0.c"), musicC, "utf8");
-        musicIncludes = `#include "music/song_0.c"\n`;
-        hasMusicDef = `#define HAS_MUSIC_DATA 1\n`;
-      }
-    } catch (e) {
-      console.error("Error processing UGE music file:", e);
-    }
-  }
-
   let playerSprVramSizeHex = "0x40";
   let playerSprSizeConst = "SZ_16x16";
   if (playerSprWidth16 === 1 && playerSprHeight16 === 2) {
@@ -1341,7 +1396,7 @@ ${actorDirectives}
 #define PLAYER_START_Y ${playerStartY}
 #define PLAYER_SPR_VRAM_SIZE ${playerSprVramSizeHex}
 #define PLAYER_SPR_SIZE ${playerSprSizeConst}
-${hasMusicDef}
+${hasMusicDef}${startMusicDef}
 
 ${actorDefines}
 ${triggerDefines}

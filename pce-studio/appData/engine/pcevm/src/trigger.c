@@ -13,6 +13,25 @@ void trigger_init(void) {
     g_trigger_cooldown = 0;
 }
 
+void trigger_load_all(void) {
+#ifdef HAS_TRIGGER_TABLE
+    int i;
+    for (i = 0; i < TRIGGER_COUNT; i++) {
+        trigger_add(
+            g_trigger_table[i * 8 + 0],
+            g_trigger_table[i * 8 + 1],
+            g_trigger_table[i * 8 + 2],
+            g_trigger_table[i * 8 + 3],
+            g_trigger_table[i * 8 + 4],
+            g_trigger_table[i * 8 + 5],
+            g_trigger_table[i * 8 + 6],
+            g_trigger_table[i * 8 + 7],
+            (void *)0
+        );
+    }
+#endif
+}
+
 void trigger_add(int scene_id, int x, int y, int w, int h, int target_scene, int target_x, int target_y, unsigned char* script) {
     if (g_trigger_count < MAX_TRIGGERS) {
         g_triggers[g_trigger_count].scene_id = scene_id;

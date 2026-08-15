@@ -680,7 +680,7 @@ export const exportToC = (song: Song, trackName: string): string => {
 
   const getSequenceMappingFor = function (track: number) {
     return song.sequence
-      .map((sequence) => `song_pattern_${patternMap[sequence.channels[track]]}`)
+      .map((sequence) => `&${trackName}_song_pattern_${patternMap[sequence.channels[track]]}`)
       .join(", ");
   };
 
@@ -847,7 +847,7 @@ export const exportToC = (song: Song, trackName: string): string => {
     let subpatternSymbol = emittedSubpatterns.get(subpatternKey);
 
     if (!subpatternSymbol) {
-      subpatternSymbol = `subpattern_${emittedSubpatterns.size}`;
+      subpatternSymbol = `${trackName}_subpattern_${emittedSubpatterns.size}`;
       emittedSubpatterns.set(subpatternKey, subpatternSymbol);
 
       let definition = `static const unsigned char ${subpatternSymbol}[] = {\n`;
@@ -884,11 +884,11 @@ export const exportToC = (song: Song, trackName: string): string => {
   let data = `#include "include/hUGEDriver.h"
 #include "include/hUGEDriverRoutines.h"
 
-static const unsigned char order_cnt = ${song.sequence.length * 2};
+static const unsigned char ${trackName}_order_cnt = ${song.sequence.length * 2};
 `;
 
   for (let idx = 0; idx < patterns.length; idx++) {
-    data += `static const unsigned char song_pattern_${idx}[] = {\n`;
+    data += `static const unsigned char ${trackName}_song_pattern_${idx}[] = {\n`;
     data += patterns[idx].map((cell) => `    ${formatPatternCell(cell)}`).join(",\n");
     data += "\n};\n";
   }
@@ -896,32 +896,32 @@ static const unsigned char order_cnt = ${song.sequence.length * 2};
     data += definition;
   }
   for (let track = 0; track < 4; track++)
-    data += `static const unsigned char* order${track + 1
+    data += `static const unsigned char* ${trackName}_order${track + 1
       }[] = {${getSequenceMappingFor(track)}};\n`;
-  data += "static const unsigned char duty_instruments[] = {\n";
+  data += `static const unsigned char ${trackName}_duty_instruments[] = {\n`;
   data += song.dutyInstruments.map((instr) => `    ${formatDutyInstrument(instr)}`).join(",\n");
   data += "\n};\n";
-  data += "static const unsigned char wave_instruments[] = {\n";
+  data += `static const unsigned char ${trackName}_wave_instruments[] = {\n`;
   data += song.waveInstruments.map((instr) => `    ${formatWaveInstrument(instr)}`).join(",\n");
   data += "\n};\n";
-  data += "static const unsigned char noise_instruments[] = {\n";
+  data += `static const unsigned char ${trackName}_noise_instruments[] = {\n`;
   data += song.noiseInstruments.map((instr) => `    ${formatNoiseInstrument(instr)}`).join(",\n");
   data += "\n};\n";
   //data += "static const unsigned char routines[] = {\n";
   //TODO
   //data += "};\n";
-  data += "static const unsigned char waves[] = {\n";
+  data += `static const unsigned char ${trackName}_waves[] = {\n`;
   data += song.waves.map((wave) => `    ${formatWave(wave)}`).join(",\n");
   data += "\n};\n";
 
   data += `
 const unsigned int ${trackName}_Data[] = {
     ${song.ticksPerRow},
-    &order_cnt,
-    order1, order2, order3, order4,
-    duty_instruments, wave_instruments, noise_instruments,
-    routines,
-    waves
+    &${trackName}_order_cnt,
+    &${trackName}_order1, &${trackName}_order2, &${trackName}_order3, &${trackName}_order4,
+    &${trackName}_duty_instruments, &${trackName}_wave_instruments, &${trackName}_noise_instruments,
+    0,
+    &${trackName}_waves
 };
 `;
   return data;
