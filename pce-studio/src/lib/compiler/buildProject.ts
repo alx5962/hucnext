@@ -481,8 +481,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       ? settingsGbsData.startSceneId
       : (projectData?.settings?.startSceneId ?? ""));
 
-  let startSceneNum = 1;
-  if (startSceneId) {
+  const requestedSceneNum = (typeof outputBuildDir === "object" && outputBuildDir?.sceneNum) ? outputBuildDir.sceneNum : ((typeof projectDirPath === "object" && projectDirPath?.sceneNum) ? projectDirPath.sceneNum : 0);
+  let startSceneNum = requestedSceneNum ? requestedSceneNum : 1;
+  if (!requestedSceneNum && startSceneId) {
     if (sceneIdToNum[startSceneId]) {
       startSceneNum = sceneIdToNum[startSceneId];
     } else {

@@ -5748,11 +5748,15 @@ void load_scene(int scene_num, int player_x, int player_y) {
   load_scene_music(scene_num);
 }
 
-const unsigned int font_pal[16] = {0x000, 0x1FF, 0x1FF, 0x1FF, 0x1FF, 0x1FF,
-                                   0x1FF, 0x1FF, 0x000, 0x1FF, 0x1FF, 0x1FF,
-                                   0x1FF, 0x1FF, 0x1FF, 0x1FF};
+const unsigned int font_pal[16] = {
+    0x1FF, /* 0: White background */
+    0x000, /* 1: Pure black text */
+    0x000, 0x000, 0x000, 0x000, 0x000, 0x000,
+    0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000
+};
 
 void engine_init(void) {
+  int i;
   pce_sys_init();
   pce_sound_init();
 #ifdef HAS_MUSIC_DATA
@@ -5765,9 +5769,11 @@ void engine_init(void) {
   trigger_init();
   vm_init();
 
-  set_color(15, 0x1FF);
-  set_font_color(0, 15);
+  set_font_pal(15);
+  set_font_color(1, 2);
   load_default_font();
+  set_color(241, 0x000);
+  set_color(242, 0x1FF);
 
   trigger_load_all();
 
@@ -5808,8 +5814,9 @@ void show_dialogue(const char *msg) {
   actor_update_all();
   satb_update();
 
-  set_color(15, 0x1FF);
-  set_font_color(0, 15);
+  set_font_pal(15);
+  set_color(241, 0x000);
+  set_color(242, 0x1FF);
 
   /* Top border at y = 22 */
   line_buf[0] = '+';
