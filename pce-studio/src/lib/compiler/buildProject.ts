@@ -703,15 +703,29 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         if (!anim || !anim.frames || !anim.frames[frameIdx] || !anim.frames[frameIdx].tiles) return null;
         const tiles = anim.frames[frameIdx].tiles.filter((t: any) => typeof t.sliceX === "number" && typeof t.sliceY === "number");
         if (tiles.length === 0) return null;
-        let minX = Infinity, minY = Infinity;
+
+        const cellCounts = new Map<string, number>();
         let hasTileFlipX = false;
         tiles.forEach((t: any) => {
-          if (t.sliceX < minX) minX = t.sliceX;
-          if (t.sliceY < minY) minY = t.sliceY;
+          const cellX = Math.floor(t.sliceX / 16) * 16;
+          const cellY = Math.floor(t.sliceY / 16) * 16;
+          const key = `${cellX},${cellY}`;
+          cellCounts.set(key, (cellCounts.get(key) || 0) + 1);
           if (t.flipX) hasTileFlipX = true;
         });
-        if (minX === Infinity || minY === Infinity) return null;
-        return { cropX: minX, cropY: minY, flipX: hasTileFlipX };
+
+        let maxCount = -1;
+        let bestKey = "";
+        cellCounts.forEach((count, key) => {
+          if (count > maxCount) {
+            maxCount = count;
+            bestKey = key;
+          }
+        });
+
+        if (!bestKey) return null;
+        const [cropX, cropY] = bestKey.split(",").map(Number);
+        return { cropX, cropY, flipX: hasTileFlipX };
       };
 
       // 0: idleRight, 1: idleLeft, 2: idleUp, 3: idleDown, 4: movingRight, 5: movingLeft, 6: movingUp, 7: movingDown
