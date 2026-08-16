@@ -123,6 +123,21 @@ export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: Cro
     }
   }
 
+  let minPixelX = width;
+  let maxPixelX = -1;
+  let minPixelY = height;
+  let maxPixelY = -1;
+  for (let py = 0; py < height; py++) {
+    for (let px = 0; px < width; px++) {
+      if (pixels[py * width + px] > 0) {
+        if (px < minPixelX) minPixelX = px;
+        if (px > maxPixelX) maxPixelX = px;
+        if (py < minPixelY) minPixelY = py;
+        if (py > maxPixelY) maxPixelY = py;
+      }
+    }
+  }
+
   // Build 128-byte PCX Header
   const header = Buffer.alloc(128);
   header[0] = 0x0A; // PCX ID
@@ -175,5 +190,5 @@ export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: Cro
   fs.ensureDirSync(Path.dirname(pcxPath));
   fs.writeFileSync(pcxPath, outBuf);
 
-  return { width, height };
+  return { width, height, minPixelX, maxPixelX, minPixelY, maxPixelY };
 }

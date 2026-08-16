@@ -763,14 +763,31 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
       const sharedPal = buildPngPalette(srcPng);
 
-      convertPngToPcx(srcPng, destPcxR0, { cropX: infoR0.cropX, cropY: infoR0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoR0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxR1, { cropX: infoR1.cropX, cropY: infoR1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoR1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxL0, { cropX: infoL0.cropX, cropY: infoL0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoL0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxL1, { cropX: infoL1.cropX, cropY: infoL1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoL1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxU0, { cropX: infoU0.cropX, cropY: infoU0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoU0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxU1, { cropX: infoU1.cropX, cropY: infoU1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoU1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxD0, { cropX: infoD0.cropX, cropY: infoD0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoD0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxD1, { cropX: infoD1.cropX, cropY: infoD1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoD1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      const d_r0 = convertPngToPcx(srcPng, destPcxR0, { cropX: infoR0.cropX, cropY: infoR0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoR0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      const d_r1 = convertPngToPcx(srcPng, destPcxR1, { cropX: infoR1.cropX, cropY: infoR1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoR1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      const d_l0 = convertPngToPcx(srcPng, destPcxL0, { cropX: infoL0.cropX, cropY: infoL0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoL0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      const d_l1 = convertPngToPcx(srcPng, destPcxL1, { cropX: infoL1.cropX, cropY: infoL1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoL1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      const d_u0 = convertPngToPcx(srcPng, destPcxU0, { cropX: infoU0.cropX, cropY: infoU0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoU0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      const d_u1 = convertPngToPcx(srcPng, destPcxU1, { cropX: infoU1.cropX, cropY: infoU1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoU1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      const d_d0 = convertPngToPcx(srcPng, destPcxD0, { cropX: infoD0.cropX, cropY: infoD0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoD0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      const d_d1 = convertPngToPcx(srcPng, destPcxD1, { cropX: infoD1.cropX, cropY: infoD1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoD1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+
+      const allFrames = [d_r0, d_r1, d_l0, d_l1, d_u0, d_u1, d_d0, d_d1];
+      let maxBottom = -1;
+      let minTop = 999;
+      let minLeft = 999;
+      let maxRight = -1;
+      allFrames.forEach((f: any) => {
+        if (f.maxPixelY > maxBottom) maxBottom = f.maxPixelY;
+        if (f.minPixelY >= 0 && f.minPixelY < minTop) minTop = f.minPixelY;
+        if (f.minPixelX >= 0 && f.minPixelX < minLeft) minLeft = f.minPixelX;
+        if (f.maxPixelX > maxRight) maxRight = f.maxPixelX;
+      });
+
+      const bboxBottom = maxBottom > 0 ? maxBottom : (height16 * 16 - 1);
+      const bboxTop = (minTop < maxBottom && minTop >= 0) ? (minTop + Math.floor((maxBottom - minTop) / 2)) : 8;
+      const bboxLeft = (minLeft >= 0 && minLeft < 16) ? Math.max(1, minLeft + 1) : 2;
+      const bboxRight = (maxRight >= 0 && maxRight < 32) ? Math.min(width16 * 16 - 2, maxRight - 1) : 13;
 
       const relR0 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxR0).replace(/\\/g, "/")}`;
       const relR1 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxR1).replace(/\\/g, "/")}`;
@@ -811,7 +828,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         sizeConst = "SZ_16x64";
       }
 
-      compiledPlayerSprites.set(key, { symPrefix, palName, width16, height16, filename, vramSizeHex, sizeConst });
+      compiledPlayerSprites.set(key, { symPrefix, palName, width16, height16, filename, vramSizeHex, sizeConst, bboxLeft, bboxRight, bboxTop, bboxBottom });
     } catch (e) {
       console.error("Error converting player sprite frames to PCX:", e);
     }
@@ -833,6 +850,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       g_player_spr_vram_size = ${compiled.vramSizeHex};
       g_player_spr_size = ${compiled.sizeConst};
       g_actor_size[0] = ${compiled.sizeConst};
+      g_player_bbox_left = ${compiled.bboxLeft};
+      g_player_bbox_right = ${compiled.bboxRight};
+      g_player_bbox_top = ${compiled.bboxTop};
+      g_player_bbox_bottom = ${compiled.bboxBottom};
       load_vram(0x5000 + 0 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r0, ${compiled.vramSizeHex});
       load_vram(0x5000 + 1 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r1, ${compiled.vramSizeHex});
       load_vram(0x5000 + 2 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_l0, ${compiled.vramSizeHex});
