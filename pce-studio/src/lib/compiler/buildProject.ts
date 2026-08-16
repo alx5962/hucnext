@@ -515,10 +515,17 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       }
     }
 
+    const origW = Number(scene.width) || dim.width;
+    const origH = Number(scene.height) || dim.height;
     let colBytes = new Uint8Array(dim.width * dim.height);
-    const len = Math.min(colBytes.length, rawCollisions.length);
-    for (let i = 0; i < len; i++) {
-      colBytes[i] = rawCollisions[i];
+    for (let y = 0; y < dim.height; y++) {
+      for (let x = 0; x < dim.width; x++) {
+        const dstIdx = y * dim.width + x;
+        const srcIdx = y * origW + x;
+        if (srcIdx < rawCollisions.length) {
+          colBytes[dstIdx] = rawCollisions[srcIdx] ? 1 : 0;
+        }
+      }
     }
 
     fs.writeFileSync(colFilePath, Buffer.from(colBytes));
