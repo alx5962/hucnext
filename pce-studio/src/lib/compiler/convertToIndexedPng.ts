@@ -39,8 +39,8 @@ export function convertToIndexedPng(srcPath: string, destPath: string) {
   const buf = fs.readFileSync(srcPath);
   const png = PNG.sync.read(buf);
 
-  // If already indexed with <= 16 colors, keep original
-  if (png.colorType === 3 && png.palette && png.palette.length <= 16) {
+  // If already indexed with <= 256 colors, keep original
+  if (png.colorType === 3 && png.palette && png.palette.length <= 256) {
     fs.ensureDirSync(Path.dirname(destPath));
     fs.writeFileSync(destPath, buf);
     return;

@@ -8,7 +8,59 @@ export type CropOptions = {
   cropW?: number;
   cropH?: number;
   flipX?: boolean;
+  sharedPalette?: Uint8Array;
+  sharedColorMap?: Map<string, number>;
 };
+
+export interface SharedSpritePalette {
+  palette: Uint8Array;
+  colorMap: Map<string, number>;
+}
+
+export function buildPngPalette(pngPath: string): SharedSpritePalette {
+  const data = fs.readFileSync(pngPath);
+  const srcPng = PNG.sync.read(data);
+
+  const bgR = srcPng.data[0];
+  const bgG = srcPng.data[1];
+  const bgB = srcPng.data[2];
+
+  const palette = new Uint8Array(768);
+  const colorMap = new Map<string, number>();
+  let colorCount = 0;
+
+  for (let y = 0; y < srcPng.height; y++) {
+    for (let x = 0; x < srcPng.width; x++) {
+      const srcIdx = (y * srcPng.width + x) * 4;
+      const r = srcPng.data[srcIdx];
+      const g = srcPng.data[srcIdx + 1];
+      const b = srcPng.data[srcIdx + 2];
+      const a = srcPng.data[srcIdx + 3];
+
+      const isTopLeftBg = Math.abs(r - bgR) <= 5 && Math.abs(g - bgG) <= 5 && Math.abs(b - bgB) <= 5;
+      const isPureGreenScreen = r === 0 && g === 255 && b === 0;
+
+      if (a < 128 || isTopLeftBg || isPureGreenScreen) {
+        continue;
+      }
+
+      const key = `${r},${g},${b}`;
+      if (!colorMap.has(key)) {
+        if (colorCount < 15) {
+          colorCount++;
+          colorMap.set(key, colorCount);
+          palette[colorCount * 3] = r;
+          palette[colorCount * 3 + 1] = g;
+          palette[colorCount * 3 + 2] = b;
+        } else {
+          colorMap.set(key, 15);
+        }
+      }
+    }
+  }
+
+  return { palette, colorMap };
+}
 
 export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: CropOptions) {
   const data = fs.readFileSync(pngPath);
@@ -19,15 +71,13 @@ export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: Cro
   let width = cropOpts?.cropW ?? srcPng.width;
   let height = cropOpts?.cropH ?? srcPng.height;
 
-  // Detect transparent background color from top-left pixel (0,0) or alpha
   const bgR = srcPng.data[0];
   const bgG = srcPng.data[1];
   const bgB = srcPng.data[2];
 
-  // Build 256 color palette (16 colors mapped)
-  const palette = new Uint8Array(768);
-  const colorMap = new Map<string, number>();
-  let colorCount = 0;
+  const palette = cropOpts?.sharedPalette || new Uint8Array(768);
+  const colorMap = cropOpts?.sharedColorMap || new Map<string, number>();
+  let colorCount = colorMap.size;
 
   const pixels = new Uint8Array(width * height);
 
@@ -44,25 +94,17 @@ export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: Cro
       }
 
       const srcIdx = (realY * srcPng.width + realX) * 4;
-      let r = srcPng.data[srcIdx];
-      let g = srcPng.data[srcIdx + 1];
-      let b = srcPng.data[srcIdx + 2];
+      const r = srcPng.data[srcIdx];
+      const g = srcPng.data[srcIdx + 1];
+      const b = srcPng.data[srcIdx + 2];
       const a = srcPng.data[srcIdx + 3];
 
-      // Check alpha transparency OR exact top-left background color match
       const isTopLeftBg = Math.abs(r - bgR) <= 5 && Math.abs(g - bgG) <= 5 && Math.abs(b - bgB) <= 5;
       const isPureGreenScreen = r === 0 && g === 255 && b === 0;
 
       if (a < 128 || isTopLeftBg || isPureGreenScreen) {
         pixels[dstIdx] = 0; // Index 0 = Transparent
         continue;
-      }
-
-      // Quantize artifact green leg/skin contour colors (147, 190, 112) to bright light cream skin (226, 247, 210)
-      if (r < 170 && g > 150 && b < 140) {
-        r = 226;
-        g = 247;
-        b = 210;
       }
 
       const key = `${r},${g},${b}`;

@@ -1,6 +1,6 @@
 import fs from "fs-extra";
 import Path from "path";
-import { convertPngToPcx } from "./convertPngToPcx";
+import { convertPngToPcx, buildPngPalette } from "./convertPngToPcx";
 import convertToIndexedPngDefault, { convertToIndexedPng as convertToIndexedPngFn } from "./indexedPngWriter";
 
 const pathModule = (Path as any).default || Path;
@@ -205,10 +205,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
   } else if (scenesFromGbsres.length > 0) {
     scenesFromGbsres.sort((a, b) => {
+      const idxA = a._index !== undefined ? Number(a._index) : 999;
+      const idxB = b._index !== undefined ? Number(b._index) : 999;
+      if (idxA !== idxB) return idxA - idxB;
       const numA = parseInt((a.name || "").replace(/\D/g, "")) || 0;
       const numB = parseInt((b.name || "").replace(/\D/g, "")) || 0;
       if (numA && numB) return numA - numB;
-      return 0;
+      return (a.name || "").localeCompare(b.name || "");
     });
   }
 
@@ -349,14 +352,64 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     return "scene.png";
   };
 
+  const getPceScreenSize = (w: number, h: number) => {
+    if (w <= 32 && h <= 32) return "SCR_SIZE_32x32";
+    if (w <= 64 && h <= 32) return "SCR_SIZE_64x32";
+    if (w <= 32 && h > 32) return "SCR_SIZE_32x64";
+    if (w <= 64 && h > 32) return "SCR_SIZE_64x64";
+    if (w > 64 && h <= 32) return "SCR_SIZE_128x32";
+    return "SCR_SIZE_128x64";
+  };
+
+  const sceneDimensions: { width: number; height: number; scrSize: string }[] = [];
+
   allScenes.forEach((scene: any, idx: number) => {
     const scNum = idx + 1;
     const bgFile = getSceneBgFilename(scene, idx);
     sceneBgFilenames.push(bgFile);
 
+    let scWidth = Number(scene.width) || 32;
+    let scHeight = Number(scene.height) || 28;
+
+    if (scene.backgroundId) {
+      const matchedBg = allBackgrounds.find((b: any) => b && (b.id === scene.backgroundId || b.name === scene.backgroundId || b.filename === scene.backgroundId || b.symbol === scene.backgroundId));
+      if (matchedBg) {
+        if (matchedBg.width) scWidth = Number(matchedBg.width);
+        if (matchedBg.height) scHeight = Number(matchedBg.height);
+      }
+    }
+
+    for (const bDir of bgDirsToScan) {
+      const srcPng = pathModule.join(bDir, bgFile);
+      if (fs.existsSync(srcPng)) {
+        try {
+          const buf = fs.readFileSync(srcPng);
+          if (buf.length >= 24) {
+            const pngW = buf.readUInt32BE(16) >> 3;
+            const pngH = buf.readUInt32BE(20) >> 3;
+            if (pngW > 0) scWidth = Math.max(scWidth, pngW);
+            if (pngH > 0) scHeight = Math.max(scHeight, pngH);
+          }
+        } catch (e) {}
+        break;
+      }
+    }
+
+    scWidth = Math.min(128, scWidth);
+    scHeight = Math.min(64, scHeight);
+    if (scWidth * scHeight > 2048) {
+      scWidth = Math.min(scWidth, Math.floor(2048 / scHeight));
+    }
+
+    const scrSize = getPceScreenSize(scWidth, scHeight);
+    sceneDimensions.push({ width: scWidth, height: scHeight, scrSize });
+
     const scType: string = (scene.type || "TOPDOWN").toUpperCase();
     const scTypeNum = SCENE_TYPE_MAP[scType] ?? SCENE_TYPE_MAP["TOPDOWN"];
     sceneTypeDefineList.push(`#define SCENE_${scNum}_TYPE ${scTypeNum}`);
+    sceneTypeDefineList.push(`#define SCENE_${scNum}_WIDTH ${scWidth}`);
+    sceneTypeDefineList.push(`#define SCENE_${scNum}_HEIGHT ${scHeight}`);
+    sceneTypeDefineList.push(`#define SCENE_${scNum}_SCR_SIZE ${scrSize}`);
     sceneTypeDefineList.push(`#define HAS_SCENE_${scNum} 1`);
   });
 
@@ -368,24 +421,14 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const destBgDir = pathModule.join(buildDir, "assets", "backgrounds");
   await fs.ensureDir(destBgDir);
 
-  // Build a map: bgFilename -> max colors needed (256 for Logo scenes, 16 for others)
-  const bgFileMaxColors = new Map<string, number>();
-  sceneBgFilenames.forEach((bgFile, idx) => {
-    const scType = (allScenes[idx]?.type || "TOPDOWN").toUpperCase();
-    const needed = scType === "LOGO" ? 256 : 16;
-    const prev = bgFileMaxColors.get(bgFile) ?? 0;
-    bgFileMaxColors.set(bgFile, Math.max(prev, needed));
-  });
-
   const uniqueBgFiles = Array.from(new Set(sceneBgFilenames));
   for (const bgFile of uniqueBgFiles) {
     for (const bDir of bgDirsToScan) {
       const srcPng = pathModule.join(bDir, bgFile);
       if (fs.existsSync(srcPng)) {
         const destPng = pathModule.join(destBgDir, bgFile);
-        const maxColors = bgFileMaxColors.get(bgFile) ?? 16;
         try {
-          convertToIndexedPng(srcPng, destPng, maxColors);
+          convertToIndexedPng(srcPng, destPng);
         } catch (e) {
           await fs.copy(srcPng, destPng, { overwrite: true });
         }
@@ -394,70 +437,106 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
   }
 
-  let bgDirectives = "";
+  let bgAsmDirectives = "";
+  let bgSymbolDefines = "";
   const bgSymbolMap = new Map<string, string>();
   let bgUniqueIndex = 0;
 
   sceneBgFilenames.forEach((bgFile, idx) => {
     const scNum = idx + 1;
-    const sceneType = (allScenes[idx]?.type || "TOPDOWN").toUpperCase();
-    const palArgs = sceneType === "LOGO" ? ", 0, 16" : "";
-    const key = `${bgFile}|${palArgs}`;
+    const dim = sceneDimensions[idx] || { width: 32, height: 28 };
+    const key = `${bgFile}|${dim.width}|${dim.height}`;
 
     if (!bgSymbolMap.has(key)) {
       const symPrefix = `bg_file_${bgUniqueIndex++}`;
       bgSymbolMap.set(key, symPrefix);
-      bgDirectives += `#incchr(${symPrefix}_chr, "assets/backgrounds/${bgFile}", 0, 0, 32, 28)\n`;
-      bgDirectives += `#incpal(${symPrefix}_pal, "assets/backgrounds/${bgFile}"${palArgs})\n`;
-      bgDirectives += `#incbat(${symPrefix}_bat, "assets/backgrounds/${bgFile}", 0x1000, 32, 28)\n`;
+      bgAsmDirectives += `_${symPrefix}_chr .incchr "assets/backgrounds/${bgFile}",0,0,${dim.width},${dim.height},1\n`;
+      bgAsmDirectives += `_${symPrefix}_pal .incpal "assets/backgrounds/${bgFile}"\n`;
+      bgAsmDirectives += `_${symPrefix}_bat .incbat "assets/backgrounds/${bgFile}",$1000,0,0,${dim.width},${dim.height},_${symPrefix}_chr\n`;
+      bgSymbolDefines += `extern const unsigned int ${symPrefix}_chr[];\n`;
+      bgSymbolDefines += `extern const unsigned int ${symPrefix}_pal[];\n`;
+      bgSymbolDefines += `extern const unsigned int ${symPrefix}_bat[];\n`;
     }
 
     const symPrefix = bgSymbolMap.get(key)!;
-    bgDirectives += `#define bg_scene${scNum}_chr ${symPrefix}_chr\n`;
-    bgDirectives += `#define bg_scene${scNum}_pal ${symPrefix}_pal\n`;
-    bgDirectives += `#define bg_scene${scNum}_bat ${symPrefix}_bat\n`;
+    bgSymbolDefines += `#define bg_scene${scNum}_chr ${symPrefix}_chr\n`;
+    bgSymbolDefines += `#define bg_scene${scNum}_pal ${symPrefix}_pal\n`;
+    bgSymbolDefines += `#define bg_scene${scNum}_bat ${symPrefix}_bat\n`;
   });
+
+  const bgDirectives = `#asm\n .data\n${bgAsmDirectives} .code\n#endasm\n\n${bgSymbolDefines}`;
 
   let collisionIncludes = "";
   const colSymbolMap = new Map<string, string>();
   let colUniqueIndex = 0;
 
+  const decompress8bitNumberString = (str: string): number[] => {
+    const arr: number[] = [];
+    let i = 0;
+    while (i < str.length) {
+      const value = parseInt(str.slice(i, i + 2), 16);
+      i += 2;
+      let count = 1;
+      if (i < str.length) {
+        if (str[i] === "!") {
+          count = 1;
+          i++;
+        } else {
+          const countStart = i;
+          const countEnd = str.indexOf("+", countStart);
+          if (countStart === countEnd || countEnd === -1) {
+            return [];
+          }
+          count = parseInt(str.slice(countStart, countEnd), 16);
+          i = countEnd + 1;
+        }
+      } else {
+        return [];
+      }
+      for (let j = 0; j < count; j++) {
+        arr.push(value);
+      }
+    }
+    return arr;
+  };
+
   allScenes.forEach((scene: any, idx: number) => {
     const scNum = idx + 1;
-    const colFileName = `scene_${scNum}_collisions.c`;
+    const dim = sceneDimensions[idx] || { width: 32, height: 28 };
+    const colFileName = `scene_${scNum}_collisions.bin`;
     const colFilePath = pathModule.join(buildDir, colFileName);
 
-    let colBytes = new Uint8Array(32 * 28);
-    if (scene.collisions && Array.isArray(scene.collisions)) {
-      const len = Math.min(colBytes.length, scene.collisions.length);
-      for (let i = 0; i < len; i++) {
-        colBytes[i] = scene.collisions[i];
+    let rawCollisions: number[] = [];
+    if (scene.collisions) {
+      if (typeof scene.collisions === "string") {
+        rawCollisions = decompress8bitNumberString(scene.collisions);
+      } else if (Array.isArray(scene.collisions)) {
+        rawCollisions = scene.collisions;
       }
     }
 
+    let colBytes = new Uint8Array(dim.width * dim.height);
+    const len = Math.min(colBytes.length, rawCollisions.length);
+    for (let i = 0; i < len; i++) {
+      colBytes[i] = rawCollisions[i];
+    }
+
+    fs.writeFileSync(colFilePath, Buffer.from(colBytes));
+
     const key = Array.from(colBytes).join(",");
     let symName = "";
-    let colHeaderContent = "";
 
     if (!colSymbolMap.has(key)) {
       symName = `col_data_${colUniqueIndex++}`;
       colSymbolMap.set(key, symName);
-
-      const lines: string[] = [];
-      for (let i = 0; i < colBytes.length; i += 16) {
-        const chunk = Array.from(colBytes.slice(i, i + 16)).map(c => `0x${c.toString(16).padStart(2, "0").toUpperCase()}`);
-        lines.push(`  ${chunk.join(", ")}`);
-      }
-      colHeaderContent = `#include "include/gbs_types.h"\n\nconst unsigned char ${symName}[] = {\n${lines.join(",\n")}\n};\n#define scene_${scNum}_collisions ${symName}\n`;
+      collisionIncludes += `#incbin(${symName}, "${colFileName}")\n`;
+      collisionIncludes += `#define scene_${scNum}_collisions ${symName}\n`;
     } else {
       symName = colSymbolMap.get(key)!;
-      colHeaderContent = `#define scene_${scNum}_collisions ${symName}\n`;
+      collisionIncludes += `#define scene_${scNum}_collisions ${symName}\n`;
     }
 
-    fs.writeFileSync(colFilePath, colHeaderContent, "utf8");
-
     collisionIncludes += `#define HAS_SCENE_${scNum}_COLLISIONS 1\n`;
-    collisionIncludes += `#include "${colFileName}"\n`;
   });
 
   const parseCoord = (val: any, fallback: number) => {
@@ -652,14 +731,16 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         ? { cropX: infoR1.cropX, cropY: infoR1.cropY, flipX: !infoR1.flipX }
         : (getAnimFrameInfo(5, 0) || getAnimFrameInfo(5, 1) || infoR1);
 
-      convertPngToPcx(srcPng, destPcxR0, { cropX: infoR0.cropX, cropY: infoR0.cropY, cropW: cropW, cropH: cropH, flipX: infoR0.flipX });
-      convertPngToPcx(srcPng, destPcxR1, { cropX: infoR1.cropX, cropY: infoR1.cropY, cropW: cropW, cropH: cropH, flipX: infoR1.flipX });
-      convertPngToPcx(srcPng, destPcxL0, { cropX: infoL0.cropX, cropY: infoL0.cropY, cropW: cropW, cropH: cropH, flipX: infoL0.flipX });
-      convertPngToPcx(srcPng, destPcxL1, { cropX: infoL1.cropX, cropY: infoL1.cropY, cropW: cropW, cropH: cropH, flipX: infoL1.flipX });
-      convertPngToPcx(srcPng, destPcxU0, { cropX: infoU0.cropX, cropY: infoU0.cropY, cropW: cropW, cropH: cropH, flipX: infoU0.flipX });
-      convertPngToPcx(srcPng, destPcxU1, { cropX: infoU1.cropX, cropY: infoU1.cropY, cropW: cropW, cropH: cropH, flipX: infoU1.flipX });
-      convertPngToPcx(srcPng, destPcxD0, { cropX: infoD0.cropX, cropY: infoD0.cropY, cropW: cropW, cropH: cropH, flipX: infoD0.flipX });
-      convertPngToPcx(srcPng, destPcxD1, { cropX: infoD1.cropX, cropY: infoD1.cropY, cropW: cropW, cropH: cropH, flipX: infoD1.flipX });
+      const sharedPal = buildPngPalette(srcPng);
+
+      convertPngToPcx(srcPng, destPcxR0, { cropX: infoR0.cropX, cropY: infoR0.cropY, cropW: cropW, cropH: cropH, flipX: infoR0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxR1, { cropX: infoR1.cropX, cropY: infoR1.cropY, cropW: cropW, cropH: cropH, flipX: infoR1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxL0, { cropX: infoL0.cropX, cropY: infoL0.cropY, cropW: cropW, cropH: cropH, flipX: infoL0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxL1, { cropX: infoL1.cropX, cropY: infoL1.cropY, cropW: cropW, cropH: cropH, flipX: infoL1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxU0, { cropX: infoU0.cropX, cropY: infoU0.cropY, cropW: cropW, cropH: cropH, flipX: infoU0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxU1, { cropX: infoU1.cropX, cropY: infoU1.cropY, cropW: cropW, cropH: cropH, flipX: infoU1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxD0, { cropX: infoD0.cropX, cropY: infoD0.cropY, cropW: cropW, cropH: cropH, flipX: infoD0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxD1, { cropX: infoD1.cropX, cropY: infoD1.cropY, cropW: cropW, cropH: cropH, flipX: infoD1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
 
       const relR0 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxR0).replace(/\\/g, "/")}`;
       const relR1 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxR1).replace(/\\/g, "/")}`;
@@ -704,7 +785,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   let scenePlayerSpriteCases = "";
   const firstCompiled = Array.from(compiledPlayerSprites.values())[0];
   allScenes.forEach((scene: any, sceneIdx: number) => {
-    const scNum = scene.sceneNum !== undefined ? scene.sceneNum : (sceneIdx + 1);
+    const scNum = sceneIdx + 1;
     let sheetId = scene.playerSpriteSheetId;
     if (!sheetId && (scene.type === "TOPDOWN" || scene.type === "ADVENTURE") && defaultTopdownSpr) {
       sheetId = defaultTopdownSpr.id;
@@ -715,6 +796,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       scenePlayerSpriteCases += `    case ${scNum}:
       g_player_spr_vram_size = ${compiled.vramSizeHex};
       g_player_spr_size = ${compiled.sizeConst};
+      g_actor_size[0] = ${compiled.sizeConst};
       load_vram(0x5000 + 0 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r0, ${compiled.vramSizeHex});
       load_vram(0x5000 + 1 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r1, ${compiled.vramSizeHex});
       load_vram(0x5000 + 2 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_l0, ${compiled.vramSizeHex});
@@ -1421,7 +1503,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   let sceneBackgroundCases = "";
   allScenes.forEach((scene: any, idx: number) => {
     const scNum = idx + 1;
-    sceneBackgroundCases += `    case ${scNum}:\n      load_background(bg_scene${scNum}_chr, bg_scene${scNum}_pal, bg_scene${scNum}_bat, 32, 28);\n      break;\n`;
+    const dim = sceneDimensions[idx] || { width: 32, height: 28 };
+    sceneBackgroundCases += `    case ${scNum}:\n      g_current_scene_type = SCENE_${scNum}_TYPE;\n      g_collision_width = SCENE_${scNum}_WIDTH;\n      g_collision_height = SCENE_${scNum}_HEIGHT;\n      set_screen_size(SCENE_${scNum}_SCR_SIZE);\n      camera_set_bounds(SCENE_${scNum}_WIDTH, SCENE_${scNum}_HEIGHT);\n      load_background(bg_scene${scNum}_chr, bg_scene${scNum}_pal, bg_scene${scNum}_bat, ${dim.width}, ${dim.height});\n      set_map_data(scene_${scNum}_collisions, ${dim.width}, ${dim.height});\n      break;\n`;
   });
 
   const sceneInitFunctionC = `#define HAS_SCENE_STEP_EVENTS 1

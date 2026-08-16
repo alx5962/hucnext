@@ -38,8 +38,6 @@ int g_shmup_scroll_x = 0;
 void load_scene_part1(int scene_num) {
   if (scene_num == 1) {
     g_current_scene_type = SCENE_1_TYPE;
-    load_background(bg_scene1_chr, bg_scene1_pal, bg_scene1_bat, 32, 28);
-    collision_init(scene_1_collisions, 32, 28);
 
 #ifdef ACTOR_SCENE_1_PLAYER_HIDDEN
     actor_hide(0);
@@ -98,11 +96,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene2_chr, bg_scene2_pal, bg_scene2_bat, 32, 28);
 #ifdef HAS_SCENE_2_COLLISIONS
-    collision_init(scene_2_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_2_1
@@ -126,11 +121,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene3_chr, bg_scene3_pal, bg_scene3_bat, 32, 28);
 #ifdef HAS_SCENE_3_COLLISIONS
-    collision_init(scene_3_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_3_1
@@ -154,11 +146,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene4_chr, bg_scene4_pal, bg_scene4_bat, 32, 28);
 #ifdef HAS_SCENE_4_COLLISIONS
-    collision_init(scene_4_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_4_1
@@ -182,11 +171,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene5_chr, bg_scene5_pal, bg_scene5_bat, 32, 28);
 #ifdef HAS_SCENE_5_COLLISIONS
-    collision_init(scene_5_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_5_1
@@ -210,11 +196,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene6_chr, bg_scene6_pal, bg_scene6_bat, 32, 28);
 #ifdef HAS_SCENE_6_COLLISIONS
-    collision_init(scene_6_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_6_1
@@ -238,11 +221,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene7_chr, bg_scene7_pal, bg_scene7_bat, 32, 28);
 #ifdef HAS_SCENE_7_COLLISIONS
-    collision_init(scene_7_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_7_1
@@ -266,11 +246,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene8_chr, bg_scene8_pal, bg_scene8_bat, 32, 28);
 #ifdef HAS_SCENE_8_COLLISIONS
-    collision_init(scene_8_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_8_1
@@ -294,11 +271,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene9_chr, bg_scene9_pal, bg_scene9_bat, 32, 28);
 #ifdef HAS_SCENE_9_COLLISIONS
-    collision_init(scene_9_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_9_1
@@ -322,11 +296,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene10_chr, bg_scene10_pal, bg_scene10_bat, 32, 28);
 #ifdef HAS_SCENE_10_COLLISIONS
-    collision_init(scene_10_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_10_1
@@ -350,11 +321,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene11_chr, bg_scene11_pal, bg_scene11_bat, 32, 28);
 #ifdef HAS_SCENE_11_COLLISIONS
-    collision_init(scene_11_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_11_1
@@ -378,11 +346,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene12_chr, bg_scene12_pal, bg_scene12_bat, 32, 28);
 #ifdef HAS_SCENE_12_COLLISIONS
-    collision_init(scene_12_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_12_1
@@ -406,11 +371,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene13_chr, bg_scene13_pal, bg_scene13_bat, 32, 28);
 #ifdef HAS_SCENE_13_COLLISIONS
-    collision_init(scene_13_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_13_1
@@ -434,11 +396,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene14_chr, bg_scene14_pal, bg_scene14_bat, 32, 28);
 #ifdef HAS_SCENE_14_COLLISIONS
-    collision_init(scene_14_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_14_1
@@ -462,11 +421,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene15_chr, bg_scene15_pal, bg_scene15_bat, 32, 28);
 #ifdef HAS_SCENE_15_COLLISIONS
-    collision_init(scene_15_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_15_1
@@ -490,11 +446,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene16_chr, bg_scene16_pal, bg_scene16_bat, 32, 28);
 #ifdef HAS_SCENE_16_COLLISIONS
-    collision_init(scene_16_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_16_1
@@ -518,11 +471,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene17_chr, bg_scene17_pal, bg_scene17_bat, 32, 28);
 #ifdef HAS_SCENE_17_COLLISIONS
-    collision_init(scene_17_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_17_1
@@ -546,11 +496,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene18_chr, bg_scene18_pal, bg_scene18_bat, 32, 28);
 #ifdef HAS_SCENE_18_COLLISIONS
-    collision_init(scene_18_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_18_1
@@ -574,11 +521,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene19_chr, bg_scene19_pal, bg_scene19_bat, 32, 28);
 #ifdef HAS_SCENE_19_COLLISIONS
-    collision_init(scene_19_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_19_1
@@ -602,11 +546,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene20_chr, bg_scene20_pal, bg_scene20_bat, 32, 28);
 #ifdef HAS_SCENE_20_COLLISIONS
-    collision_init(scene_20_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_20_1
@@ -630,11 +571,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene21_chr, bg_scene21_pal, bg_scene21_bat, 32, 28);
 #ifdef HAS_SCENE_21_COLLISIONS
-    collision_init(scene_21_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_21_1
@@ -658,11 +596,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene22_chr, bg_scene22_pal, bg_scene22_bat, 32, 28);
 #ifdef HAS_SCENE_22_COLLISIONS
-    collision_init(scene_22_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_22_1
@@ -686,11 +621,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene23_chr, bg_scene23_pal, bg_scene23_bat, 32, 28);
 #ifdef HAS_SCENE_23_COLLISIONS
-    collision_init(scene_23_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_23_1
@@ -714,11 +646,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene24_chr, bg_scene24_pal, bg_scene24_bat, 32, 28);
 #ifdef HAS_SCENE_24_COLLISIONS
-    collision_init(scene_24_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_24_1
@@ -742,11 +671,8 @@ void load_scene_part1(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene25_chr, bg_scene25_pal, bg_scene25_bat, 32, 28);
 #ifdef HAS_SCENE_25_COLLISIONS
-    collision_init(scene_25_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_25_1
@@ -773,11 +699,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene26_chr, bg_scene26_pal, bg_scene26_bat, 32, 28);
 #ifdef HAS_SCENE_26_COLLISIONS
-    collision_init(scene_26_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_26_1
@@ -801,11 +724,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene27_chr, bg_scene27_pal, bg_scene27_bat, 32, 28);
 #ifdef HAS_SCENE_27_COLLISIONS
-    collision_init(scene_27_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_27_1
@@ -829,11 +749,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene28_chr, bg_scene28_pal, bg_scene28_bat, 32, 28);
 #ifdef HAS_SCENE_28_COLLISIONS
-    collision_init(scene_28_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_28_1
@@ -857,11 +774,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene29_chr, bg_scene29_pal, bg_scene29_bat, 32, 28);
 #ifdef HAS_SCENE_29_COLLISIONS
-    collision_init(scene_29_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_29_1
@@ -885,11 +799,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene30_chr, bg_scene30_pal, bg_scene30_bat, 32, 28);
 #ifdef HAS_SCENE_30_COLLISIONS
-    collision_init(scene_30_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_30_1
@@ -913,11 +824,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene31_chr, bg_scene31_pal, bg_scene31_bat, 32, 28);
 #ifdef HAS_SCENE_31_COLLISIONS
-    collision_init(scene_31_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_31_1
@@ -941,11 +849,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene32_chr, bg_scene32_pal, bg_scene32_bat, 32, 28);
 #ifdef HAS_SCENE_32_COLLISIONS
-    collision_init(scene_32_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_32_1
@@ -969,11 +874,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene33_chr, bg_scene33_pal, bg_scene33_bat, 32, 28);
 #ifdef HAS_SCENE_33_COLLISIONS
-    collision_init(scene_33_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_33_1
@@ -997,11 +899,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene34_chr, bg_scene34_pal, bg_scene34_bat, 32, 28);
 #ifdef HAS_SCENE_34_COLLISIONS
-    collision_init(scene_34_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_34_1
@@ -1025,11 +924,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene35_chr, bg_scene35_pal, bg_scene35_bat, 32, 28);
 #ifdef HAS_SCENE_35_COLLISIONS
-    collision_init(scene_35_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_35_1
@@ -1053,11 +949,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene36_chr, bg_scene36_pal, bg_scene36_bat, 32, 28);
 #ifdef HAS_SCENE_36_COLLISIONS
-    collision_init(scene_36_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_36_1
@@ -1081,11 +974,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene37_chr, bg_scene37_pal, bg_scene37_bat, 32, 28);
 #ifdef HAS_SCENE_37_COLLISIONS
-    collision_init(scene_37_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_37_1
@@ -1109,11 +999,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene38_chr, bg_scene38_pal, bg_scene38_bat, 32, 28);
 #ifdef HAS_SCENE_38_COLLISIONS
-    collision_init(scene_38_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_38_1
@@ -1137,11 +1024,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene39_chr, bg_scene39_pal, bg_scene39_bat, 32, 28);
 #ifdef HAS_SCENE_39_COLLISIONS
-    collision_init(scene_39_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_39_1
@@ -1165,11 +1049,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene40_chr, bg_scene40_pal, bg_scene40_bat, 32, 28);
 #ifdef HAS_SCENE_40_COLLISIONS
-    collision_init(scene_40_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_40_1
@@ -1193,11 +1074,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene41_chr, bg_scene41_pal, bg_scene41_bat, 32, 28);
 #ifdef HAS_SCENE_41_COLLISIONS
-    collision_init(scene_41_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_41_1
@@ -1221,11 +1099,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene42_chr, bg_scene42_pal, bg_scene42_bat, 32, 28);
 #ifdef HAS_SCENE_42_COLLISIONS
-    collision_init(scene_42_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_42_1
@@ -1249,11 +1124,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene43_chr, bg_scene43_pal, bg_scene43_bat, 32, 28);
 #ifdef HAS_SCENE_43_COLLISIONS
-    collision_init(scene_43_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_43_1
@@ -1277,11 +1149,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene44_chr, bg_scene44_pal, bg_scene44_bat, 32, 28);
 #ifdef HAS_SCENE_44_COLLISIONS
-    collision_init(scene_44_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_44_1
@@ -1305,11 +1174,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene45_chr, bg_scene45_pal, bg_scene45_bat, 32, 28);
 #ifdef HAS_SCENE_45_COLLISIONS
-    collision_init(scene_45_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_45_1
@@ -1333,11 +1199,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene46_chr, bg_scene46_pal, bg_scene46_bat, 32, 28);
 #ifdef HAS_SCENE_46_COLLISIONS
-    collision_init(scene_46_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_46_1
@@ -1361,11 +1224,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene47_chr, bg_scene47_pal, bg_scene47_bat, 32, 28);
 #ifdef HAS_SCENE_47_COLLISIONS
-    collision_init(scene_47_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_47_1
@@ -1389,11 +1249,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene48_chr, bg_scene48_pal, bg_scene48_bat, 32, 28);
 #ifdef HAS_SCENE_48_COLLISIONS
-    collision_init(scene_48_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_48_1
@@ -1417,11 +1274,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene49_chr, bg_scene49_pal, bg_scene49_bat, 32, 28);
 #ifdef HAS_SCENE_49_COLLISIONS
-    collision_init(scene_49_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_49_1
@@ -1445,11 +1299,8 @@ void load_scene_part2(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene50_chr, bg_scene50_pal, bg_scene50_bat, 32, 28);
 #ifdef HAS_SCENE_50_COLLISIONS
-    collision_init(scene_50_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_50_1
@@ -1476,11 +1327,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene51_chr, bg_scene51_pal, bg_scene51_bat, 32, 28);
 #ifdef HAS_SCENE_51_COLLISIONS
-    collision_init(scene_51_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_51_1
@@ -1504,11 +1352,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene52_chr, bg_scene52_pal, bg_scene52_bat, 32, 28);
 #ifdef HAS_SCENE_52_COLLISIONS
-    collision_init(scene_52_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_52_1
@@ -1532,11 +1377,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene53_chr, bg_scene53_pal, bg_scene53_bat, 32, 28);
 #ifdef HAS_SCENE_53_COLLISIONS
-    collision_init(scene_53_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_53_1
@@ -1560,11 +1402,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene54_chr, bg_scene54_pal, bg_scene54_bat, 32, 28);
 #ifdef HAS_SCENE_54_COLLISIONS
-    collision_init(scene_54_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_54_1
@@ -1588,11 +1427,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene55_chr, bg_scene55_pal, bg_scene55_bat, 32, 28);
 #ifdef HAS_SCENE_55_COLLISIONS
-    collision_init(scene_55_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_55_1
@@ -1616,11 +1452,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene56_chr, bg_scene56_pal, bg_scene56_bat, 32, 28);
 #ifdef HAS_SCENE_56_COLLISIONS
-    collision_init(scene_56_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_56_1
@@ -1644,11 +1477,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene57_chr, bg_scene57_pal, bg_scene57_bat, 32, 28);
 #ifdef HAS_SCENE_57_COLLISIONS
-    collision_init(scene_57_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_57_1
@@ -1672,11 +1502,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene58_chr, bg_scene58_pal, bg_scene58_bat, 32, 28);
 #ifdef HAS_SCENE_58_COLLISIONS
-    collision_init(scene_58_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_58_1
@@ -1700,11 +1527,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene59_chr, bg_scene59_pal, bg_scene59_bat, 32, 28);
 #ifdef HAS_SCENE_59_COLLISIONS
-    collision_init(scene_59_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_59_1
@@ -1728,11 +1552,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene60_chr, bg_scene60_pal, bg_scene60_bat, 32, 28);
 #ifdef HAS_SCENE_60_COLLISIONS
-    collision_init(scene_60_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_60_1
@@ -1756,11 +1577,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene61_chr, bg_scene61_pal, bg_scene61_bat, 32, 28);
 #ifdef HAS_SCENE_61_COLLISIONS
-    collision_init(scene_61_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_61_1
@@ -1784,11 +1602,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene62_chr, bg_scene62_pal, bg_scene62_bat, 32, 28);
 #ifdef HAS_SCENE_62_COLLISIONS
-    collision_init(scene_62_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_62_1
@@ -1812,11 +1627,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene63_chr, bg_scene63_pal, bg_scene63_bat, 32, 28);
 #ifdef HAS_SCENE_63_COLLISIONS
-    collision_init(scene_63_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_63_1
@@ -1840,11 +1652,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene64_chr, bg_scene64_pal, bg_scene64_bat, 32, 28);
 #ifdef HAS_SCENE_64_COLLISIONS
-    collision_init(scene_64_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_64_1
@@ -1868,11 +1677,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene65_chr, bg_scene65_pal, bg_scene65_bat, 32, 28);
 #ifdef HAS_SCENE_65_COLLISIONS
-    collision_init(scene_65_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_65_1
@@ -1896,11 +1702,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene66_chr, bg_scene66_pal, bg_scene66_bat, 32, 28);
 #ifdef HAS_SCENE_66_COLLISIONS
-    collision_init(scene_66_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_66_1
@@ -1924,11 +1727,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene67_chr, bg_scene67_pal, bg_scene67_bat, 32, 28);
 #ifdef HAS_SCENE_67_COLLISIONS
-    collision_init(scene_67_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_67_1
@@ -1952,11 +1752,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene68_chr, bg_scene68_pal, bg_scene68_bat, 32, 28);
 #ifdef HAS_SCENE_68_COLLISIONS
-    collision_init(scene_68_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_68_1
@@ -1980,11 +1777,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene69_chr, bg_scene69_pal, bg_scene69_bat, 32, 28);
 #ifdef HAS_SCENE_69_COLLISIONS
-    collision_init(scene_69_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_69_1
@@ -2008,11 +1802,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene70_chr, bg_scene70_pal, bg_scene70_bat, 32, 28);
 #ifdef HAS_SCENE_70_COLLISIONS
-    collision_init(scene_70_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_70_1
@@ -2036,11 +1827,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene71_chr, bg_scene71_pal, bg_scene71_bat, 32, 28);
 #ifdef HAS_SCENE_71_COLLISIONS
-    collision_init(scene_71_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_71_1
@@ -2064,11 +1852,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene72_chr, bg_scene72_pal, bg_scene72_bat, 32, 28);
 #ifdef HAS_SCENE_72_COLLISIONS
-    collision_init(scene_72_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_72_1
@@ -2092,11 +1877,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene73_chr, bg_scene73_pal, bg_scene73_bat, 32, 28);
 #ifdef HAS_SCENE_73_COLLISIONS
-    collision_init(scene_73_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_73_1
@@ -2120,11 +1902,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene74_chr, bg_scene74_pal, bg_scene74_bat, 32, 28);
 #ifdef HAS_SCENE_74_COLLISIONS
-    collision_init(scene_74_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_74_1
@@ -2148,11 +1927,8 @@ void load_scene_part3(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene75_chr, bg_scene75_pal, bg_scene75_bat, 32, 28);
 #ifdef HAS_SCENE_75_COLLISIONS
-    collision_init(scene_75_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_75_1
@@ -2179,11 +1955,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene76_chr, bg_scene76_pal, bg_scene76_bat, 32, 28);
 #ifdef HAS_SCENE_76_COLLISIONS
-    collision_init(scene_76_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_76_1
@@ -2207,11 +1980,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene77_chr, bg_scene77_pal, bg_scene77_bat, 32, 28);
 #ifdef HAS_SCENE_77_COLLISIONS
-    collision_init(scene_77_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_77_1
@@ -2235,11 +2005,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene78_chr, bg_scene78_pal, bg_scene78_bat, 32, 28);
 #ifdef HAS_SCENE_78_COLLISIONS
-    collision_init(scene_78_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_78_1
@@ -2263,11 +2030,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene79_chr, bg_scene79_pal, bg_scene79_bat, 32, 28);
 #ifdef HAS_SCENE_79_COLLISIONS
-    collision_init(scene_79_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_79_1
@@ -2291,11 +2055,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene80_chr, bg_scene80_pal, bg_scene80_bat, 32, 28);
 #ifdef HAS_SCENE_80_COLLISIONS
-    collision_init(scene_80_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_80_1
@@ -2319,11 +2080,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene81_chr, bg_scene81_pal, bg_scene81_bat, 32, 28);
 #ifdef HAS_SCENE_81_COLLISIONS
-    collision_init(scene_81_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_81_1
@@ -2347,11 +2105,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene82_chr, bg_scene82_pal, bg_scene82_bat, 32, 28);
 #ifdef HAS_SCENE_82_COLLISIONS
-    collision_init(scene_82_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_82_1
@@ -2375,11 +2130,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene83_chr, bg_scene83_pal, bg_scene83_bat, 32, 28);
 #ifdef HAS_SCENE_83_COLLISIONS
-    collision_init(scene_83_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_83_1
@@ -2403,11 +2155,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene84_chr, bg_scene84_pal, bg_scene84_bat, 32, 28);
 #ifdef HAS_SCENE_84_COLLISIONS
-    collision_init(scene_84_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_84_1
@@ -2431,11 +2180,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene85_chr, bg_scene85_pal, bg_scene85_bat, 32, 28);
 #ifdef HAS_SCENE_85_COLLISIONS
-    collision_init(scene_85_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_85_1
@@ -2459,11 +2205,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene86_chr, bg_scene86_pal, bg_scene86_bat, 32, 28);
 #ifdef HAS_SCENE_86_COLLISIONS
-    collision_init(scene_86_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_86_1
@@ -2487,11 +2230,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene87_chr, bg_scene87_pal, bg_scene87_bat, 32, 28);
 #ifdef HAS_SCENE_87_COLLISIONS
-    collision_init(scene_87_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_87_1
@@ -2515,11 +2255,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene88_chr, bg_scene88_pal, bg_scene88_bat, 32, 28);
 #ifdef HAS_SCENE_88_COLLISIONS
-    collision_init(scene_88_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_88_1
@@ -2543,11 +2280,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene89_chr, bg_scene89_pal, bg_scene89_bat, 32, 28);
 #ifdef HAS_SCENE_89_COLLISIONS
-    collision_init(scene_89_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_89_1
@@ -2571,11 +2305,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene90_chr, bg_scene90_pal, bg_scene90_bat, 32, 28);
 #ifdef HAS_SCENE_90_COLLISIONS
-    collision_init(scene_90_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_90_1
@@ -2599,11 +2330,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene91_chr, bg_scene91_pal, bg_scene91_bat, 32, 28);
 #ifdef HAS_SCENE_91_COLLISIONS
-    collision_init(scene_91_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_91_1
@@ -2627,11 +2355,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene92_chr, bg_scene92_pal, bg_scene92_bat, 32, 28);
 #ifdef HAS_SCENE_92_COLLISIONS
-    collision_init(scene_92_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_92_1
@@ -2655,11 +2380,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene93_chr, bg_scene93_pal, bg_scene93_bat, 32, 28);
 #ifdef HAS_SCENE_93_COLLISIONS
-    collision_init(scene_93_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_93_1
@@ -2683,11 +2405,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene94_chr, bg_scene94_pal, bg_scene94_bat, 32, 28);
 #ifdef HAS_SCENE_94_COLLISIONS
-    collision_init(scene_94_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_94_1
@@ -2711,11 +2430,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene95_chr, bg_scene95_pal, bg_scene95_bat, 32, 28);
 #ifdef HAS_SCENE_95_COLLISIONS
-    collision_init(scene_95_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_95_1
@@ -2739,11 +2455,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene96_chr, bg_scene96_pal, bg_scene96_bat, 32, 28);
 #ifdef HAS_SCENE_96_COLLISIONS
-    collision_init(scene_96_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_96_1
@@ -2767,11 +2480,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene97_chr, bg_scene97_pal, bg_scene97_bat, 32, 28);
 #ifdef HAS_SCENE_97_COLLISIONS
-    collision_init(scene_97_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_97_1
@@ -2795,11 +2505,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene98_chr, bg_scene98_pal, bg_scene98_bat, 32, 28);
 #ifdef HAS_SCENE_98_COLLISIONS
-    collision_init(scene_98_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_98_1
@@ -2823,11 +2530,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene99_chr, bg_scene99_pal, bg_scene99_bat, 32, 28);
 #ifdef HAS_SCENE_99_COLLISIONS
-    collision_init(scene_99_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_99_1
@@ -2851,11 +2555,8 @@ void load_scene_part4(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene100_chr, bg_scene100_pal, bg_scene100_bat, 32, 28);
 #ifdef HAS_SCENE_100_COLLISIONS
-    collision_init(scene_100_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_100_1
@@ -2882,11 +2583,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene101_chr, bg_scene101_pal, bg_scene101_bat, 32, 28);
 #ifdef HAS_SCENE_101_COLLISIONS
-    collision_init(scene_101_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_101_1
@@ -2910,11 +2608,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene102_chr, bg_scene102_pal, bg_scene102_bat, 32, 28);
 #ifdef HAS_SCENE_102_COLLISIONS
-    collision_init(scene_102_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_102_1
@@ -2938,11 +2633,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene103_chr, bg_scene103_pal, bg_scene103_bat, 32, 28);
 #ifdef HAS_SCENE_103_COLLISIONS
-    collision_init(scene_103_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_103_1
@@ -2966,11 +2658,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene104_chr, bg_scene104_pal, bg_scene104_bat, 32, 28);
 #ifdef HAS_SCENE_104_COLLISIONS
-    collision_init(scene_104_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_104_1
@@ -2994,11 +2683,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene105_chr, bg_scene105_pal, bg_scene105_bat, 32, 28);
 #ifdef HAS_SCENE_105_COLLISIONS
-    collision_init(scene_105_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_105_1
@@ -3022,11 +2708,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene106_chr, bg_scene106_pal, bg_scene106_bat, 32, 28);
 #ifdef HAS_SCENE_106_COLLISIONS
-    collision_init(scene_106_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_106_1
@@ -3050,11 +2733,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene107_chr, bg_scene107_pal, bg_scene107_bat, 32, 28);
 #ifdef HAS_SCENE_107_COLLISIONS
-    collision_init(scene_107_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_107_1
@@ -3078,11 +2758,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene108_chr, bg_scene108_pal, bg_scene108_bat, 32, 28);
 #ifdef HAS_SCENE_108_COLLISIONS
-    collision_init(scene_108_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_108_1
@@ -3106,11 +2783,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene109_chr, bg_scene109_pal, bg_scene109_bat, 32, 28);
 #ifdef HAS_SCENE_109_COLLISIONS
-    collision_init(scene_109_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_109_1
@@ -3134,11 +2808,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene110_chr, bg_scene110_pal, bg_scene110_bat, 32, 28);
 #ifdef HAS_SCENE_110_COLLISIONS
-    collision_init(scene_110_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_110_1
@@ -3162,11 +2833,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene111_chr, bg_scene111_pal, bg_scene111_bat, 32, 28);
 #ifdef HAS_SCENE_111_COLLISIONS
-    collision_init(scene_111_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_111_1
@@ -3190,11 +2858,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene112_chr, bg_scene112_pal, bg_scene112_bat, 32, 28);
 #ifdef HAS_SCENE_112_COLLISIONS
-    collision_init(scene_112_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_112_1
@@ -3218,11 +2883,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene113_chr, bg_scene113_pal, bg_scene113_bat, 32, 28);
 #ifdef HAS_SCENE_113_COLLISIONS
-    collision_init(scene_113_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_113_1
@@ -3246,11 +2908,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene114_chr, bg_scene114_pal, bg_scene114_bat, 32, 28);
 #ifdef HAS_SCENE_114_COLLISIONS
-    collision_init(scene_114_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_114_1
@@ -3274,11 +2933,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene115_chr, bg_scene115_pal, bg_scene115_bat, 32, 28);
 #ifdef HAS_SCENE_115_COLLISIONS
-    collision_init(scene_115_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_115_1
@@ -3302,11 +2958,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene116_chr, bg_scene116_pal, bg_scene116_bat, 32, 28);
 #ifdef HAS_SCENE_116_COLLISIONS
-    collision_init(scene_116_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_116_1
@@ -3330,11 +2983,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene117_chr, bg_scene117_pal, bg_scene117_bat, 32, 28);
 #ifdef HAS_SCENE_117_COLLISIONS
-    collision_init(scene_117_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_117_1
@@ -3358,11 +3008,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene118_chr, bg_scene118_pal, bg_scene118_bat, 32, 28);
 #ifdef HAS_SCENE_118_COLLISIONS
-    collision_init(scene_118_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_118_1
@@ -3386,11 +3033,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene119_chr, bg_scene119_pal, bg_scene119_bat, 32, 28);
 #ifdef HAS_SCENE_119_COLLISIONS
-    collision_init(scene_119_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_119_1
@@ -3414,11 +3058,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene120_chr, bg_scene120_pal, bg_scene120_bat, 32, 28);
 #ifdef HAS_SCENE_120_COLLISIONS
-    collision_init(scene_120_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_120_1
@@ -3442,11 +3083,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene121_chr, bg_scene121_pal, bg_scene121_bat, 32, 28);
 #ifdef HAS_SCENE_121_COLLISIONS
-    collision_init(scene_121_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_121_1
@@ -3470,11 +3108,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene122_chr, bg_scene122_pal, bg_scene122_bat, 32, 28);
 #ifdef HAS_SCENE_122_COLLISIONS
-    collision_init(scene_122_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_122_1
@@ -3498,11 +3133,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene123_chr, bg_scene123_pal, bg_scene123_bat, 32, 28);
 #ifdef HAS_SCENE_123_COLLISIONS
-    collision_init(scene_123_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_123_1
@@ -3526,11 +3158,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene124_chr, bg_scene124_pal, bg_scene124_bat, 32, 28);
 #ifdef HAS_SCENE_124_COLLISIONS
-    collision_init(scene_124_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_124_1
@@ -3554,11 +3183,8 @@ void load_scene_part5(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene125_chr, bg_scene125_pal, bg_scene125_bat, 32, 28);
 #ifdef HAS_SCENE_125_COLLISIONS
-    collision_init(scene_125_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_125_1
@@ -3585,11 +3211,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene126_chr, bg_scene126_pal, bg_scene126_bat, 32, 28);
 #ifdef HAS_SCENE_126_COLLISIONS
-    collision_init(scene_126_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_126_1
@@ -3613,11 +3236,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene127_chr, bg_scene127_pal, bg_scene127_bat, 32, 28);
 #ifdef HAS_SCENE_127_COLLISIONS
-    collision_init(scene_127_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_127_1
@@ -3641,11 +3261,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene128_chr, bg_scene128_pal, bg_scene128_bat, 32, 28);
 #ifdef HAS_SCENE_128_COLLISIONS
-    collision_init(scene_128_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_128_1
@@ -3669,11 +3286,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene129_chr, bg_scene129_pal, bg_scene129_bat, 32, 28);
 #ifdef HAS_SCENE_129_COLLISIONS
-    collision_init(scene_129_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_129_1
@@ -3697,11 +3311,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene130_chr, bg_scene130_pal, bg_scene130_bat, 32, 28);
 #ifdef HAS_SCENE_130_COLLISIONS
-    collision_init(scene_130_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_130_1
@@ -3725,11 +3336,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene131_chr, bg_scene131_pal, bg_scene131_bat, 32, 28);
 #ifdef HAS_SCENE_131_COLLISIONS
-    collision_init(scene_131_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_131_1
@@ -3753,11 +3361,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene132_chr, bg_scene132_pal, bg_scene132_bat, 32, 28);
 #ifdef HAS_SCENE_132_COLLISIONS
-    collision_init(scene_132_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_132_1
@@ -3781,11 +3386,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene133_chr, bg_scene133_pal, bg_scene133_bat, 32, 28);
 #ifdef HAS_SCENE_133_COLLISIONS
-    collision_init(scene_133_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_133_1
@@ -3809,11 +3411,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene134_chr, bg_scene134_pal, bg_scene134_bat, 32, 28);
 #ifdef HAS_SCENE_134_COLLISIONS
-    collision_init(scene_134_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_134_1
@@ -3837,11 +3436,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene135_chr, bg_scene135_pal, bg_scene135_bat, 32, 28);
 #ifdef HAS_SCENE_135_COLLISIONS
-    collision_init(scene_135_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_135_1
@@ -3865,11 +3461,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene136_chr, bg_scene136_pal, bg_scene136_bat, 32, 28);
 #ifdef HAS_SCENE_136_COLLISIONS
-    collision_init(scene_136_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_136_1
@@ -3893,11 +3486,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene137_chr, bg_scene137_pal, bg_scene137_bat, 32, 28);
 #ifdef HAS_SCENE_137_COLLISIONS
-    collision_init(scene_137_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_137_1
@@ -3921,11 +3511,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene138_chr, bg_scene138_pal, bg_scene138_bat, 32, 28);
 #ifdef HAS_SCENE_138_COLLISIONS
-    collision_init(scene_138_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_138_1
@@ -3949,11 +3536,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene139_chr, bg_scene139_pal, bg_scene139_bat, 32, 28);
 #ifdef HAS_SCENE_139_COLLISIONS
-    collision_init(scene_139_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_139_1
@@ -3977,11 +3561,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene140_chr, bg_scene140_pal, bg_scene140_bat, 32, 28);
 #ifdef HAS_SCENE_140_COLLISIONS
-    collision_init(scene_140_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_140_1
@@ -4005,11 +3586,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene141_chr, bg_scene141_pal, bg_scene141_bat, 32, 28);
 #ifdef HAS_SCENE_141_COLLISIONS
-    collision_init(scene_141_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_141_1
@@ -4033,11 +3611,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene142_chr, bg_scene142_pal, bg_scene142_bat, 32, 28);
 #ifdef HAS_SCENE_142_COLLISIONS
-    collision_init(scene_142_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_142_1
@@ -4061,11 +3636,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene143_chr, bg_scene143_pal, bg_scene143_bat, 32, 28);
 #ifdef HAS_SCENE_143_COLLISIONS
-    collision_init(scene_143_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_143_1
@@ -4089,11 +3661,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene144_chr, bg_scene144_pal, bg_scene144_bat, 32, 28);
 #ifdef HAS_SCENE_144_COLLISIONS
-    collision_init(scene_144_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_144_1
@@ -4117,11 +3686,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene145_chr, bg_scene145_pal, bg_scene145_bat, 32, 28);
 #ifdef HAS_SCENE_145_COLLISIONS
-    collision_init(scene_145_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_145_1
@@ -4145,11 +3711,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene146_chr, bg_scene146_pal, bg_scene146_bat, 32, 28);
 #ifdef HAS_SCENE_146_COLLISIONS
-    collision_init(scene_146_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_146_1
@@ -4173,11 +3736,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene147_chr, bg_scene147_pal, bg_scene147_bat, 32, 28);
 #ifdef HAS_SCENE_147_COLLISIONS
-    collision_init(scene_147_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_147_1
@@ -4201,11 +3761,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene148_chr, bg_scene148_pal, bg_scene148_bat, 32, 28);
 #ifdef HAS_SCENE_148_COLLISIONS
-    collision_init(scene_148_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_148_1
@@ -4229,11 +3786,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene149_chr, bg_scene149_pal, bg_scene149_bat, 32, 28);
 #ifdef HAS_SCENE_149_COLLISIONS
-    collision_init(scene_149_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_149_1
@@ -4257,11 +3811,8 @@ void load_scene_part6(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene150_chr, bg_scene150_pal, bg_scene150_bat, 32, 28);
 #ifdef HAS_SCENE_150_COLLISIONS
-    collision_init(scene_150_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_150_1
@@ -4288,11 +3839,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene151_chr, bg_scene151_pal, bg_scene151_bat, 32, 28);
 #ifdef HAS_SCENE_151_COLLISIONS
-    collision_init(scene_151_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_151_1
@@ -4316,11 +3864,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene152_chr, bg_scene152_pal, bg_scene152_bat, 32, 28);
 #ifdef HAS_SCENE_152_COLLISIONS
-    collision_init(scene_152_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_152_1
@@ -4344,11 +3889,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene153_chr, bg_scene153_pal, bg_scene153_bat, 32, 28);
 #ifdef HAS_SCENE_153_COLLISIONS
-    collision_init(scene_153_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_153_1
@@ -4372,11 +3914,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene154_chr, bg_scene154_pal, bg_scene154_bat, 32, 28);
 #ifdef HAS_SCENE_154_COLLISIONS
-    collision_init(scene_154_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_154_1
@@ -4400,11 +3939,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene155_chr, bg_scene155_pal, bg_scene155_bat, 32, 28);
 #ifdef HAS_SCENE_155_COLLISIONS
-    collision_init(scene_155_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_155_1
@@ -4428,11 +3964,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene156_chr, bg_scene156_pal, bg_scene156_bat, 32, 28);
 #ifdef HAS_SCENE_156_COLLISIONS
-    collision_init(scene_156_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_156_1
@@ -4456,11 +3989,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene157_chr, bg_scene157_pal, bg_scene157_bat, 32, 28);
 #ifdef HAS_SCENE_157_COLLISIONS
-    collision_init(scene_157_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_157_1
@@ -4484,11 +4014,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene158_chr, bg_scene158_pal, bg_scene158_bat, 32, 28);
 #ifdef HAS_SCENE_158_COLLISIONS
-    collision_init(scene_158_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_158_1
@@ -4512,11 +4039,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene159_chr, bg_scene159_pal, bg_scene159_bat, 32, 28);
 #ifdef HAS_SCENE_159_COLLISIONS
-    collision_init(scene_159_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_159_1
@@ -4540,11 +4064,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene160_chr, bg_scene160_pal, bg_scene160_bat, 32, 28);
 #ifdef HAS_SCENE_160_COLLISIONS
-    collision_init(scene_160_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_160_1
@@ -4568,11 +4089,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene161_chr, bg_scene161_pal, bg_scene161_bat, 32, 28);
 #ifdef HAS_SCENE_161_COLLISIONS
-    collision_init(scene_161_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_161_1
@@ -4596,11 +4114,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene162_chr, bg_scene162_pal, bg_scene162_bat, 32, 28);
 #ifdef HAS_SCENE_162_COLLISIONS
-    collision_init(scene_162_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_162_1
@@ -4624,11 +4139,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene163_chr, bg_scene163_pal, bg_scene163_bat, 32, 28);
 #ifdef HAS_SCENE_163_COLLISIONS
-    collision_init(scene_163_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_163_1
@@ -4652,11 +4164,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene164_chr, bg_scene164_pal, bg_scene164_bat, 32, 28);
 #ifdef HAS_SCENE_164_COLLISIONS
-    collision_init(scene_164_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_164_1
@@ -4680,11 +4189,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene165_chr, bg_scene165_pal, bg_scene165_bat, 32, 28);
 #ifdef HAS_SCENE_165_COLLISIONS
-    collision_init(scene_165_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_165_1
@@ -4708,11 +4214,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene166_chr, bg_scene166_pal, bg_scene166_bat, 32, 28);
 #ifdef HAS_SCENE_166_COLLISIONS
-    collision_init(scene_166_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_166_1
@@ -4736,11 +4239,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene167_chr, bg_scene167_pal, bg_scene167_bat, 32, 28);
 #ifdef HAS_SCENE_167_COLLISIONS
-    collision_init(scene_167_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_167_1
@@ -4764,11 +4264,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene168_chr, bg_scene168_pal, bg_scene168_bat, 32, 28);
 #ifdef HAS_SCENE_168_COLLISIONS
-    collision_init(scene_168_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_168_1
@@ -4792,11 +4289,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene169_chr, bg_scene169_pal, bg_scene169_bat, 32, 28);
 #ifdef HAS_SCENE_169_COLLISIONS
-    collision_init(scene_169_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_169_1
@@ -4820,11 +4314,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene170_chr, bg_scene170_pal, bg_scene170_bat, 32, 28);
 #ifdef HAS_SCENE_170_COLLISIONS
-    collision_init(scene_170_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_170_1
@@ -4848,11 +4339,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene171_chr, bg_scene171_pal, bg_scene171_bat, 32, 28);
 #ifdef HAS_SCENE_171_COLLISIONS
-    collision_init(scene_171_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_171_1
@@ -4876,11 +4364,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene172_chr, bg_scene172_pal, bg_scene172_bat, 32, 28);
 #ifdef HAS_SCENE_172_COLLISIONS
-    collision_init(scene_172_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_172_1
@@ -4904,11 +4389,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene173_chr, bg_scene173_pal, bg_scene173_bat, 32, 28);
 #ifdef HAS_SCENE_173_COLLISIONS
-    collision_init(scene_173_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_173_1
@@ -4932,11 +4414,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene174_chr, bg_scene174_pal, bg_scene174_bat, 32, 28);
 #ifdef HAS_SCENE_174_COLLISIONS
-    collision_init(scene_174_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_174_1
@@ -4960,11 +4439,8 @@ void load_scene_part7(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene175_chr, bg_scene175_pal, bg_scene175_bat, 32, 28);
 #ifdef HAS_SCENE_175_COLLISIONS
-    collision_init(scene_175_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_175_1
@@ -4991,11 +4467,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene176_chr, bg_scene176_pal, bg_scene176_bat, 32, 28);
 #ifdef HAS_SCENE_176_COLLISIONS
-    collision_init(scene_176_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_176_1
@@ -5019,11 +4492,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene177_chr, bg_scene177_pal, bg_scene177_bat, 32, 28);
 #ifdef HAS_SCENE_177_COLLISIONS
-    collision_init(scene_177_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_177_1
@@ -5047,11 +4517,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene178_chr, bg_scene178_pal, bg_scene178_bat, 32, 28);
 #ifdef HAS_SCENE_178_COLLISIONS
-    collision_init(scene_178_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_178_1
@@ -5075,11 +4542,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene179_chr, bg_scene179_pal, bg_scene179_bat, 32, 28);
 #ifdef HAS_SCENE_179_COLLISIONS
-    collision_init(scene_179_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_179_1
@@ -5103,11 +4567,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene180_chr, bg_scene180_pal, bg_scene180_bat, 32, 28);
 #ifdef HAS_SCENE_180_COLLISIONS
-    collision_init(scene_180_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_180_1
@@ -5131,11 +4592,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene181_chr, bg_scene181_pal, bg_scene181_bat, 32, 28);
 #ifdef HAS_SCENE_181_COLLISIONS
-    collision_init(scene_181_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_181_1
@@ -5159,11 +4617,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene182_chr, bg_scene182_pal, bg_scene182_bat, 32, 28);
 #ifdef HAS_SCENE_182_COLLISIONS
-    collision_init(scene_182_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_182_1
@@ -5187,11 +4642,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene183_chr, bg_scene183_pal, bg_scene183_bat, 32, 28);
 #ifdef HAS_SCENE_183_COLLISIONS
-    collision_init(scene_183_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_183_1
@@ -5215,11 +4667,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene184_chr, bg_scene184_pal, bg_scene184_bat, 32, 28);
 #ifdef HAS_SCENE_184_COLLISIONS
-    collision_init(scene_184_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_184_1
@@ -5243,11 +4692,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene185_chr, bg_scene185_pal, bg_scene185_bat, 32, 28);
 #ifdef HAS_SCENE_185_COLLISIONS
-    collision_init(scene_185_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_185_1
@@ -5271,11 +4717,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene186_chr, bg_scene186_pal, bg_scene186_bat, 32, 28);
 #ifdef HAS_SCENE_186_COLLISIONS
-    collision_init(scene_186_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_186_1
@@ -5299,11 +4742,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene187_chr, bg_scene187_pal, bg_scene187_bat, 32, 28);
 #ifdef HAS_SCENE_187_COLLISIONS
-    collision_init(scene_187_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_187_1
@@ -5327,11 +4767,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene188_chr, bg_scene188_pal, bg_scene188_bat, 32, 28);
 #ifdef HAS_SCENE_188_COLLISIONS
-    collision_init(scene_188_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_188_1
@@ -5355,11 +4792,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene189_chr, bg_scene189_pal, bg_scene189_bat, 32, 28);
 #ifdef HAS_SCENE_189_COLLISIONS
-    collision_init(scene_189_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_189_1
@@ -5383,11 +4817,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene190_chr, bg_scene190_pal, bg_scene190_bat, 32, 28);
 #ifdef HAS_SCENE_190_COLLISIONS
-    collision_init(scene_190_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_190_1
@@ -5411,11 +4842,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene191_chr, bg_scene191_pal, bg_scene191_bat, 32, 28);
 #ifdef HAS_SCENE_191_COLLISIONS
-    collision_init(scene_191_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_191_1
@@ -5439,11 +4867,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene192_chr, bg_scene192_pal, bg_scene192_bat, 32, 28);
 #ifdef HAS_SCENE_192_COLLISIONS
-    collision_init(scene_192_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_192_1
@@ -5467,11 +4892,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene193_chr, bg_scene193_pal, bg_scene193_bat, 32, 28);
 #ifdef HAS_SCENE_193_COLLISIONS
-    collision_init(scene_193_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_193_1
@@ -5495,11 +4917,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene194_chr, bg_scene194_pal, bg_scene194_bat, 32, 28);
 #ifdef HAS_SCENE_194_COLLISIONS
-    collision_init(scene_194_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_194_1
@@ -5523,11 +4942,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene195_chr, bg_scene195_pal, bg_scene195_bat, 32, 28);
 #ifdef HAS_SCENE_195_COLLISIONS
-    collision_init(scene_195_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_195_1
@@ -5551,11 +4967,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene196_chr, bg_scene196_pal, bg_scene196_bat, 32, 28);
 #ifdef HAS_SCENE_196_COLLISIONS
-    collision_init(scene_196_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_196_1
@@ -5579,11 +4992,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene197_chr, bg_scene197_pal, bg_scene197_bat, 32, 28);
 #ifdef HAS_SCENE_197_COLLISIONS
-    collision_init(scene_197_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_197_1
@@ -5607,11 +5017,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene198_chr, bg_scene198_pal, bg_scene198_bat, 32, 28);
 #ifdef HAS_SCENE_198_COLLISIONS
-    collision_init(scene_198_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_198_1
@@ -5635,11 +5042,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene199_chr, bg_scene199_pal, bg_scene199_bat, 32, 28);
 #ifdef HAS_SCENE_199_COLLISIONS
-    collision_init(scene_199_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_199_1
@@ -5663,11 +5067,8 @@ void load_scene_part8(int scene_num) {
 #else
     g_current_scene_type = SCENE_1_TYPE;
 #endif
-    load_background(bg_scene200_chr, bg_scene200_pal, bg_scene200_bat, 32, 28);
 #ifdef HAS_SCENE_200_COLLISIONS
-    collision_init(scene_200_collisions, 32, 28);
 #else
-    collision_init(scene_1_collisions, 32, 28);
 #endif
 
 #ifdef HAS_ACTOR_SCENE_200_1
@@ -5731,6 +5132,8 @@ void load_scene(int scene_num, int player_x, int player_y) {
     load_scene_part8(scene_num);
   }
 
+  load_scene_background(scene_num);
+
   g_plat_sub_x = player_x * 8;
   g_plat_sub_y = player_y * 8;
   g_plat_vy = 0;
@@ -5740,6 +5143,9 @@ void load_scene(int scene_num, int player_x, int player_y) {
   if (g_actor_count > 0) {
     actor_set_pos(0, player_x, player_y);
   }
+
+  camera_update(player_x, player_y);
+  camera_apply();
 
   g_script_scene = scene_num;
   g_script_step = 0;
@@ -6194,7 +5600,7 @@ void update_platform(void) {
       g_plat_sub_y = g_actor_y[0] * 8;
     }
 
-    camera_update_x(g_actor_x[0]);
+    camera_update(g_actor_x[0], g_actor_y[0]);
     trigger_check(g_actor_x[0], g_actor_y[0]);
   }
 }

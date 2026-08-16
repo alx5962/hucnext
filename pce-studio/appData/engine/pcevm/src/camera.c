@@ -3,13 +3,25 @@
 
 int g_cam_x;
 int g_cam_y;
-
-#define CAM_MAX_X  ((32 * 8) - PCE_SCREEN_WIDTH_PX)
-#define CAM_MAX_Y  ((28 * 8) - PCE_SCREEN_HEIGHT_PX)
+int g_cam_max_x = 0;
+int g_cam_max_y = 0;
 
 void camera_init(void) {
     g_cam_x = 0;
     g_cam_y = 0;
+    g_cam_max_x = 0;
+    g_cam_max_y = 0;
+}
+
+void camera_set_bounds(int width_tiles, int height_tiles) {
+    int max_x;
+    int max_y;
+    max_x = (width_tiles * 8) - PCE_SCREEN_WIDTH_PX;
+    max_y = (height_tiles * 8) - PCE_SCREEN_HEIGHT_PX;
+    if (max_x > 0) g_cam_max_x = max_x;
+    else g_cam_max_x = 0;
+    if (max_y > 0) g_cam_max_y = max_y;
+    else g_cam_max_y = 0;
 }
 
 void camera_update(int target_x, int target_y) {
@@ -17,14 +29,14 @@ void camera_update(int target_x, int target_y) {
     g_cam_y = target_y - (PCE_SCREEN_HEIGHT_PX / 2);
     if (g_cam_x < 0) g_cam_x = 0;
     if (g_cam_y < 0) g_cam_y = 0;
-    if (g_cam_x > CAM_MAX_X) g_cam_x = CAM_MAX_X;
-    if (g_cam_y > CAM_MAX_Y) g_cam_y = CAM_MAX_Y;
+    if (g_cam_x > g_cam_max_x) g_cam_x = g_cam_max_x;
+    if (g_cam_y > g_cam_max_y) g_cam_y = g_cam_max_y;
 }
 
 void camera_update_x(int target_x) {
     g_cam_x = target_x - (PCE_SCREEN_WIDTH_PX / 2);
     if (g_cam_x < 0) g_cam_x = 0;
-    if (g_cam_x > CAM_MAX_X) g_cam_x = CAM_MAX_X;
+    if (g_cam_x > g_cam_max_x) g_cam_x = g_cam_max_x;
 }
 
 int g_camera_shake_timer = 0;
