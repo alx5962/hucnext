@@ -13,12 +13,20 @@
 #define SZ_16x32 0x10
 #endif
 
+#ifndef SZ_16x64
+#define SZ_16x64 0x30
+#endif
+
 #ifndef SZ_32x16
 #define SZ_32x16 0x01
 #endif
 
 #ifndef SZ_32x32
 #define SZ_32x32 0x11
+#endif
+
+#ifndef SZ_32x64
+#define SZ_32x64 0x31
 #endif
 
 #ifndef DIR_RIGHT

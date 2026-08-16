@@ -67,33 +67,40 @@ workerCtx.onmessage = async (evt) => {
     );
     chromaKeyData(tileImageData.data);
 
+    tilesCanvasCtx.putImageData(tileImageData, 0, 0);
+
     tilesCanvases = {
-      OBP0: new OffscreenCanvas(img.width, img.height),
-      OBP1: new OffscreenCanvas(img.width, img.height),
+      OBP0: tilesCanvas,
+      OBP1: tilesCanvas,
     };
 
-    (["OBP0", "OBP1"] as ObjPalette[]).forEach((objPalette, objIndex) => {
-      const canvas = tilesCanvases[objPalette];
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        return;
-      }
-      const imageDataCopy = new ImageData(
-        new Uint8ClampedArray(tileImageData.data),
-        tileImageData.width,
-        tileImageData.height,
-      );
-      colorizeSpriteData(
-        imageDataCopy.data,
-        monoPalettes[objIndex],
-        palette,
-        colorCorrection,
-      );
-      ctx.putImageData(imageDataCopy, 0, 0);
-    });
-
-    if (palettes && !previewAsMono) {
+    if (previewAsMono) {
+      (["OBP0", "OBP1"] as ObjPalette[]).forEach((objPalette, objIndex) => {
+        const canvas = new OffscreenCanvas(img.width, img.height);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          return;
+        }
+        const imageDataCopy = new ImageData(
+          new Uint8ClampedArray(tileImageData.data),
+          tileImageData.width,
+          tileImageData.height,
+        );
+        colorizeSpriteData(
+          imageDataCopy.data,
+          monoPalettes[objIndex],
+          palette,
+          colorCorrection,
+        );
+        ctx.putImageData(imageDataCopy, 0, 0);
+        tilesCanvases[objPalette] = canvas;
+      });
+    } else if (palettes) {
       [0, 1, 2, 3, 4, 5, 6, 7].forEach((i) => {
+        if (!palettes[i]) {
+          tilesCanvases[i] = tilesCanvas;
+          return;
+        }
         tilesCanvases[i] = new OffscreenCanvas(img.width, img.height);
         const colors = palettes[i] || DMG_PALETTE.colors;
         const canvas = tilesCanvases[i];

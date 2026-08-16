@@ -787,13 +787,8 @@ const MetaspriteEditor = ({
 
   const getTilePalette = useCallback(
     (metaspriteTile: MetaspriteTile) => {
-      if (!colorsEnabled) {
+      if (!colorsEnabled || !scene) {
         return undefined;
-      }
-      if (!scene) {
-        return palettesLookup[
-          defaultSpritePaletteIds[metaspriteTile.paletteIndex]
-        ];
       }
       return palettesLookup[
         scene.spritePaletteIds?.[metaspriteTile.paletteIndex] ||

@@ -35,7 +35,7 @@ void actor_init(void) {
         g_actor_size[i] = SZ_16x16;
         g_actor_dir[i] = 0;
         g_actor_anim_frame[i] = 0;
-        g_actor_sprite_handle[i] = i * 2;
+        g_actor_sprite_handle[i] = i;
     }
 }
 
@@ -63,12 +63,6 @@ void actor_update_all(void) {
             spr_x(512);
             spr_y(512);
             spr_hide();
-            if (g_actor_sprite_handle[i] + 16 < 64) {
-                spr_set(g_actor_sprite_handle[i] + 16);
-                spr_x(512);
-                spr_y(512);
-                spr_hide();
-            }
             continue;
         }
 
@@ -77,8 +71,7 @@ void actor_update_all(void) {
 
         flip = (i > 0 && g_actor_dir[i] == 1) ? FLIP_X : NO_FLIP;
 
-        // Top tile (Head / Upper body)
-        if ((g_dialogue_active && screen_y >= 168) || screen_x < -16 || screen_x > 256 || screen_y < -32 || screen_y > 224) {
+        if ((g_dialogue_active && screen_y >= 168) || screen_x < -64 || screen_x > 256 || screen_y < -64 || screen_y > 224) {
             spr_set(g_actor_sprite_handle[i]);
             spr_x(512);
             spr_y(512);
@@ -90,32 +83,7 @@ void actor_update_all(void) {
             spr_pattern(g_actor_tile_id[i]);
             spr_pal(g_actor_palette[i]);
             spr_pri(1);
-            spr_ctrl(0xFF, SZ_16x16 | flip);
-        }
-
-        // If 16x32, render bottom tile (Body & Legs) stacked at Y + 16
-        if (g_actor_size[i] == SZ_16x32) {
-            if ((g_dialogue_active && (screen_y + 16) >= 168) || screen_x < -16 || screen_x > 256 || (screen_y + 16) < -32 || (screen_y + 16) > 224) {
-                spr_set(g_actor_sprite_handle[i] + 16);
-                spr_x(512);
-                spr_y(512);
-                spr_hide();
-            } else {
-                spr_set(g_actor_sprite_handle[i] + 16);
-                spr_x(screen_x);
-                spr_y(screen_y + 16);
-                spr_pattern(g_actor_tile_id[i] + 0x40);
-                spr_pal(g_actor_palette[i]);
-                spr_pri(1);
-                spr_ctrl(0xFF, SZ_16x16 | flip);
-            }
-        } else {
-            if (g_actor_sprite_handle[i] + 16 < 64) {
-                spr_set(g_actor_sprite_handle[i] + 16);
-                spr_x(512);
-                spr_y(512);
-                spr_hide();
-            }
+            spr_ctrl(FLIP_MAS | SIZE_MAS, g_actor_size[i] | flip);
         }
     }
     satb_update();

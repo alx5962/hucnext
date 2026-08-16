@@ -10,6 +10,7 @@ export type CropOptions = {
   flipX?: boolean;
   sharedPalette?: Uint8Array;
   sharedColorMap?: Map<string, number>;
+  padWidthTo?: number;
 };
 
 export interface SharedSpritePalette {
@@ -20,10 +21,6 @@ export interface SharedSpritePalette {
 export function buildPngPalette(pngPath: string): SharedSpritePalette {
   const data = fs.readFileSync(pngPath);
   const srcPng = PNG.sync.read(data);
-
-  const bgR = srcPng.data[0];
-  const bgG = srcPng.data[1];
-  const bgB = srcPng.data[2];
 
   const palette = new Uint8Array(768);
   const colorMap = new Map<string, number>();
@@ -37,10 +34,10 @@ export function buildPngPalette(pngPath: string): SharedSpritePalette {
       const b = srcPng.data[srcIdx + 2];
       const a = srcPng.data[srcIdx + 3];
 
-      const isTopLeftBg = Math.abs(r - bgR) <= 5 && Math.abs(g - bgG) <= 5 && Math.abs(b - bgB) <= 5;
-      const isPureGreenScreen = r === 0 && g === 255 && b === 0;
+      const isLimeGreen = g > 240 && r < 180 && b < 50;
+      const isMagenta = r > 200 && b > 200 && g < 50;
 
-      if (a < 128 || isTopLeftBg || isPureGreenScreen) {
+      if (a < 128 || isLimeGreen || isMagenta) {
         continue;
       }
 
@@ -68,12 +65,9 @@ export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: Cro
 
   let cropX = cropOpts?.cropX ?? 0;
   let cropY = cropOpts?.cropY ?? 0;
-  let width = cropOpts?.cropW ?? srcPng.width;
+  let srcW = cropOpts?.cropW ?? srcPng.width;
   let height = cropOpts?.cropH ?? srcPng.height;
-
-  const bgR = srcPng.data[0];
-  const bgG = srcPng.data[1];
-  const bgB = srcPng.data[2];
+  let width = cropOpts?.padWidthTo ?? srcW;
 
   const palette = cropOpts?.sharedPalette || new Uint8Array(768);
   const colorMap = cropOpts?.sharedColorMap || new Map<string, number>();
@@ -84,7 +78,13 @@ export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: Cro
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const dstIdx = y * width + x;
-      const srcX = cropOpts?.flipX ? (width - 1 - x) : x;
+
+      if (x >= srcW) {
+        pixels[dstIdx] = 0; // Transparent horizontal padding
+        continue;
+      }
+
+      const srcX = cropOpts?.flipX ? (srcW - 1 - x) : x;
       const realX = cropX + srcX;
       const realY = cropY + y;
 
@@ -99,10 +99,10 @@ export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: Cro
       const b = srcPng.data[srcIdx + 2];
       const a = srcPng.data[srcIdx + 3];
 
-      const isTopLeftBg = Math.abs(r - bgR) <= 5 && Math.abs(g - bgG) <= 5 && Math.abs(b - bgB) <= 5;
-      const isPureGreenScreen = r === 0 && g === 255 && b === 0;
+      const isLimeGreen = g > 240 && r < 180 && b < 50;
+      const isMagenta = r > 200 && b > 200 && g < 50;
 
-      if (a < 128 || isTopLeftBg || isPureGreenScreen) {
+      if (a < 128 || isLimeGreen || isMagenta) {
         pixels[dstIdx] = 0; // Index 0 = Transparent
         continue;
       }

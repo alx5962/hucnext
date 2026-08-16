@@ -44,11 +44,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_1_1
-    load_vram(0x5400, actor_sc1_1_spr, ACTOR_SCENE_1_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc1_1_spr, ACTOR_SCENE_1_1_VRAM_SIZE);
     load_palette(17, actor_sc1_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_1_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_1_1_X, ACTOR_SCENE_1_1_Y);
@@ -58,11 +58,11 @@ void load_scene_part1(int scene_num) {
     }
 #else
 #ifdef HAS_ACTOR_SCENE_1
-    load_vram(0x5400, actor_sc1_spr, ACTOR_SCENE_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc1_spr, ACTOR_SCENE_1_VRAM_SIZE);
     load_palette(17, actor_sc1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_1_X, ACTOR_SCENE_1_Y);
@@ -74,11 +74,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_1_2
-    load_vram(0x5600, actor_sc1_2_spr, ACTOR_SCENE_1_2_VRAM_SIZE);
+    load_vram(0x5A00, actor_sc1_2_spr, ACTOR_SCENE_1_2_VRAM_SIZE);
     load_palette(18, actor_sc1_2_pal, 1);
     if (g_actor_count > 2) {
       g_actor_active[2] = 1;
-      g_actor_tile_id[2] = 0x5600;
+      g_actor_tile_id[2] = 0x5A00;
       g_actor_palette[2] = 2;
       g_actor_size[2] = ACTOR_SCENE_1_2_SPRITE_SIZE;
       actor_set_pos(2, ACTOR_SCENE_1_2_X, ACTOR_SCENE_1_2_Y);
@@ -101,11 +101,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_2_1
-    load_vram(0x5400, actor_sc2_1_spr, ACTOR_SCENE_2_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc2_1_spr, ACTOR_SCENE_2_1_VRAM_SIZE);
     load_palette(17, actor_sc2_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_2_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_2_1_X, ACTOR_SCENE_2_1_Y);
@@ -126,11 +126,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_3_1
-    load_vram(0x5400, actor_sc3_1_spr, ACTOR_SCENE_3_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc3_1_spr, ACTOR_SCENE_3_1_VRAM_SIZE);
     load_palette(17, actor_sc3_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_3_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_3_1_X, ACTOR_SCENE_3_1_Y);
@@ -151,11 +151,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_4_1
-    load_vram(0x5400, actor_sc4_1_spr, ACTOR_SCENE_4_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc4_1_spr, ACTOR_SCENE_4_1_VRAM_SIZE);
     load_palette(17, actor_sc4_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_4_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_4_1_X, ACTOR_SCENE_4_1_Y);
@@ -176,11 +176,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_5_1
-    load_vram(0x5400, actor_sc5_1_spr, ACTOR_SCENE_5_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc5_1_spr, ACTOR_SCENE_5_1_VRAM_SIZE);
     load_palette(17, actor_sc5_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_5_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_5_1_X, ACTOR_SCENE_5_1_Y);
@@ -201,11 +201,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_6_1
-    load_vram(0x5400, actor_sc6_1_spr, ACTOR_SCENE_6_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc6_1_spr, ACTOR_SCENE_6_1_VRAM_SIZE);
     load_palette(17, actor_sc6_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_6_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_6_1_X, ACTOR_SCENE_6_1_Y);
@@ -226,11 +226,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_7_1
-    load_vram(0x5400, actor_sc7_1_spr, ACTOR_SCENE_7_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc7_1_spr, ACTOR_SCENE_7_1_VRAM_SIZE);
     load_palette(17, actor_sc7_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_7_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_7_1_X, ACTOR_SCENE_7_1_Y);
@@ -251,11 +251,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_8_1
-    load_vram(0x5400, actor_sc8_1_spr, ACTOR_SCENE_8_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc8_1_spr, ACTOR_SCENE_8_1_VRAM_SIZE);
     load_palette(17, actor_sc8_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_8_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_8_1_X, ACTOR_SCENE_8_1_Y);
@@ -276,11 +276,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_9_1
-    load_vram(0x5400, actor_sc9_1_spr, ACTOR_SCENE_9_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc9_1_spr, ACTOR_SCENE_9_1_VRAM_SIZE);
     load_palette(17, actor_sc9_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_9_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_9_1_X, ACTOR_SCENE_9_1_Y);
@@ -301,11 +301,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_10_1
-    load_vram(0x5400, actor_sc10_1_spr, ACTOR_SCENE_10_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc10_1_spr, ACTOR_SCENE_10_1_VRAM_SIZE);
     load_palette(17, actor_sc10_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_10_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_10_1_X, ACTOR_SCENE_10_1_Y);
@@ -326,11 +326,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_11_1
-    load_vram(0x5400, actor_sc11_1_spr, ACTOR_SCENE_11_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc11_1_spr, ACTOR_SCENE_11_1_VRAM_SIZE);
     load_palette(17, actor_sc11_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_11_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_11_1_X, ACTOR_SCENE_11_1_Y);
@@ -351,11 +351,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_12_1
-    load_vram(0x5400, actor_sc12_1_spr, ACTOR_SCENE_12_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc12_1_spr, ACTOR_SCENE_12_1_VRAM_SIZE);
     load_palette(17, actor_sc12_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_12_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_12_1_X, ACTOR_SCENE_12_1_Y);
@@ -376,11 +376,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_13_1
-    load_vram(0x5400, actor_sc13_1_spr, ACTOR_SCENE_13_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc13_1_spr, ACTOR_SCENE_13_1_VRAM_SIZE);
     load_palette(17, actor_sc13_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_13_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_13_1_X, ACTOR_SCENE_13_1_Y);
@@ -401,11 +401,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_14_1
-    load_vram(0x5400, actor_sc14_1_spr, ACTOR_SCENE_14_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc14_1_spr, ACTOR_SCENE_14_1_VRAM_SIZE);
     load_palette(17, actor_sc14_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_14_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_14_1_X, ACTOR_SCENE_14_1_Y);
@@ -426,11 +426,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_15_1
-    load_vram(0x5400, actor_sc15_1_spr, ACTOR_SCENE_15_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc15_1_spr, ACTOR_SCENE_15_1_VRAM_SIZE);
     load_palette(17, actor_sc15_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_15_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_15_1_X, ACTOR_SCENE_15_1_Y);
@@ -451,11 +451,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_16_1
-    load_vram(0x5400, actor_sc16_1_spr, ACTOR_SCENE_16_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc16_1_spr, ACTOR_SCENE_16_1_VRAM_SIZE);
     load_palette(17, actor_sc16_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_16_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_16_1_X, ACTOR_SCENE_16_1_Y);
@@ -476,11 +476,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_17_1
-    load_vram(0x5400, actor_sc17_1_spr, ACTOR_SCENE_17_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc17_1_spr, ACTOR_SCENE_17_1_VRAM_SIZE);
     load_palette(17, actor_sc17_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_17_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_17_1_X, ACTOR_SCENE_17_1_Y);
@@ -501,11 +501,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_18_1
-    load_vram(0x5400, actor_sc18_1_spr, ACTOR_SCENE_18_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc18_1_spr, ACTOR_SCENE_18_1_VRAM_SIZE);
     load_palette(17, actor_sc18_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_18_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_18_1_X, ACTOR_SCENE_18_1_Y);
@@ -526,11 +526,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_19_1
-    load_vram(0x5400, actor_sc19_1_spr, ACTOR_SCENE_19_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc19_1_spr, ACTOR_SCENE_19_1_VRAM_SIZE);
     load_palette(17, actor_sc19_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_19_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_19_1_X, ACTOR_SCENE_19_1_Y);
@@ -551,11 +551,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_20_1
-    load_vram(0x5400, actor_sc20_1_spr, ACTOR_SCENE_20_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc20_1_spr, ACTOR_SCENE_20_1_VRAM_SIZE);
     load_palette(17, actor_sc20_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_20_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_20_1_X, ACTOR_SCENE_20_1_Y);
@@ -576,11 +576,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_21_1
-    load_vram(0x5400, actor_sc21_1_spr, ACTOR_SCENE_21_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc21_1_spr, ACTOR_SCENE_21_1_VRAM_SIZE);
     load_palette(17, actor_sc21_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_21_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_21_1_X, ACTOR_SCENE_21_1_Y);
@@ -601,11 +601,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_22_1
-    load_vram(0x5400, actor_sc22_1_spr, ACTOR_SCENE_22_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc22_1_spr, ACTOR_SCENE_22_1_VRAM_SIZE);
     load_palette(17, actor_sc22_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_22_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_22_1_X, ACTOR_SCENE_22_1_Y);
@@ -626,11 +626,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_23_1
-    load_vram(0x5400, actor_sc23_1_spr, ACTOR_SCENE_23_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc23_1_spr, ACTOR_SCENE_23_1_VRAM_SIZE);
     load_palette(17, actor_sc23_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_23_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_23_1_X, ACTOR_SCENE_23_1_Y);
@@ -651,11 +651,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_24_1
-    load_vram(0x5400, actor_sc24_1_spr, ACTOR_SCENE_24_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc24_1_spr, ACTOR_SCENE_24_1_VRAM_SIZE);
     load_palette(17, actor_sc24_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_24_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_24_1_X, ACTOR_SCENE_24_1_Y);
@@ -676,11 +676,11 @@ void load_scene_part1(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_25_1
-    load_vram(0x5400, actor_sc25_1_spr, ACTOR_SCENE_25_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc25_1_spr, ACTOR_SCENE_25_1_VRAM_SIZE);
     load_palette(17, actor_sc25_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_25_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_25_1_X, ACTOR_SCENE_25_1_Y);
@@ -704,11 +704,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_26_1
-    load_vram(0x5400, actor_sc26_1_spr, ACTOR_SCENE_26_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc26_1_spr, ACTOR_SCENE_26_1_VRAM_SIZE);
     load_palette(17, actor_sc26_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_26_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_26_1_X, ACTOR_SCENE_26_1_Y);
@@ -729,11 +729,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_27_1
-    load_vram(0x5400, actor_sc27_1_spr, ACTOR_SCENE_27_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc27_1_spr, ACTOR_SCENE_27_1_VRAM_SIZE);
     load_palette(17, actor_sc27_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_27_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_27_1_X, ACTOR_SCENE_27_1_Y);
@@ -754,11 +754,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_28_1
-    load_vram(0x5400, actor_sc28_1_spr, ACTOR_SCENE_28_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc28_1_spr, ACTOR_SCENE_28_1_VRAM_SIZE);
     load_palette(17, actor_sc28_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_28_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_28_1_X, ACTOR_SCENE_28_1_Y);
@@ -779,11 +779,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_29_1
-    load_vram(0x5400, actor_sc29_1_spr, ACTOR_SCENE_29_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc29_1_spr, ACTOR_SCENE_29_1_VRAM_SIZE);
     load_palette(17, actor_sc29_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_29_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_29_1_X, ACTOR_SCENE_29_1_Y);
@@ -804,11 +804,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_30_1
-    load_vram(0x5400, actor_sc30_1_spr, ACTOR_SCENE_30_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc30_1_spr, ACTOR_SCENE_30_1_VRAM_SIZE);
     load_palette(17, actor_sc30_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_30_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_30_1_X, ACTOR_SCENE_30_1_Y);
@@ -829,11 +829,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_31_1
-    load_vram(0x5400, actor_sc31_1_spr, ACTOR_SCENE_31_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc31_1_spr, ACTOR_SCENE_31_1_VRAM_SIZE);
     load_palette(17, actor_sc31_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_31_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_31_1_X, ACTOR_SCENE_31_1_Y);
@@ -854,11 +854,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_32_1
-    load_vram(0x5400, actor_sc32_1_spr, ACTOR_SCENE_32_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc32_1_spr, ACTOR_SCENE_32_1_VRAM_SIZE);
     load_palette(17, actor_sc32_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_32_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_32_1_X, ACTOR_SCENE_32_1_Y);
@@ -879,11 +879,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_33_1
-    load_vram(0x5400, actor_sc33_1_spr, ACTOR_SCENE_33_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc33_1_spr, ACTOR_SCENE_33_1_VRAM_SIZE);
     load_palette(17, actor_sc33_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_33_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_33_1_X, ACTOR_SCENE_33_1_Y);
@@ -904,11 +904,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_34_1
-    load_vram(0x5400, actor_sc34_1_spr, ACTOR_SCENE_34_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc34_1_spr, ACTOR_SCENE_34_1_VRAM_SIZE);
     load_palette(17, actor_sc34_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_34_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_34_1_X, ACTOR_SCENE_34_1_Y);
@@ -929,11 +929,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_35_1
-    load_vram(0x5400, actor_sc35_1_spr, ACTOR_SCENE_35_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc35_1_spr, ACTOR_SCENE_35_1_VRAM_SIZE);
     load_palette(17, actor_sc35_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_35_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_35_1_X, ACTOR_SCENE_35_1_Y);
@@ -954,11 +954,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_36_1
-    load_vram(0x5400, actor_sc36_1_spr, ACTOR_SCENE_36_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc36_1_spr, ACTOR_SCENE_36_1_VRAM_SIZE);
     load_palette(17, actor_sc36_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_36_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_36_1_X, ACTOR_SCENE_36_1_Y);
@@ -979,11 +979,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_37_1
-    load_vram(0x5400, actor_sc37_1_spr, ACTOR_SCENE_37_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc37_1_spr, ACTOR_SCENE_37_1_VRAM_SIZE);
     load_palette(17, actor_sc37_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_37_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_37_1_X, ACTOR_SCENE_37_1_Y);
@@ -1004,11 +1004,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_38_1
-    load_vram(0x5400, actor_sc38_1_spr, ACTOR_SCENE_38_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc38_1_spr, ACTOR_SCENE_38_1_VRAM_SIZE);
     load_palette(17, actor_sc38_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_38_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_38_1_X, ACTOR_SCENE_38_1_Y);
@@ -1029,11 +1029,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_39_1
-    load_vram(0x5400, actor_sc39_1_spr, ACTOR_SCENE_39_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc39_1_spr, ACTOR_SCENE_39_1_VRAM_SIZE);
     load_palette(17, actor_sc39_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_39_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_39_1_X, ACTOR_SCENE_39_1_Y);
@@ -1054,11 +1054,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_40_1
-    load_vram(0x5400, actor_sc40_1_spr, ACTOR_SCENE_40_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc40_1_spr, ACTOR_SCENE_40_1_VRAM_SIZE);
     load_palette(17, actor_sc40_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_40_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_40_1_X, ACTOR_SCENE_40_1_Y);
@@ -1079,11 +1079,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_41_1
-    load_vram(0x5400, actor_sc41_1_spr, ACTOR_SCENE_41_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc41_1_spr, ACTOR_SCENE_41_1_VRAM_SIZE);
     load_palette(17, actor_sc41_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_41_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_41_1_X, ACTOR_SCENE_41_1_Y);
@@ -1104,11 +1104,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_42_1
-    load_vram(0x5400, actor_sc42_1_spr, ACTOR_SCENE_42_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc42_1_spr, ACTOR_SCENE_42_1_VRAM_SIZE);
     load_palette(17, actor_sc42_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_42_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_42_1_X, ACTOR_SCENE_42_1_Y);
@@ -1129,11 +1129,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_43_1
-    load_vram(0x5400, actor_sc43_1_spr, ACTOR_SCENE_43_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc43_1_spr, ACTOR_SCENE_43_1_VRAM_SIZE);
     load_palette(17, actor_sc43_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_43_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_43_1_X, ACTOR_SCENE_43_1_Y);
@@ -1154,11 +1154,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_44_1
-    load_vram(0x5400, actor_sc44_1_spr, ACTOR_SCENE_44_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc44_1_spr, ACTOR_SCENE_44_1_VRAM_SIZE);
     load_palette(17, actor_sc44_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_44_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_44_1_X, ACTOR_SCENE_44_1_Y);
@@ -1179,11 +1179,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_45_1
-    load_vram(0x5400, actor_sc45_1_spr, ACTOR_SCENE_45_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc45_1_spr, ACTOR_SCENE_45_1_VRAM_SIZE);
     load_palette(17, actor_sc45_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_45_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_45_1_X, ACTOR_SCENE_45_1_Y);
@@ -1204,11 +1204,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_46_1
-    load_vram(0x5400, actor_sc46_1_spr, ACTOR_SCENE_46_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc46_1_spr, ACTOR_SCENE_46_1_VRAM_SIZE);
     load_palette(17, actor_sc46_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_46_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_46_1_X, ACTOR_SCENE_46_1_Y);
@@ -1229,11 +1229,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_47_1
-    load_vram(0x5400, actor_sc47_1_spr, ACTOR_SCENE_47_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc47_1_spr, ACTOR_SCENE_47_1_VRAM_SIZE);
     load_palette(17, actor_sc47_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_47_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_47_1_X, ACTOR_SCENE_47_1_Y);
@@ -1254,11 +1254,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_48_1
-    load_vram(0x5400, actor_sc48_1_spr, ACTOR_SCENE_48_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc48_1_spr, ACTOR_SCENE_48_1_VRAM_SIZE);
     load_palette(17, actor_sc48_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_48_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_48_1_X, ACTOR_SCENE_48_1_Y);
@@ -1279,11 +1279,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_49_1
-    load_vram(0x5400, actor_sc49_1_spr, ACTOR_SCENE_49_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc49_1_spr, ACTOR_SCENE_49_1_VRAM_SIZE);
     load_palette(17, actor_sc49_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_49_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_49_1_X, ACTOR_SCENE_49_1_Y);
@@ -1304,11 +1304,11 @@ void load_scene_part2(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_50_1
-    load_vram(0x5400, actor_sc50_1_spr, ACTOR_SCENE_50_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc50_1_spr, ACTOR_SCENE_50_1_VRAM_SIZE);
     load_palette(17, actor_sc50_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_50_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_50_1_X, ACTOR_SCENE_50_1_Y);
@@ -1332,11 +1332,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_51_1
-    load_vram(0x5400, actor_sc51_1_spr, ACTOR_SCENE_51_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc51_1_spr, ACTOR_SCENE_51_1_VRAM_SIZE);
     load_palette(17, actor_sc51_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_51_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_51_1_X, ACTOR_SCENE_51_1_Y);
@@ -1357,11 +1357,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_52_1
-    load_vram(0x5400, actor_sc52_1_spr, ACTOR_SCENE_52_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc52_1_spr, ACTOR_SCENE_52_1_VRAM_SIZE);
     load_palette(17, actor_sc52_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_52_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_52_1_X, ACTOR_SCENE_52_1_Y);
@@ -1382,11 +1382,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_53_1
-    load_vram(0x5400, actor_sc53_1_spr, ACTOR_SCENE_53_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc53_1_spr, ACTOR_SCENE_53_1_VRAM_SIZE);
     load_palette(17, actor_sc53_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_53_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_53_1_X, ACTOR_SCENE_53_1_Y);
@@ -1407,11 +1407,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_54_1
-    load_vram(0x5400, actor_sc54_1_spr, ACTOR_SCENE_54_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc54_1_spr, ACTOR_SCENE_54_1_VRAM_SIZE);
     load_palette(17, actor_sc54_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_54_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_54_1_X, ACTOR_SCENE_54_1_Y);
@@ -1432,11 +1432,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_55_1
-    load_vram(0x5400, actor_sc55_1_spr, ACTOR_SCENE_55_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc55_1_spr, ACTOR_SCENE_55_1_VRAM_SIZE);
     load_palette(17, actor_sc55_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_55_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_55_1_X, ACTOR_SCENE_55_1_Y);
@@ -1457,11 +1457,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_56_1
-    load_vram(0x5400, actor_sc56_1_spr, ACTOR_SCENE_56_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc56_1_spr, ACTOR_SCENE_56_1_VRAM_SIZE);
     load_palette(17, actor_sc56_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_56_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_56_1_X, ACTOR_SCENE_56_1_Y);
@@ -1482,11 +1482,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_57_1
-    load_vram(0x5400, actor_sc57_1_spr, ACTOR_SCENE_57_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc57_1_spr, ACTOR_SCENE_57_1_VRAM_SIZE);
     load_palette(17, actor_sc57_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_57_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_57_1_X, ACTOR_SCENE_57_1_Y);
@@ -1507,11 +1507,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_58_1
-    load_vram(0x5400, actor_sc58_1_spr, ACTOR_SCENE_58_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc58_1_spr, ACTOR_SCENE_58_1_VRAM_SIZE);
     load_palette(17, actor_sc58_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_58_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_58_1_X, ACTOR_SCENE_58_1_Y);
@@ -1532,11 +1532,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_59_1
-    load_vram(0x5400, actor_sc59_1_spr, ACTOR_SCENE_59_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc59_1_spr, ACTOR_SCENE_59_1_VRAM_SIZE);
     load_palette(17, actor_sc59_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_59_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_59_1_X, ACTOR_SCENE_59_1_Y);
@@ -1557,11 +1557,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_60_1
-    load_vram(0x5400, actor_sc60_1_spr, ACTOR_SCENE_60_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc60_1_spr, ACTOR_SCENE_60_1_VRAM_SIZE);
     load_palette(17, actor_sc60_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_60_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_60_1_X, ACTOR_SCENE_60_1_Y);
@@ -1582,11 +1582,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_61_1
-    load_vram(0x5400, actor_sc61_1_spr, ACTOR_SCENE_61_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc61_1_spr, ACTOR_SCENE_61_1_VRAM_SIZE);
     load_palette(17, actor_sc61_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_61_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_61_1_X, ACTOR_SCENE_61_1_Y);
@@ -1607,11 +1607,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_62_1
-    load_vram(0x5400, actor_sc62_1_spr, ACTOR_SCENE_62_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc62_1_spr, ACTOR_SCENE_62_1_VRAM_SIZE);
     load_palette(17, actor_sc62_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_62_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_62_1_X, ACTOR_SCENE_62_1_Y);
@@ -1632,11 +1632,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_63_1
-    load_vram(0x5400, actor_sc63_1_spr, ACTOR_SCENE_63_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc63_1_spr, ACTOR_SCENE_63_1_VRAM_SIZE);
     load_palette(17, actor_sc63_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_63_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_63_1_X, ACTOR_SCENE_63_1_Y);
@@ -1657,11 +1657,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_64_1
-    load_vram(0x5400, actor_sc64_1_spr, ACTOR_SCENE_64_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc64_1_spr, ACTOR_SCENE_64_1_VRAM_SIZE);
     load_palette(17, actor_sc64_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_64_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_64_1_X, ACTOR_SCENE_64_1_Y);
@@ -1682,11 +1682,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_65_1
-    load_vram(0x5400, actor_sc65_1_spr, ACTOR_SCENE_65_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc65_1_spr, ACTOR_SCENE_65_1_VRAM_SIZE);
     load_palette(17, actor_sc65_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_65_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_65_1_X, ACTOR_SCENE_65_1_Y);
@@ -1707,11 +1707,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_66_1
-    load_vram(0x5400, actor_sc66_1_spr, ACTOR_SCENE_66_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc66_1_spr, ACTOR_SCENE_66_1_VRAM_SIZE);
     load_palette(17, actor_sc66_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_66_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_66_1_X, ACTOR_SCENE_66_1_Y);
@@ -1732,11 +1732,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_67_1
-    load_vram(0x5400, actor_sc67_1_spr, ACTOR_SCENE_67_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc67_1_spr, ACTOR_SCENE_67_1_VRAM_SIZE);
     load_palette(17, actor_sc67_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_67_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_67_1_X, ACTOR_SCENE_67_1_Y);
@@ -1757,11 +1757,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_68_1
-    load_vram(0x5400, actor_sc68_1_spr, ACTOR_SCENE_68_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc68_1_spr, ACTOR_SCENE_68_1_VRAM_SIZE);
     load_palette(17, actor_sc68_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_68_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_68_1_X, ACTOR_SCENE_68_1_Y);
@@ -1782,11 +1782,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_69_1
-    load_vram(0x5400, actor_sc69_1_spr, ACTOR_SCENE_69_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc69_1_spr, ACTOR_SCENE_69_1_VRAM_SIZE);
     load_palette(17, actor_sc69_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_69_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_69_1_X, ACTOR_SCENE_69_1_Y);
@@ -1807,11 +1807,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_70_1
-    load_vram(0x5400, actor_sc70_1_spr, ACTOR_SCENE_70_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc70_1_spr, ACTOR_SCENE_70_1_VRAM_SIZE);
     load_palette(17, actor_sc70_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_70_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_70_1_X, ACTOR_SCENE_70_1_Y);
@@ -1832,11 +1832,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_71_1
-    load_vram(0x5400, actor_sc71_1_spr, ACTOR_SCENE_71_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc71_1_spr, ACTOR_SCENE_71_1_VRAM_SIZE);
     load_palette(17, actor_sc71_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_71_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_71_1_X, ACTOR_SCENE_71_1_Y);
@@ -1857,11 +1857,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_72_1
-    load_vram(0x5400, actor_sc72_1_spr, ACTOR_SCENE_72_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc72_1_spr, ACTOR_SCENE_72_1_VRAM_SIZE);
     load_palette(17, actor_sc72_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_72_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_72_1_X, ACTOR_SCENE_72_1_Y);
@@ -1882,11 +1882,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_73_1
-    load_vram(0x5400, actor_sc73_1_spr, ACTOR_SCENE_73_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc73_1_spr, ACTOR_SCENE_73_1_VRAM_SIZE);
     load_palette(17, actor_sc73_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_73_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_73_1_X, ACTOR_SCENE_73_1_Y);
@@ -1907,11 +1907,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_74_1
-    load_vram(0x5400, actor_sc74_1_spr, ACTOR_SCENE_74_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc74_1_spr, ACTOR_SCENE_74_1_VRAM_SIZE);
     load_palette(17, actor_sc74_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_74_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_74_1_X, ACTOR_SCENE_74_1_Y);
@@ -1932,11 +1932,11 @@ void load_scene_part3(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_75_1
-    load_vram(0x5400, actor_sc75_1_spr, ACTOR_SCENE_75_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc75_1_spr, ACTOR_SCENE_75_1_VRAM_SIZE);
     load_palette(17, actor_sc75_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_75_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_75_1_X, ACTOR_SCENE_75_1_Y);
@@ -1960,11 +1960,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_76_1
-    load_vram(0x5400, actor_sc76_1_spr, ACTOR_SCENE_76_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc76_1_spr, ACTOR_SCENE_76_1_VRAM_SIZE);
     load_palette(17, actor_sc76_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_76_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_76_1_X, ACTOR_SCENE_76_1_Y);
@@ -1985,11 +1985,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_77_1
-    load_vram(0x5400, actor_sc77_1_spr, ACTOR_SCENE_77_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc77_1_spr, ACTOR_SCENE_77_1_VRAM_SIZE);
     load_palette(17, actor_sc77_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_77_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_77_1_X, ACTOR_SCENE_77_1_Y);
@@ -2010,11 +2010,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_78_1
-    load_vram(0x5400, actor_sc78_1_spr, ACTOR_SCENE_78_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc78_1_spr, ACTOR_SCENE_78_1_VRAM_SIZE);
     load_palette(17, actor_sc78_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_78_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_78_1_X, ACTOR_SCENE_78_1_Y);
@@ -2035,11 +2035,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_79_1
-    load_vram(0x5400, actor_sc79_1_spr, ACTOR_SCENE_79_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc79_1_spr, ACTOR_SCENE_79_1_VRAM_SIZE);
     load_palette(17, actor_sc79_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_79_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_79_1_X, ACTOR_SCENE_79_1_Y);
@@ -2060,11 +2060,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_80_1
-    load_vram(0x5400, actor_sc80_1_spr, ACTOR_SCENE_80_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc80_1_spr, ACTOR_SCENE_80_1_VRAM_SIZE);
     load_palette(17, actor_sc80_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_80_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_80_1_X, ACTOR_SCENE_80_1_Y);
@@ -2085,11 +2085,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_81_1
-    load_vram(0x5400, actor_sc81_1_spr, ACTOR_SCENE_81_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc81_1_spr, ACTOR_SCENE_81_1_VRAM_SIZE);
     load_palette(17, actor_sc81_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_81_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_81_1_X, ACTOR_SCENE_81_1_Y);
@@ -2110,11 +2110,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_82_1
-    load_vram(0x5400, actor_sc82_1_spr, ACTOR_SCENE_82_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc82_1_spr, ACTOR_SCENE_82_1_VRAM_SIZE);
     load_palette(17, actor_sc82_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_82_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_82_1_X, ACTOR_SCENE_82_1_Y);
@@ -2135,11 +2135,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_83_1
-    load_vram(0x5400, actor_sc83_1_spr, ACTOR_SCENE_83_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc83_1_spr, ACTOR_SCENE_83_1_VRAM_SIZE);
     load_palette(17, actor_sc83_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_83_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_83_1_X, ACTOR_SCENE_83_1_Y);
@@ -2160,11 +2160,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_84_1
-    load_vram(0x5400, actor_sc84_1_spr, ACTOR_SCENE_84_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc84_1_spr, ACTOR_SCENE_84_1_VRAM_SIZE);
     load_palette(17, actor_sc84_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_84_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_84_1_X, ACTOR_SCENE_84_1_Y);
@@ -2185,11 +2185,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_85_1
-    load_vram(0x5400, actor_sc85_1_spr, ACTOR_SCENE_85_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc85_1_spr, ACTOR_SCENE_85_1_VRAM_SIZE);
     load_palette(17, actor_sc85_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_85_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_85_1_X, ACTOR_SCENE_85_1_Y);
@@ -2210,11 +2210,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_86_1
-    load_vram(0x5400, actor_sc86_1_spr, ACTOR_SCENE_86_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc86_1_spr, ACTOR_SCENE_86_1_VRAM_SIZE);
     load_palette(17, actor_sc86_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_86_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_86_1_X, ACTOR_SCENE_86_1_Y);
@@ -2235,11 +2235,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_87_1
-    load_vram(0x5400, actor_sc87_1_spr, ACTOR_SCENE_87_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc87_1_spr, ACTOR_SCENE_87_1_VRAM_SIZE);
     load_palette(17, actor_sc87_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_87_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_87_1_X, ACTOR_SCENE_87_1_Y);
@@ -2260,11 +2260,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_88_1
-    load_vram(0x5400, actor_sc88_1_spr, ACTOR_SCENE_88_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc88_1_spr, ACTOR_SCENE_88_1_VRAM_SIZE);
     load_palette(17, actor_sc88_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_88_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_88_1_X, ACTOR_SCENE_88_1_Y);
@@ -2285,11 +2285,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_89_1
-    load_vram(0x5400, actor_sc89_1_spr, ACTOR_SCENE_89_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc89_1_spr, ACTOR_SCENE_89_1_VRAM_SIZE);
     load_palette(17, actor_sc89_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_89_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_89_1_X, ACTOR_SCENE_89_1_Y);
@@ -2310,11 +2310,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_90_1
-    load_vram(0x5400, actor_sc90_1_spr, ACTOR_SCENE_90_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc90_1_spr, ACTOR_SCENE_90_1_VRAM_SIZE);
     load_palette(17, actor_sc90_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_90_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_90_1_X, ACTOR_SCENE_90_1_Y);
@@ -2335,11 +2335,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_91_1
-    load_vram(0x5400, actor_sc91_1_spr, ACTOR_SCENE_91_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc91_1_spr, ACTOR_SCENE_91_1_VRAM_SIZE);
     load_palette(17, actor_sc91_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_91_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_91_1_X, ACTOR_SCENE_91_1_Y);
@@ -2360,11 +2360,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_92_1
-    load_vram(0x5400, actor_sc92_1_spr, ACTOR_SCENE_92_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc92_1_spr, ACTOR_SCENE_92_1_VRAM_SIZE);
     load_palette(17, actor_sc92_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_92_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_92_1_X, ACTOR_SCENE_92_1_Y);
@@ -2385,11 +2385,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_93_1
-    load_vram(0x5400, actor_sc93_1_spr, ACTOR_SCENE_93_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc93_1_spr, ACTOR_SCENE_93_1_VRAM_SIZE);
     load_palette(17, actor_sc93_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_93_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_93_1_X, ACTOR_SCENE_93_1_Y);
@@ -2410,11 +2410,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_94_1
-    load_vram(0x5400, actor_sc94_1_spr, ACTOR_SCENE_94_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc94_1_spr, ACTOR_SCENE_94_1_VRAM_SIZE);
     load_palette(17, actor_sc94_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_94_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_94_1_X, ACTOR_SCENE_94_1_Y);
@@ -2435,11 +2435,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_95_1
-    load_vram(0x5400, actor_sc95_1_spr, ACTOR_SCENE_95_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc95_1_spr, ACTOR_SCENE_95_1_VRAM_SIZE);
     load_palette(17, actor_sc95_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_95_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_95_1_X, ACTOR_SCENE_95_1_Y);
@@ -2460,11 +2460,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_96_1
-    load_vram(0x5400, actor_sc96_1_spr, ACTOR_SCENE_96_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc96_1_spr, ACTOR_SCENE_96_1_VRAM_SIZE);
     load_palette(17, actor_sc96_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_96_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_96_1_X, ACTOR_SCENE_96_1_Y);
@@ -2485,11 +2485,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_97_1
-    load_vram(0x5400, actor_sc97_1_spr, ACTOR_SCENE_97_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc97_1_spr, ACTOR_SCENE_97_1_VRAM_SIZE);
     load_palette(17, actor_sc97_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_97_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_97_1_X, ACTOR_SCENE_97_1_Y);
@@ -2510,11 +2510,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_98_1
-    load_vram(0x5400, actor_sc98_1_spr, ACTOR_SCENE_98_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc98_1_spr, ACTOR_SCENE_98_1_VRAM_SIZE);
     load_palette(17, actor_sc98_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_98_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_98_1_X, ACTOR_SCENE_98_1_Y);
@@ -2535,11 +2535,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_99_1
-    load_vram(0x5400, actor_sc99_1_spr, ACTOR_SCENE_99_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc99_1_spr, ACTOR_SCENE_99_1_VRAM_SIZE);
     load_palette(17, actor_sc99_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_99_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_99_1_X, ACTOR_SCENE_99_1_Y);
@@ -2560,11 +2560,11 @@ void load_scene_part4(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_100_1
-    load_vram(0x5400, actor_sc100_1_spr, ACTOR_SCENE_100_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc100_1_spr, ACTOR_SCENE_100_1_VRAM_SIZE);
     load_palette(17, actor_sc100_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_100_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_100_1_X, ACTOR_SCENE_100_1_Y);
@@ -2588,11 +2588,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_101_1
-    load_vram(0x5400, actor_sc101_1_spr, ACTOR_SCENE_101_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc101_1_spr, ACTOR_SCENE_101_1_VRAM_SIZE);
     load_palette(17, actor_sc101_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_101_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_101_1_X, ACTOR_SCENE_101_1_Y);
@@ -2613,11 +2613,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_102_1
-    load_vram(0x5400, actor_sc102_1_spr, ACTOR_SCENE_102_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc102_1_spr, ACTOR_SCENE_102_1_VRAM_SIZE);
     load_palette(17, actor_sc102_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_102_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_102_1_X, ACTOR_SCENE_102_1_Y);
@@ -2638,11 +2638,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_103_1
-    load_vram(0x5400, actor_sc103_1_spr, ACTOR_SCENE_103_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc103_1_spr, ACTOR_SCENE_103_1_VRAM_SIZE);
     load_palette(17, actor_sc103_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_103_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_103_1_X, ACTOR_SCENE_103_1_Y);
@@ -2663,11 +2663,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_104_1
-    load_vram(0x5400, actor_sc104_1_spr, ACTOR_SCENE_104_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc104_1_spr, ACTOR_SCENE_104_1_VRAM_SIZE);
     load_palette(17, actor_sc104_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_104_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_104_1_X, ACTOR_SCENE_104_1_Y);
@@ -2688,11 +2688,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_105_1
-    load_vram(0x5400, actor_sc105_1_spr, ACTOR_SCENE_105_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc105_1_spr, ACTOR_SCENE_105_1_VRAM_SIZE);
     load_palette(17, actor_sc105_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_105_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_105_1_X, ACTOR_SCENE_105_1_Y);
@@ -2713,11 +2713,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_106_1
-    load_vram(0x5400, actor_sc106_1_spr, ACTOR_SCENE_106_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc106_1_spr, ACTOR_SCENE_106_1_VRAM_SIZE);
     load_palette(17, actor_sc106_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_106_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_106_1_X, ACTOR_SCENE_106_1_Y);
@@ -2738,11 +2738,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_107_1
-    load_vram(0x5400, actor_sc107_1_spr, ACTOR_SCENE_107_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc107_1_spr, ACTOR_SCENE_107_1_VRAM_SIZE);
     load_palette(17, actor_sc107_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_107_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_107_1_X, ACTOR_SCENE_107_1_Y);
@@ -2763,11 +2763,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_108_1
-    load_vram(0x5400, actor_sc108_1_spr, ACTOR_SCENE_108_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc108_1_spr, ACTOR_SCENE_108_1_VRAM_SIZE);
     load_palette(17, actor_sc108_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_108_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_108_1_X, ACTOR_SCENE_108_1_Y);
@@ -2788,11 +2788,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_109_1
-    load_vram(0x5400, actor_sc109_1_spr, ACTOR_SCENE_109_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc109_1_spr, ACTOR_SCENE_109_1_VRAM_SIZE);
     load_palette(17, actor_sc109_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_109_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_109_1_X, ACTOR_SCENE_109_1_Y);
@@ -2813,11 +2813,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_110_1
-    load_vram(0x5400, actor_sc110_1_spr, ACTOR_SCENE_110_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc110_1_spr, ACTOR_SCENE_110_1_VRAM_SIZE);
     load_palette(17, actor_sc110_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_110_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_110_1_X, ACTOR_SCENE_110_1_Y);
@@ -2838,11 +2838,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_111_1
-    load_vram(0x5400, actor_sc111_1_spr, ACTOR_SCENE_111_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc111_1_spr, ACTOR_SCENE_111_1_VRAM_SIZE);
     load_palette(17, actor_sc111_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_111_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_111_1_X, ACTOR_SCENE_111_1_Y);
@@ -2863,11 +2863,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_112_1
-    load_vram(0x5400, actor_sc112_1_spr, ACTOR_SCENE_112_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc112_1_spr, ACTOR_SCENE_112_1_VRAM_SIZE);
     load_palette(17, actor_sc112_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_112_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_112_1_X, ACTOR_SCENE_112_1_Y);
@@ -2888,11 +2888,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_113_1
-    load_vram(0x5400, actor_sc113_1_spr, ACTOR_SCENE_113_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc113_1_spr, ACTOR_SCENE_113_1_VRAM_SIZE);
     load_palette(17, actor_sc113_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_113_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_113_1_X, ACTOR_SCENE_113_1_Y);
@@ -2913,11 +2913,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_114_1
-    load_vram(0x5400, actor_sc114_1_spr, ACTOR_SCENE_114_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc114_1_spr, ACTOR_SCENE_114_1_VRAM_SIZE);
     load_palette(17, actor_sc114_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_114_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_114_1_X, ACTOR_SCENE_114_1_Y);
@@ -2938,11 +2938,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_115_1
-    load_vram(0x5400, actor_sc115_1_spr, ACTOR_SCENE_115_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc115_1_spr, ACTOR_SCENE_115_1_VRAM_SIZE);
     load_palette(17, actor_sc115_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_115_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_115_1_X, ACTOR_SCENE_115_1_Y);
@@ -2963,11 +2963,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_116_1
-    load_vram(0x5400, actor_sc116_1_spr, ACTOR_SCENE_116_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc116_1_spr, ACTOR_SCENE_116_1_VRAM_SIZE);
     load_palette(17, actor_sc116_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_116_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_116_1_X, ACTOR_SCENE_116_1_Y);
@@ -2988,11 +2988,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_117_1
-    load_vram(0x5400, actor_sc117_1_spr, ACTOR_SCENE_117_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc117_1_spr, ACTOR_SCENE_117_1_VRAM_SIZE);
     load_palette(17, actor_sc117_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_117_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_117_1_X, ACTOR_SCENE_117_1_Y);
@@ -3013,11 +3013,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_118_1
-    load_vram(0x5400, actor_sc118_1_spr, ACTOR_SCENE_118_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc118_1_spr, ACTOR_SCENE_118_1_VRAM_SIZE);
     load_palette(17, actor_sc118_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_118_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_118_1_X, ACTOR_SCENE_118_1_Y);
@@ -3038,11 +3038,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_119_1
-    load_vram(0x5400, actor_sc119_1_spr, ACTOR_SCENE_119_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc119_1_spr, ACTOR_SCENE_119_1_VRAM_SIZE);
     load_palette(17, actor_sc119_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_119_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_119_1_X, ACTOR_SCENE_119_1_Y);
@@ -3063,11 +3063,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_120_1
-    load_vram(0x5400, actor_sc120_1_spr, ACTOR_SCENE_120_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc120_1_spr, ACTOR_SCENE_120_1_VRAM_SIZE);
     load_palette(17, actor_sc120_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_120_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_120_1_X, ACTOR_SCENE_120_1_Y);
@@ -3088,11 +3088,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_121_1
-    load_vram(0x5400, actor_sc121_1_spr, ACTOR_SCENE_121_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc121_1_spr, ACTOR_SCENE_121_1_VRAM_SIZE);
     load_palette(17, actor_sc121_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_121_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_121_1_X, ACTOR_SCENE_121_1_Y);
@@ -3113,11 +3113,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_122_1
-    load_vram(0x5400, actor_sc122_1_spr, ACTOR_SCENE_122_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc122_1_spr, ACTOR_SCENE_122_1_VRAM_SIZE);
     load_palette(17, actor_sc122_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_122_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_122_1_X, ACTOR_SCENE_122_1_Y);
@@ -3138,11 +3138,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_123_1
-    load_vram(0x5400, actor_sc123_1_spr, ACTOR_SCENE_123_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc123_1_spr, ACTOR_SCENE_123_1_VRAM_SIZE);
     load_palette(17, actor_sc123_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_123_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_123_1_X, ACTOR_SCENE_123_1_Y);
@@ -3163,11 +3163,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_124_1
-    load_vram(0x5400, actor_sc124_1_spr, ACTOR_SCENE_124_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc124_1_spr, ACTOR_SCENE_124_1_VRAM_SIZE);
     load_palette(17, actor_sc124_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_124_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_124_1_X, ACTOR_SCENE_124_1_Y);
@@ -3188,11 +3188,11 @@ void load_scene_part5(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_125_1
-    load_vram(0x5400, actor_sc125_1_spr, ACTOR_SCENE_125_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc125_1_spr, ACTOR_SCENE_125_1_VRAM_SIZE);
     load_palette(17, actor_sc125_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_125_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_125_1_X, ACTOR_SCENE_125_1_Y);
@@ -3216,11 +3216,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_126_1
-    load_vram(0x5400, actor_sc126_1_spr, ACTOR_SCENE_126_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc126_1_spr, ACTOR_SCENE_126_1_VRAM_SIZE);
     load_palette(17, actor_sc126_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_126_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_126_1_X, ACTOR_SCENE_126_1_Y);
@@ -3241,11 +3241,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_127_1
-    load_vram(0x5400, actor_sc127_1_spr, ACTOR_SCENE_127_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc127_1_spr, ACTOR_SCENE_127_1_VRAM_SIZE);
     load_palette(17, actor_sc127_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_127_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_127_1_X, ACTOR_SCENE_127_1_Y);
@@ -3266,11 +3266,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_128_1
-    load_vram(0x5400, actor_sc128_1_spr, ACTOR_SCENE_128_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc128_1_spr, ACTOR_SCENE_128_1_VRAM_SIZE);
     load_palette(17, actor_sc128_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_128_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_128_1_X, ACTOR_SCENE_128_1_Y);
@@ -3291,11 +3291,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_129_1
-    load_vram(0x5400, actor_sc129_1_spr, ACTOR_SCENE_129_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc129_1_spr, ACTOR_SCENE_129_1_VRAM_SIZE);
     load_palette(17, actor_sc129_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_129_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_129_1_X, ACTOR_SCENE_129_1_Y);
@@ -3316,11 +3316,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_130_1
-    load_vram(0x5400, actor_sc130_1_spr, ACTOR_SCENE_130_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc130_1_spr, ACTOR_SCENE_130_1_VRAM_SIZE);
     load_palette(17, actor_sc130_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_130_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_130_1_X, ACTOR_SCENE_130_1_Y);
@@ -3341,11 +3341,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_131_1
-    load_vram(0x5400, actor_sc131_1_spr, ACTOR_SCENE_131_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc131_1_spr, ACTOR_SCENE_131_1_VRAM_SIZE);
     load_palette(17, actor_sc131_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_131_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_131_1_X, ACTOR_SCENE_131_1_Y);
@@ -3366,11 +3366,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_132_1
-    load_vram(0x5400, actor_sc132_1_spr, ACTOR_SCENE_132_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc132_1_spr, ACTOR_SCENE_132_1_VRAM_SIZE);
     load_palette(17, actor_sc132_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_132_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_132_1_X, ACTOR_SCENE_132_1_Y);
@@ -3391,11 +3391,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_133_1
-    load_vram(0x5400, actor_sc133_1_spr, ACTOR_SCENE_133_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc133_1_spr, ACTOR_SCENE_133_1_VRAM_SIZE);
     load_palette(17, actor_sc133_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_133_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_133_1_X, ACTOR_SCENE_133_1_Y);
@@ -3416,11 +3416,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_134_1
-    load_vram(0x5400, actor_sc134_1_spr, ACTOR_SCENE_134_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc134_1_spr, ACTOR_SCENE_134_1_VRAM_SIZE);
     load_palette(17, actor_sc134_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_134_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_134_1_X, ACTOR_SCENE_134_1_Y);
@@ -3441,11 +3441,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_135_1
-    load_vram(0x5400, actor_sc135_1_spr, ACTOR_SCENE_135_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc135_1_spr, ACTOR_SCENE_135_1_VRAM_SIZE);
     load_palette(17, actor_sc135_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_135_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_135_1_X, ACTOR_SCENE_135_1_Y);
@@ -3466,11 +3466,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_136_1
-    load_vram(0x5400, actor_sc136_1_spr, ACTOR_SCENE_136_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc136_1_spr, ACTOR_SCENE_136_1_VRAM_SIZE);
     load_palette(17, actor_sc136_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_136_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_136_1_X, ACTOR_SCENE_136_1_Y);
@@ -3491,11 +3491,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_137_1
-    load_vram(0x5400, actor_sc137_1_spr, ACTOR_SCENE_137_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc137_1_spr, ACTOR_SCENE_137_1_VRAM_SIZE);
     load_palette(17, actor_sc137_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_137_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_137_1_X, ACTOR_SCENE_137_1_Y);
@@ -3516,11 +3516,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_138_1
-    load_vram(0x5400, actor_sc138_1_spr, ACTOR_SCENE_138_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc138_1_spr, ACTOR_SCENE_138_1_VRAM_SIZE);
     load_palette(17, actor_sc138_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_138_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_138_1_X, ACTOR_SCENE_138_1_Y);
@@ -3541,11 +3541,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_139_1
-    load_vram(0x5400, actor_sc139_1_spr, ACTOR_SCENE_139_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc139_1_spr, ACTOR_SCENE_139_1_VRAM_SIZE);
     load_palette(17, actor_sc139_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_139_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_139_1_X, ACTOR_SCENE_139_1_Y);
@@ -3566,11 +3566,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_140_1
-    load_vram(0x5400, actor_sc140_1_spr, ACTOR_SCENE_140_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc140_1_spr, ACTOR_SCENE_140_1_VRAM_SIZE);
     load_palette(17, actor_sc140_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_140_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_140_1_X, ACTOR_SCENE_140_1_Y);
@@ -3591,11 +3591,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_141_1
-    load_vram(0x5400, actor_sc141_1_spr, ACTOR_SCENE_141_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc141_1_spr, ACTOR_SCENE_141_1_VRAM_SIZE);
     load_palette(17, actor_sc141_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_141_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_141_1_X, ACTOR_SCENE_141_1_Y);
@@ -3616,11 +3616,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_142_1
-    load_vram(0x5400, actor_sc142_1_spr, ACTOR_SCENE_142_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc142_1_spr, ACTOR_SCENE_142_1_VRAM_SIZE);
     load_palette(17, actor_sc142_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_142_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_142_1_X, ACTOR_SCENE_142_1_Y);
@@ -3641,11 +3641,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_143_1
-    load_vram(0x5400, actor_sc143_1_spr, ACTOR_SCENE_143_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc143_1_spr, ACTOR_SCENE_143_1_VRAM_SIZE);
     load_palette(17, actor_sc143_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_143_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_143_1_X, ACTOR_SCENE_143_1_Y);
@@ -3666,11 +3666,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_144_1
-    load_vram(0x5400, actor_sc144_1_spr, ACTOR_SCENE_144_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc144_1_spr, ACTOR_SCENE_144_1_VRAM_SIZE);
     load_palette(17, actor_sc144_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_144_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_144_1_X, ACTOR_SCENE_144_1_Y);
@@ -3691,11 +3691,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_145_1
-    load_vram(0x5400, actor_sc145_1_spr, ACTOR_SCENE_145_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc145_1_spr, ACTOR_SCENE_145_1_VRAM_SIZE);
     load_palette(17, actor_sc145_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_145_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_145_1_X, ACTOR_SCENE_145_1_Y);
@@ -3716,11 +3716,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_146_1
-    load_vram(0x5400, actor_sc146_1_spr, ACTOR_SCENE_146_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc146_1_spr, ACTOR_SCENE_146_1_VRAM_SIZE);
     load_palette(17, actor_sc146_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_146_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_146_1_X, ACTOR_SCENE_146_1_Y);
@@ -3741,11 +3741,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_147_1
-    load_vram(0x5400, actor_sc147_1_spr, ACTOR_SCENE_147_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc147_1_spr, ACTOR_SCENE_147_1_VRAM_SIZE);
     load_palette(17, actor_sc147_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_147_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_147_1_X, ACTOR_SCENE_147_1_Y);
@@ -3766,11 +3766,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_148_1
-    load_vram(0x5400, actor_sc148_1_spr, ACTOR_SCENE_148_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc148_1_spr, ACTOR_SCENE_148_1_VRAM_SIZE);
     load_palette(17, actor_sc148_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_148_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_148_1_X, ACTOR_SCENE_148_1_Y);
@@ -3791,11 +3791,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_149_1
-    load_vram(0x5400, actor_sc149_1_spr, ACTOR_SCENE_149_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc149_1_spr, ACTOR_SCENE_149_1_VRAM_SIZE);
     load_palette(17, actor_sc149_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_149_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_149_1_X, ACTOR_SCENE_149_1_Y);
@@ -3816,11 +3816,11 @@ void load_scene_part6(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_150_1
-    load_vram(0x5400, actor_sc150_1_spr, ACTOR_SCENE_150_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc150_1_spr, ACTOR_SCENE_150_1_VRAM_SIZE);
     load_palette(17, actor_sc150_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_150_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_150_1_X, ACTOR_SCENE_150_1_Y);
@@ -3844,11 +3844,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_151_1
-    load_vram(0x5400, actor_sc151_1_spr, ACTOR_SCENE_151_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc151_1_spr, ACTOR_SCENE_151_1_VRAM_SIZE);
     load_palette(17, actor_sc151_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_151_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_151_1_X, ACTOR_SCENE_151_1_Y);
@@ -3869,11 +3869,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_152_1
-    load_vram(0x5400, actor_sc152_1_spr, ACTOR_SCENE_152_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc152_1_spr, ACTOR_SCENE_152_1_VRAM_SIZE);
     load_palette(17, actor_sc152_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_152_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_152_1_X, ACTOR_SCENE_152_1_Y);
@@ -3894,11 +3894,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_153_1
-    load_vram(0x5400, actor_sc153_1_spr, ACTOR_SCENE_153_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc153_1_spr, ACTOR_SCENE_153_1_VRAM_SIZE);
     load_palette(17, actor_sc153_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_153_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_153_1_X, ACTOR_SCENE_153_1_Y);
@@ -3919,11 +3919,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_154_1
-    load_vram(0x5400, actor_sc154_1_spr, ACTOR_SCENE_154_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc154_1_spr, ACTOR_SCENE_154_1_VRAM_SIZE);
     load_palette(17, actor_sc154_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_154_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_154_1_X, ACTOR_SCENE_154_1_Y);
@@ -3944,11 +3944,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_155_1
-    load_vram(0x5400, actor_sc155_1_spr, ACTOR_SCENE_155_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc155_1_spr, ACTOR_SCENE_155_1_VRAM_SIZE);
     load_palette(17, actor_sc155_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_155_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_155_1_X, ACTOR_SCENE_155_1_Y);
@@ -3969,11 +3969,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_156_1
-    load_vram(0x5400, actor_sc156_1_spr, ACTOR_SCENE_156_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc156_1_spr, ACTOR_SCENE_156_1_VRAM_SIZE);
     load_palette(17, actor_sc156_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_156_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_156_1_X, ACTOR_SCENE_156_1_Y);
@@ -3994,11 +3994,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_157_1
-    load_vram(0x5400, actor_sc157_1_spr, ACTOR_SCENE_157_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc157_1_spr, ACTOR_SCENE_157_1_VRAM_SIZE);
     load_palette(17, actor_sc157_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_157_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_157_1_X, ACTOR_SCENE_157_1_Y);
@@ -4019,11 +4019,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_158_1
-    load_vram(0x5400, actor_sc158_1_spr, ACTOR_SCENE_158_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc158_1_spr, ACTOR_SCENE_158_1_VRAM_SIZE);
     load_palette(17, actor_sc158_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_158_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_158_1_X, ACTOR_SCENE_158_1_Y);
@@ -4044,11 +4044,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_159_1
-    load_vram(0x5400, actor_sc159_1_spr, ACTOR_SCENE_159_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc159_1_spr, ACTOR_SCENE_159_1_VRAM_SIZE);
     load_palette(17, actor_sc159_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_159_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_159_1_X, ACTOR_SCENE_159_1_Y);
@@ -4069,11 +4069,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_160_1
-    load_vram(0x5400, actor_sc160_1_spr, ACTOR_SCENE_160_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc160_1_spr, ACTOR_SCENE_160_1_VRAM_SIZE);
     load_palette(17, actor_sc160_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_160_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_160_1_X, ACTOR_SCENE_160_1_Y);
@@ -4094,11 +4094,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_161_1
-    load_vram(0x5400, actor_sc161_1_spr, ACTOR_SCENE_161_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc161_1_spr, ACTOR_SCENE_161_1_VRAM_SIZE);
     load_palette(17, actor_sc161_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_161_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_161_1_X, ACTOR_SCENE_161_1_Y);
@@ -4119,11 +4119,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_162_1
-    load_vram(0x5400, actor_sc162_1_spr, ACTOR_SCENE_162_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc162_1_spr, ACTOR_SCENE_162_1_VRAM_SIZE);
     load_palette(17, actor_sc162_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_162_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_162_1_X, ACTOR_SCENE_162_1_Y);
@@ -4144,11 +4144,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_163_1
-    load_vram(0x5400, actor_sc163_1_spr, ACTOR_SCENE_163_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc163_1_spr, ACTOR_SCENE_163_1_VRAM_SIZE);
     load_palette(17, actor_sc163_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_163_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_163_1_X, ACTOR_SCENE_163_1_Y);
@@ -4169,11 +4169,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_164_1
-    load_vram(0x5400, actor_sc164_1_spr, ACTOR_SCENE_164_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc164_1_spr, ACTOR_SCENE_164_1_VRAM_SIZE);
     load_palette(17, actor_sc164_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_164_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_164_1_X, ACTOR_SCENE_164_1_Y);
@@ -4194,11 +4194,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_165_1
-    load_vram(0x5400, actor_sc165_1_spr, ACTOR_SCENE_165_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc165_1_spr, ACTOR_SCENE_165_1_VRAM_SIZE);
     load_palette(17, actor_sc165_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_165_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_165_1_X, ACTOR_SCENE_165_1_Y);
@@ -4219,11 +4219,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_166_1
-    load_vram(0x5400, actor_sc166_1_spr, ACTOR_SCENE_166_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc166_1_spr, ACTOR_SCENE_166_1_VRAM_SIZE);
     load_palette(17, actor_sc166_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_166_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_166_1_X, ACTOR_SCENE_166_1_Y);
@@ -4244,11 +4244,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_167_1
-    load_vram(0x5400, actor_sc167_1_spr, ACTOR_SCENE_167_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc167_1_spr, ACTOR_SCENE_167_1_VRAM_SIZE);
     load_palette(17, actor_sc167_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_167_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_167_1_X, ACTOR_SCENE_167_1_Y);
@@ -4269,11 +4269,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_168_1
-    load_vram(0x5400, actor_sc168_1_spr, ACTOR_SCENE_168_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc168_1_spr, ACTOR_SCENE_168_1_VRAM_SIZE);
     load_palette(17, actor_sc168_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_168_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_168_1_X, ACTOR_SCENE_168_1_Y);
@@ -4294,11 +4294,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_169_1
-    load_vram(0x5400, actor_sc169_1_spr, ACTOR_SCENE_169_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc169_1_spr, ACTOR_SCENE_169_1_VRAM_SIZE);
     load_palette(17, actor_sc169_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_169_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_169_1_X, ACTOR_SCENE_169_1_Y);
@@ -4319,11 +4319,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_170_1
-    load_vram(0x5400, actor_sc170_1_spr, ACTOR_SCENE_170_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc170_1_spr, ACTOR_SCENE_170_1_VRAM_SIZE);
     load_palette(17, actor_sc170_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_170_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_170_1_X, ACTOR_SCENE_170_1_Y);
@@ -4344,11 +4344,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_171_1
-    load_vram(0x5400, actor_sc171_1_spr, ACTOR_SCENE_171_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc171_1_spr, ACTOR_SCENE_171_1_VRAM_SIZE);
     load_palette(17, actor_sc171_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_171_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_171_1_X, ACTOR_SCENE_171_1_Y);
@@ -4369,11 +4369,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_172_1
-    load_vram(0x5400, actor_sc172_1_spr, ACTOR_SCENE_172_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc172_1_spr, ACTOR_SCENE_172_1_VRAM_SIZE);
     load_palette(17, actor_sc172_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_172_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_172_1_X, ACTOR_SCENE_172_1_Y);
@@ -4394,11 +4394,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_173_1
-    load_vram(0x5400, actor_sc173_1_spr, ACTOR_SCENE_173_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc173_1_spr, ACTOR_SCENE_173_1_VRAM_SIZE);
     load_palette(17, actor_sc173_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_173_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_173_1_X, ACTOR_SCENE_173_1_Y);
@@ -4419,11 +4419,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_174_1
-    load_vram(0x5400, actor_sc174_1_spr, ACTOR_SCENE_174_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc174_1_spr, ACTOR_SCENE_174_1_VRAM_SIZE);
     load_palette(17, actor_sc174_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_174_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_174_1_X, ACTOR_SCENE_174_1_Y);
@@ -4444,11 +4444,11 @@ void load_scene_part7(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_175_1
-    load_vram(0x5400, actor_sc175_1_spr, ACTOR_SCENE_175_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc175_1_spr, ACTOR_SCENE_175_1_VRAM_SIZE);
     load_palette(17, actor_sc175_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_175_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_175_1_X, ACTOR_SCENE_175_1_Y);
@@ -4472,11 +4472,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_176_1
-    load_vram(0x5400, actor_sc176_1_spr, ACTOR_SCENE_176_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc176_1_spr, ACTOR_SCENE_176_1_VRAM_SIZE);
     load_palette(17, actor_sc176_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_176_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_176_1_X, ACTOR_SCENE_176_1_Y);
@@ -4497,11 +4497,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_177_1
-    load_vram(0x5400, actor_sc177_1_spr, ACTOR_SCENE_177_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc177_1_spr, ACTOR_SCENE_177_1_VRAM_SIZE);
     load_palette(17, actor_sc177_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_177_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_177_1_X, ACTOR_SCENE_177_1_Y);
@@ -4522,11 +4522,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_178_1
-    load_vram(0x5400, actor_sc178_1_spr, ACTOR_SCENE_178_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc178_1_spr, ACTOR_SCENE_178_1_VRAM_SIZE);
     load_palette(17, actor_sc178_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_178_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_178_1_X, ACTOR_SCENE_178_1_Y);
@@ -4547,11 +4547,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_179_1
-    load_vram(0x5400, actor_sc179_1_spr, ACTOR_SCENE_179_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc179_1_spr, ACTOR_SCENE_179_1_VRAM_SIZE);
     load_palette(17, actor_sc179_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_179_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_179_1_X, ACTOR_SCENE_179_1_Y);
@@ -4572,11 +4572,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_180_1
-    load_vram(0x5400, actor_sc180_1_spr, ACTOR_SCENE_180_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc180_1_spr, ACTOR_SCENE_180_1_VRAM_SIZE);
     load_palette(17, actor_sc180_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_180_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_180_1_X, ACTOR_SCENE_180_1_Y);
@@ -4597,11 +4597,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_181_1
-    load_vram(0x5400, actor_sc181_1_spr, ACTOR_SCENE_181_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc181_1_spr, ACTOR_SCENE_181_1_VRAM_SIZE);
     load_palette(17, actor_sc181_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_181_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_181_1_X, ACTOR_SCENE_181_1_Y);
@@ -4622,11 +4622,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_182_1
-    load_vram(0x5400, actor_sc182_1_spr, ACTOR_SCENE_182_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc182_1_spr, ACTOR_SCENE_182_1_VRAM_SIZE);
     load_palette(17, actor_sc182_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_182_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_182_1_X, ACTOR_SCENE_182_1_Y);
@@ -4647,11 +4647,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_183_1
-    load_vram(0x5400, actor_sc183_1_spr, ACTOR_SCENE_183_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc183_1_spr, ACTOR_SCENE_183_1_VRAM_SIZE);
     load_palette(17, actor_sc183_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_183_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_183_1_X, ACTOR_SCENE_183_1_Y);
@@ -4672,11 +4672,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_184_1
-    load_vram(0x5400, actor_sc184_1_spr, ACTOR_SCENE_184_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc184_1_spr, ACTOR_SCENE_184_1_VRAM_SIZE);
     load_palette(17, actor_sc184_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_184_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_184_1_X, ACTOR_SCENE_184_1_Y);
@@ -4697,11 +4697,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_185_1
-    load_vram(0x5400, actor_sc185_1_spr, ACTOR_SCENE_185_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc185_1_spr, ACTOR_SCENE_185_1_VRAM_SIZE);
     load_palette(17, actor_sc185_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_185_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_185_1_X, ACTOR_SCENE_185_1_Y);
@@ -4722,11 +4722,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_186_1
-    load_vram(0x5400, actor_sc186_1_spr, ACTOR_SCENE_186_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc186_1_spr, ACTOR_SCENE_186_1_VRAM_SIZE);
     load_palette(17, actor_sc186_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_186_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_186_1_X, ACTOR_SCENE_186_1_Y);
@@ -4747,11 +4747,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_187_1
-    load_vram(0x5400, actor_sc187_1_spr, ACTOR_SCENE_187_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc187_1_spr, ACTOR_SCENE_187_1_VRAM_SIZE);
     load_palette(17, actor_sc187_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_187_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_187_1_X, ACTOR_SCENE_187_1_Y);
@@ -4772,11 +4772,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_188_1
-    load_vram(0x5400, actor_sc188_1_spr, ACTOR_SCENE_188_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc188_1_spr, ACTOR_SCENE_188_1_VRAM_SIZE);
     load_palette(17, actor_sc188_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_188_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_188_1_X, ACTOR_SCENE_188_1_Y);
@@ -4797,11 +4797,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_189_1
-    load_vram(0x5400, actor_sc189_1_spr, ACTOR_SCENE_189_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc189_1_spr, ACTOR_SCENE_189_1_VRAM_SIZE);
     load_palette(17, actor_sc189_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_189_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_189_1_X, ACTOR_SCENE_189_1_Y);
@@ -4822,11 +4822,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_190_1
-    load_vram(0x5400, actor_sc190_1_spr, ACTOR_SCENE_190_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc190_1_spr, ACTOR_SCENE_190_1_VRAM_SIZE);
     load_palette(17, actor_sc190_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_190_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_190_1_X, ACTOR_SCENE_190_1_Y);
@@ -4847,11 +4847,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_191_1
-    load_vram(0x5400, actor_sc191_1_spr, ACTOR_SCENE_191_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc191_1_spr, ACTOR_SCENE_191_1_VRAM_SIZE);
     load_palette(17, actor_sc191_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_191_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_191_1_X, ACTOR_SCENE_191_1_Y);
@@ -4872,11 +4872,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_192_1
-    load_vram(0x5400, actor_sc192_1_spr, ACTOR_SCENE_192_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc192_1_spr, ACTOR_SCENE_192_1_VRAM_SIZE);
     load_palette(17, actor_sc192_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_192_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_192_1_X, ACTOR_SCENE_192_1_Y);
@@ -4897,11 +4897,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_193_1
-    load_vram(0x5400, actor_sc193_1_spr, ACTOR_SCENE_193_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc193_1_spr, ACTOR_SCENE_193_1_VRAM_SIZE);
     load_palette(17, actor_sc193_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_193_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_193_1_X, ACTOR_SCENE_193_1_Y);
@@ -4922,11 +4922,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_194_1
-    load_vram(0x5400, actor_sc194_1_spr, ACTOR_SCENE_194_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc194_1_spr, ACTOR_SCENE_194_1_VRAM_SIZE);
     load_palette(17, actor_sc194_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_194_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_194_1_X, ACTOR_SCENE_194_1_Y);
@@ -4947,11 +4947,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_195_1
-    load_vram(0x5400, actor_sc195_1_spr, ACTOR_SCENE_195_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc195_1_spr, ACTOR_SCENE_195_1_VRAM_SIZE);
     load_palette(17, actor_sc195_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_195_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_195_1_X, ACTOR_SCENE_195_1_Y);
@@ -4972,11 +4972,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_196_1
-    load_vram(0x5400, actor_sc196_1_spr, ACTOR_SCENE_196_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc196_1_spr, ACTOR_SCENE_196_1_VRAM_SIZE);
     load_palette(17, actor_sc196_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_196_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_196_1_X, ACTOR_SCENE_196_1_Y);
@@ -4997,11 +4997,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_197_1
-    load_vram(0x5400, actor_sc197_1_spr, ACTOR_SCENE_197_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc197_1_spr, ACTOR_SCENE_197_1_VRAM_SIZE);
     load_palette(17, actor_sc197_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_197_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_197_1_X, ACTOR_SCENE_197_1_Y);
@@ -5022,11 +5022,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_198_1
-    load_vram(0x5400, actor_sc198_1_spr, ACTOR_SCENE_198_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc198_1_spr, ACTOR_SCENE_198_1_VRAM_SIZE);
     load_palette(17, actor_sc198_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_198_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_198_1_X, ACTOR_SCENE_198_1_Y);
@@ -5047,11 +5047,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_199_1
-    load_vram(0x5400, actor_sc199_1_spr, ACTOR_SCENE_199_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc199_1_spr, ACTOR_SCENE_199_1_VRAM_SIZE);
     load_palette(17, actor_sc199_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_199_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_199_1_X, ACTOR_SCENE_199_1_Y);
@@ -5072,11 +5072,11 @@ void load_scene_part8(int scene_num) {
 #endif
 
 #ifdef HAS_ACTOR_SCENE_200_1
-    load_vram(0x5400, actor_sc200_1_spr, ACTOR_SCENE_200_1_VRAM_SIZE);
+    load_vram(0x5800, actor_sc200_1_spr, ACTOR_SCENE_200_1_VRAM_SIZE);
     load_palette(17, actor_sc200_1_pal, 1);
     if (g_actor_count > 1) {
       g_actor_active[1] = 1;
-      g_actor_tile_id[1] = 0x5400;
+      g_actor_tile_id[1] = 0x5800;
       g_actor_palette[1] = 1;
       g_actor_size[1] = ACTOR_SCENE_200_1_SPRITE_SIZE;
       actor_set_pos(1, ACTOR_SCENE_200_1_X, ACTOR_SCENE_200_1_Y);
@@ -5194,8 +5194,8 @@ void engine_init(void) {
 
   actor_spawn(PLAYER_START_X, PLAYER_START_Y, 0x5000, 0, g_player_spr_size);
 
-  actor_spawn(0, 0, 0x5400, 1, SZ_16x16);
-  actor_spawn(0, 0, 0x5600, 2, SZ_16x16);
+  actor_spawn(0, 0, 0x5800, 1, SZ_16x16);
+  actor_spawn(0, 0, 0x5A00, 2, SZ_16x16);
 
 #ifdef START_SCENE_NUM
   load_scene(START_SCENE_NUM, PLAYER_START_X, PLAYER_START_Y);

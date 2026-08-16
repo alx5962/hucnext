@@ -697,10 +697,16 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     const destPcxD0 = pathModule.join(destSpritesDir, filename.replace(/\.png$/i, "_d0.pcx"));
     const destPcxD1 = pathModule.join(destSpritesDir, filename.replace(/\.png$/i, "_d1.pcx"));
 
-    let cropW = sprObj.canvasWidth || 16;
-    let cropH = sprObj.canvasHeight || 16;
-    let width16 = Math.max(1, Math.min(2, Math.ceil(cropW / 16)));
-    let height16 = Math.max(1, Math.min(2, Math.ceil(cropH / 16)));
+    let origCropW = sprObj.canvasWidth || 16;
+    let origCropH = sprObj.canvasHeight || 16;
+    let width16 = Math.max(1, Math.min(2, Math.ceil(origCropW / 16)));
+    let height16 = Math.max(1, Math.min(4, Math.ceil(origCropH / 16)));
+    if (height16 === 3) height16 = 4;
+
+    let vramWidth16 = (height16 >= 2) ? 2 : width16;
+    let cropW = origCropW;
+    let cropH = height16 * 16;
+    let padWidthTo = vramWidth16 * 16;
     playerSprWidth16 = width16;
     playerSprHeight16 = height16;
 
@@ -713,9 +719,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
         const cellCounts = new Map<string, number>();
         let hasTileFlipX = false;
+        const cellSizeX = (origCropW >= 32) ? 32 : 16;
+        const cellSizeY = (origCropH >= 32) ? 32 : 16;
+
         tiles.forEach((t: any) => {
-          const cellX = Math.floor(t.sliceX / 16) * 16;
-          const cellY = Math.floor(t.sliceY / 16) * 16;
+          const cellX = Math.floor(t.sliceX / cellSizeX) * cellSizeX;
+          const cellY = Math.floor(t.sliceY / cellSizeY) * cellSizeY;
           const key = `${cellX},${cellY}`;
           cellCounts.set(key, (cellCounts.get(key) || 0) + 1);
           if (t.flipX) hasTileFlipX = true;
@@ -754,14 +763,14 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
       const sharedPal = buildPngPalette(srcPng);
 
-      convertPngToPcx(srcPng, destPcxR0, { cropX: infoR0.cropX, cropY: infoR0.cropY, cropW: cropW, cropH: cropH, flipX: infoR0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxR1, { cropX: infoR1.cropX, cropY: infoR1.cropY, cropW: cropW, cropH: cropH, flipX: infoR1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxL0, { cropX: infoL0.cropX, cropY: infoL0.cropY, cropW: cropW, cropH: cropH, flipX: infoL0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxL1, { cropX: infoL1.cropX, cropY: infoL1.cropY, cropW: cropW, cropH: cropH, flipX: infoL1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxU0, { cropX: infoU0.cropX, cropY: infoU0.cropY, cropW: cropW, cropH: cropH, flipX: infoU0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxU1, { cropX: infoU1.cropX, cropY: infoU1.cropY, cropW: cropW, cropH: cropH, flipX: infoU1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxD0, { cropX: infoD0.cropX, cropY: infoD0.cropY, cropW: cropW, cropH: cropH, flipX: infoD0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      convertPngToPcx(srcPng, destPcxD1, { cropX: infoD1.cropX, cropY: infoD1.cropY, cropW: cropW, cropH: cropH, flipX: infoD1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxR0, { cropX: infoR0.cropX, cropY: infoR0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoR0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxR1, { cropX: infoR1.cropX, cropY: infoR1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoR1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxL0, { cropX: infoL0.cropX, cropY: infoL0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoL0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxL1, { cropX: infoL1.cropX, cropY: infoL1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoL1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxU0, { cropX: infoU0.cropX, cropY: infoU0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoU0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxU1, { cropX: infoU1.cropX, cropY: infoU1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoU1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxD0, { cropX: infoD0.cropX, cropY: infoD0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoD0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      convertPngToPcx(srcPng, destPcxD1, { cropX: infoD1.cropX, cropY: infoD1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoD1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
 
       const relR0 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxR0).replace(/\\/g, "/")}`;
       const relR1 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxR1).replace(/\\/g, "/")}`;
@@ -773,20 +782,20 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       const relD1 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxD1).replace(/\\/g, "/")}`;
 
       playerDirectives += `
-#incspr(${symPrefix}_r0, "${relR0}", 0, 0, ${width16}, ${height16})
+#incspr(${symPrefix}_r0, "${relR0}", 0, 0, ${vramWidth16}, ${height16})
 #incpal(${palName}, "${relR0}")
-#incspr(${symPrefix}_r1, "${relR1}", 0, 0, ${width16}, ${height16})
-#incspr(${symPrefix}_l0, "${relL0}", 0, 0, ${width16}, ${height16})
-#incspr(${symPrefix}_l1, "${relL1}", 0, 0, ${width16}, ${height16})
-#incspr(${symPrefix}_u0, "${relU0}", 0, 0, ${width16}, ${height16})
-#incspr(${symPrefix}_u1, "${relU1}", 0, 0, ${width16}, ${height16})
-#incspr(${symPrefix}_d0, "${relD0}", 0, 0, ${width16}, ${height16})
-#incspr(${symPrefix}_d1, "${relD1}", 0, 0, ${width16}, ${height16})
+#incspr(${symPrefix}_r1, "${relR1}", 0, 0, ${vramWidth16}, ${height16})
+#incspr(${symPrefix}_l0, "${relL0}", 0, 0, ${vramWidth16}, ${height16})
+#incspr(${symPrefix}_l1, "${relL1}", 0, 0, ${vramWidth16}, ${height16})
+#incspr(${symPrefix}_u0, "${relU0}", 0, 0, ${vramWidth16}, ${height16})
+#incspr(${symPrefix}_u1, "${relU1}", 0, 0, ${vramWidth16}, ${height16})
+#incspr(${symPrefix}_d0, "${relD0}", 0, 0, ${vramWidth16}, ${height16})
+#incspr(${symPrefix}_d1, "${relD1}", 0, 0, ${vramWidth16}, ${height16})
 `;
       let vramSizeHex = "0x40";
       let sizeConst = "SZ_16x16";
       if (width16 === 1 && height16 === 2) {
-        vramSizeHex = "0x80";
+        vramSizeHex = "0x100";
         sizeConst = "SZ_16x32";
       } else if (width16 === 2 && height16 === 1) {
         vramSizeHex = "0x80";
@@ -794,6 +803,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       } else if (width16 === 2 && height16 === 2) {
         vramSizeHex = "0x100";
         sizeConst = "SZ_32x32";
+      } else if (width16 === 2 && height16 === 4) {
+        vramSizeHex = "0x200";
+        sizeConst = "SZ_32x64";
+      } else if (width16 === 1 && height16 === 4) {
+        vramSizeHex = "0x200";
+        sizeConst = "SZ_16x64";
       }
 
       compiledPlayerSprites.set(key, { symPrefix, palName, width16, height16, filename, vramSizeHex, sizeConst });
@@ -974,30 +989,48 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         let cropY = 0;
         let cropW = 16;
         let cropH = 16;
-        let w16 = 1;
-        let h16 = 1;
+        let origW16 = 1;
+        let origH16 = 1;
+
+        const canvasW = sprObj?.canvasWidth || 16;
+        const canvasH = sprObj?.canvasHeight || 16;
+        origW16 = Math.max(1, Math.min(2, Math.ceil(canvasW / 16)));
+        origH16 = Math.max(1, Math.min(4, Math.ceil(canvasH / 16)));
+        if (origH16 === 3) origH16 = 4;
 
         if (sprObj) {
-          const canvasW = sprObj.canvasWidth || 16;
-          const canvasH = sprObj.canvasHeight || 16;
-          cropW = canvasW;
-          cropH = canvasH;
-          w16 = Math.max(1, Math.min(2, Math.ceil(canvasW / 16)));
-          h16 = Math.max(1, Math.min(2, Math.ceil(canvasH / 16)));
           cropX = getCropXForActor(scActor, sprObj, canvasW);
         } else {
           cropX = getCropXForActor(scActor, null, 16);
         }
 
-        const dims = convertPngToPcx(srcPng, destPcx, { cropX, cropY, cropW, cropH });
-        w16 = Math.max(1, Math.min(2, Math.ceil(dims.width / 16)));
-        h16 = Math.max(1, Math.min(2, Math.ceil(dims.height / 16)));
+        let actVramW16 = (origH16 >= 2) ? 2 : origW16;
+        cropW = canvasW;
+        cropH = origH16 * 16;
+        const padWidthTo = actVramW16 * 16;
 
-        const vramSizeHex = `0x${((w16 * h16) * 0x40).toString(16).toUpperCase()}`;
+        const dims = convertPngToPcx(srcPng, destPcx, { cropX, cropY, cropW, cropH, padWidthTo });
+        const w16 = actVramW16;
+        const h16 = origH16;
+
         let sprSizeConst = "SZ_16x16";
-        if (w16 === 1 && h16 === 2) sprSizeConst = "SZ_16x32";
-        else if (w16 === 2 && h16 === 1) sprSizeConst = "SZ_32x16";
-        else if (w16 === 2 && h16 === 2) sprSizeConst = "SZ_32x32";
+        let vramSizeHex = "0x40";
+        if (origW16 === 1 && origH16 === 2) {
+          sprSizeConst = "SZ_16x32";
+          vramSizeHex = "0x100";
+        } else if (origW16 === 2 && origH16 === 1) {
+          sprSizeConst = "SZ_32x16";
+          vramSizeHex = "0x80";
+        } else if (origW16 === 2 && origH16 === 2) {
+          sprSizeConst = "SZ_32x32";
+          vramSizeHex = "0x100";
+        } else if (origW16 === 2 && origH16 === 4) {
+          sprSizeConst = "SZ_32x64";
+          vramSizeHex = "0x200";
+        } else if (origW16 === 1 && origH16 === 4) {
+          sprSizeConst = "SZ_16x64";
+          vramSizeHex = "0x200";
+        }
 
         const relPcx = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcx).replace(/\\/g, "/")}`;
         actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_spr, "${relPcx}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc${sceneNum}_${actorNum}_pal, "${relPcx}")\n`;
@@ -1559,7 +1592,7 @@ ${sceneBackgroundCases}    default:
   let playerSprVramSizeHex = "0x40";
   let playerSprSizeConst = "SZ_16x16";
   if (playerSprWidth16 === 1 && playerSprHeight16 === 2) {
-    playerSprVramSizeHex = "0x80";
+    playerSprVramSizeHex = "0x100";
     playerSprSizeConst = "SZ_16x32";
   } else if (playerSprWidth16 === 2 && playerSprHeight16 === 1) {
     playerSprVramSizeHex = "0x80";
@@ -1567,6 +1600,12 @@ ${sceneBackgroundCases}    default:
   } else if (playerSprWidth16 === 2 && playerSprHeight16 === 2) {
     playerSprVramSizeHex = "0x100";
     playerSprSizeConst = "SZ_32x32";
+  } else if (playerSprWidth16 === 2 && playerSprHeight16 === 4) {
+    playerSprVramSizeHex = "0x200";
+    playerSprSizeConst = "SZ_32x64";
+  } else if (playerSprWidth16 === 1 && playerSprHeight16 === 4) {
+    playerSprVramSizeHex = "0x100";
+    playerSprSizeConst = "SZ_16x64";
   }
 
   const mainCContent = `

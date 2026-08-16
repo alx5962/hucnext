@@ -1,4 +1,4 @@
-import { colorizeSpriteData } from "shared/lib/helpers/color";
+import { colorizeSpriteData, chromaKeyData } from "shared/lib/helpers/color";
 
 // eslint-disable-next-line no-restricted-globals
 const workerCtx: Worker = self as unknown as Worker;
@@ -63,9 +63,13 @@ workerCtx.onmessage = async (evt) => {
   ctx.drawImage(img, -offsetX, -offsetY);
   ctx.restore();
 
-  // Colorize
+  // Colorize or ChromaKey
   const imageData = ctx.getImageData(0, 0, width, height);
-  colorizeSpriteData(imageData.data, objPalette, palette, colorCorrection);
+  if (palette && palette.length > 0) {
+    colorizeSpriteData(imageData.data, objPalette, palette, colorCorrection);
+  } else {
+    chromaKeyData(imageData.data);
+  }
   ctx.putImageData(imageData, 0, 0);
 
   const canvasImage = canvas.transferToImageBitmap();

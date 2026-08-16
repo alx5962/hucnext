@@ -899,7 +899,7 @@ _spr_get_pattern:
 ; ----
 
 _spr_ctrl.2:
-	nop
+	txa
 	and	<__al
 	sta	<__temp
 	lda	<__al

@@ -166,8 +166,15 @@ export const colorizeSpriteData = (
  */
 export const chromaKeyData = (mutData: Uint8ClampedArray) => {
   for (let index = 0; index < mutData.length; index += 4) {
-    if (mutData[index + 1] === 255) {
-      // Set transparent background on pure green
+    const r = mutData[index];
+    const g = mutData[index + 1];
+    const b = mutData[index + 2];
+    const a = mutData[index + 3];
+    if (
+      a < 128 ||
+      (g > 240 && r < 180 && b < 50) ||
+      (r > 200 && b > 200 && g < 50)
+    ) {
       mutData[index + 3] = 0;
     }
   }
