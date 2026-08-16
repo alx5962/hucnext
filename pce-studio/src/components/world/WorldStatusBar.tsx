@@ -84,16 +84,7 @@ const WorldStatusBar = () => {
 
   return (
     <Wrapper>
-      {canPreviewAsMono && (
-        <Container>
-          <PillButton
-            variant={previewAsMono ? "primary" : "normal"}
-            onClick={onTogglePreviewAsMono}
-          >
-            {l10n("FIELD_PREVIEW_AS_MONO")}
-          </PillButton>
-        </Container>
-      )}
+
       <Container $hide={!hoverSceneName}>
         <Text>
           {hoverSceneLabel}

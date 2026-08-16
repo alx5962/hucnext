@@ -100,7 +100,6 @@ const AppToolbar: FC = () => {
       images: l10n("NAV_IMAGES"),
       music: l10n("NAV_MUSIC"),
       sounds: l10n("NAV_SFX"),
-      palettes: l10n("NAV_PALETTES"),
       dialogue: l10n("NAV_DIALOGUE_REVIEW"),
       settings: l10n("NAV_SETTINGS"),
     }),

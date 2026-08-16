@@ -107,7 +107,6 @@ const App = () => {
           {section === "sprites" && <SpritesPage />}
           {section === "music" && <MusicPage />}
           {section === "sounds" && <SoundsPage />}
-          {section === "palettes" && <PalettePage />}
           {section === "dialogue" && <DialoguePage />}
           {section === "settings" && <SettingsPage />}
           {draggingOver && <DropZone />}

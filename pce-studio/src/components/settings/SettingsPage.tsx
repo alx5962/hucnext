@@ -85,12 +85,6 @@ const SettingsPage = () => {
                 onChange={onSearch}
               />
             </SettingsSearchWrapper>
-            <SettingsMenuItem onClick={onMenuItem("settingsColor")}>
-              {l10n("SETTINGS_COLOR")}
-            </SettingsMenuItem>
-            <SettingsMenuItem onClick={onMenuItem("settingsSuper")}>
-              {l10n("SETTINGS_SGB")}
-            </SettingsMenuItem>
             <SettingsMenuItem onClick={onMenuItem("settingsSceneTypes")}>
               {l10n("FIELD_SCENE_TYPES")}
             </SettingsMenuItem>
@@ -125,8 +119,6 @@ const SettingsPage = () => {
         </SettingsMenuColumn>
       )}
       <SettingsContentColumn ref={scrollRef}>
-        <SettingsSectionColor searchTerm={searchTerm} />
-        <SettingsSectionSGB searchTerm={searchTerm} />
         <SettingsSectionSceneTypes searchTerm={searchTerm} />
         <SettingsSectionEngineFields searchTerm={searchTerm} />
         <SettingsSectionSprites searchTerm={searchTerm} />

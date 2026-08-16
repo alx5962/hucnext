@@ -205,15 +205,7 @@ const MetaspriteEditorPreviewSettings = ({
       </PillButton>
       <FixedSpacer width={5} />
 
-      {canPreviewAsMono && (
-        <PillButton
-          variant={previewAsMono ? "primary" : "normal"}
-          onClick={onTogglePreviewAsMono}
-        >
-          {l10n("FIELD_PREVIEW_AS_MONO")}
-        </PillButton>
-      )}
-      {(colorsEnabled || canPreviewAsMono) && <FixedSpacer width={10} />}
+
 
       <TooltipWrapper tooltip={l10n("FIELD_SPRITE_TILES_TOOLTIP")}>
         <Info>

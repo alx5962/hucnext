@@ -246,14 +246,6 @@ const ToolPicker = ({ hasFocusForKeyboardShortcuts }: ToolPickerProps) => {
       >
         <BrickIcon />
       </Button>
-      <Button
-        variant="transparent"
-        onClick={setToolColors}
-        title={`${l10n("TOOL_COLORS_LABEL")} (z)`}
-        active={selected === TOOL_COLORS}
-      >
-        <PaintIcon />
-      </Button>
       {tilePaintAvailable && (
         <Button
           variant="transparent"
