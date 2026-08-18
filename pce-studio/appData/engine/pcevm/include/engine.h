@@ -14,12 +14,22 @@ extern int g_wait_timer;
 extern int g_player_spr_vram_size;
 extern int g_player_spr_size;
 extern int g_dialogue_active;
+extern int g_choice_active;
+extern int g_script_scene;
+extern int g_script_step;
+extern unsigned int g_await_input_mask;
 
 void show_dialogue(const char *msg);
+void show_choice(int var_id, const char *opt1, const char *opt2);
+void show_menu(int var_id, int count, const char *opt1, const char *opt2, const char *opt3, const char *opt4, int cancel_b);
 void hide_dialogue(void);
 void load_scene(int scene_num, int player_x, int player_y);
 void load_scene_music(int scene_num);
 void load_scene_background(int scene_num);
+int run_scene_step(int scene_num, int step);
+int check_scene_input(int scene_num, unsigned int pressed);
+int scene_has_startup_script(int scene_num);
+int interact_actor(int scene_num, int actor_num);
 
 /* Scene type constants */
 #define SCENE_TYPE_TOPDOWN      0

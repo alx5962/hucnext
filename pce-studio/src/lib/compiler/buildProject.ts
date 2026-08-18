@@ -1244,10 +1244,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const targetMusicKeys = Array.from(usedMusicIds);
   if (targetMusicKeys.length > 0) {
     for (const mId of targetMusicKeys) {
-      let info = musicIdMap[mId];
+      let info: any = musicIdMap[mId];
       if (!info && musicByFilenameMap[mId]) info = musicByFilenameMap[mId];
       if (info) {
-        let fn = info.filename;
+        let fn: string = info.filename || (info.id ? `${info.id}.uge` : `${mId}.uge`);
         if (!fn.endsWith(".uge")) fn += ".uge";
         for (const mDir of musicDirsToScan) {
           const p = pathModule.join(mDir, fn);
@@ -1294,8 +1294,71 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   }
 
   // Dynamic scene step runner generation for ALL scenes in allScenes
+  const parseInputButtonMask = (inputArg: any): number => {
+    if (!inputArg) return 0x01;
+    const list = Array.isArray(inputArg) ? inputArg : [inputArg];
+    let mask = 0;
+    for (const item of list) {
+      const s = String(item).toLowerCase().trim();
+      if (s === "a" || s === "btn_a" || s === "button_a") mask |= 0x01; // JOY_A / JOY_I
+      if (s === "b" || s === "btn_b" || s === "button_b") mask |= 0x02; // JOY_B / JOY_II
+      if (s === "select" || s === "sel" || s === "slct") mask |= 0x04; // JOY_SEL
+      if (s === "start" || s === "strt" || s === "run") mask |= 0x08; // JOY_STRT / JOY_RUN
+      if (s === "up") mask |= 0x10;
+      if (s === "right" || s === "rght") mask |= 0x20;
+      if (s === "down") mask |= 0x40;
+      if (s === "left") mask |= 0x80;
+    }
+    return mask || 0x01;
+  };
+
+  const findInputScriptEvents = (events: any[]): any[] => {
+    const result: any[] = [];
+    if (!Array.isArray(events)) return result;
+    for (const evt of events) {
+      if (!evt || typeof evt !== "object" || evt.args?.__comment) continue;
+      if (
+        evt.command === "EVENT_SET_INPUT_SCRIPT" ||
+        evt.command === "EVENT_INPUT_SCRIPT_SET" ||
+        evt.command === "EVENT_ATTACH_SCRIPT" ||
+        evt.command === "EVENT_INPUT_ATTACH_SCRIPT"
+      ) {
+        result.push(evt);
+      }
+      if (evt.children && typeof evt.children === "object") {
+        Object.values(evt.children).forEach((cList: any) => {
+          if (Array.isArray(cList)) {
+            result.push(...findInputScriptEvents(cList));
+          }
+        });
+      }
+      if (evt.true && Array.isArray(evt.true) && evt.command !== "EVENT_SET_INPUT_SCRIPT" && evt.command !== "EVENT_INPUT_SCRIPT_SET") {
+        result.push(...findInputScriptEvents(evt.true));
+      }
+      if (evt.false && Array.isArray(evt.false)) {
+        result.push(...findInputScriptEvents(evt.false));
+      }
+    }
+    return result;
+  };
+
+  const parseVarIndex = (vArg: any): number => {
+    if (typeof vArg === "number") return vArg & 0xFF;
+    if (typeof vArg === "string") {
+      const num = parseInt(vArg.replace(/\D/g, ""), 10);
+      if (!isNaN(num)) return num & 0xFF;
+    }
+    return 0;
+  };
+
   let sceneStepHelpers = "";
   let sceneInitCases = "";
+  let sceneInputCheckHelpers = "";
+  let sceneInputCheckCases = "";
+  let sceneStartupCases = "";
+  let sceneActorInteractHelpers = "";
+  let sceneActorInteractCases = "";
+
   allScenes.forEach((scene: any, idx: number) => {
     const scNum = idx + 1;
     const events = [
@@ -1313,10 +1376,21 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     let stepIndex = 0;
     let stepCases = "";
 
-    const processEventList = (evts: any[]) => {
+    const processEventList = (evts: any[], isStartupContext = false) => {
       if (!Array.isArray(evts)) return;
       for (const evt of evts) {
         if (!evt || typeof evt !== "object" || evt.args?.__comment) continue;
+
+        // Skip attaching input script inside startup sequence
+        if (
+          isStartupContext &&
+          (evt.command === "EVENT_SET_INPUT_SCRIPT" ||
+           evt.command === "EVENT_INPUT_SCRIPT_SET" ||
+           evt.command === "EVENT_ATTACH_SCRIPT" ||
+           evt.command === "EVENT_INPUT_ATTACH_SCRIPT")
+        ) {
+          continue;
+        }
 
         if (evt.command === "EVENT_TEXT" || evt.command === "EVENT_TEXT_DIALOGUE" || evt.command === "EVENT_DISPLAY_TEXT") {
           let textVal = "";
@@ -1449,12 +1523,100 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           const cy = parseCoord(evt.args?.y, 0) * 8;
           stepCases += `      case ${stepIndex}:\n        camera_update(${cx}, ${cy});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
-        } else if (evt.command === "EVENT_AWAIT_INPUT") {
-          stepCases += `      case ${stepIndex}:\n        g_wait_timer = 30;\n        return ${stepIndex + 1};\n`;
+        } else if (
+          evt.command === "EVENT_AWAIT_INPUT" ||
+          evt.command === "EVENT_INPUT_AWAIT" ||
+          evt.command === "EVENT_WAIT_INPUT"
+        ) {
+          const mask = parseInputButtonMask(evt.args?.input);
+          const maskHex = `0x${mask.toString(16).toUpperCase().padStart(2, "0")}`;
+          stepCases += `      case ${stepIndex}:\n        g_await_input_mask = ${maskHex};\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_CHOICE") {
-          stepCases += `      case ${stepIndex}:\n        show_dialogue("Choice...");\n        return ${stepIndex + 1};\n`;
+          const varIdx = parseVarIndex(evt.args?.variable);
+          const trueText = String(evt.args?.trueText || "Yes").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
+          const falseText = String(evt.args?.falseText || "No").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
+          stepCases += `      case ${stepIndex}:\n        show_choice(${varIdx}, "${trueText}", "${falseText}");\n        return ${stepIndex + 1};\n`;
           stepIndex++;
+        } else if (evt.command === "EVENT_MENU") {
+          const varIdx = parseVarIndex(evt.args?.variable);
+          const items = Math.max(2, Math.min(4, Number(evt.args?.items) || 2));
+          const opt1 = String(evt.args?.option1 || "Option 1").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
+          const opt2 = String(evt.args?.option2 || "Option 2").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
+          const opt3 = String(evt.args?.option3 || "Option 3").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
+          const opt4 = String(evt.args?.option4 || "Option 4").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
+          const cancelB = evt.args?.cancelOnB !== false ? 1 : 0;
+          stepCases += `      case ${stepIndex}:\n        show_menu(${varIdx}, ${items}, "${opt1}", "${opt2}", "${opt3}", "${opt4}", ${cancelB});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (
+          evt.command === "EVENT_SET_VALUE" ||
+          evt.command === "EVENT_VARIABLE_SET_TO_VALUE" ||
+          evt.command === "EVENT_SET_VARIABLE"
+        ) {
+          const varIdx = parseVarIndex(evt.args?.variable);
+          const val = typeof evt.args?.value === "number" ? evt.args.value : (Number(evt.args?.value) || 0);
+          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, ${val});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_VARIABLE_SET_TO_TRUE") {
+          const varIdx = parseVarIndex(evt.args?.variable);
+          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, 1);\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_VARIABLE_SET_TO_FALSE") {
+          const varIdx = parseVarIndex(evt.args?.variable);
+          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, 0);\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_INC_VALUE" || evt.command === "EVENT_VARIABLE_INC") {
+          const varIdx = parseVarIndex(evt.args?.variable);
+          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) + 1);\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_DEC_VALUE" || evt.command === "EVENT_VARIABLE_DEC") {
+          const varIdx = parseVarIndex(evt.args?.variable);
+          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) - 1);\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (
+          evt.command === "EVENT_IF" ||
+          evt.command === "EVENT_IF_TRUE" ||
+          evt.command === "EVENT_IF_VARIABLE_TRUE" ||
+          evt.command === "EVENT_IF_FALSE" ||
+          evt.command === "EVENT_IF_VARIABLE_FALSE" ||
+          evt.command === "EVENT_IF_VALUE" ||
+          evt.command === "EVENT_IF_VARIABLE_VALUE" ||
+          evt.command === "EVENT_IF_VALUE_COMPARE" ||
+          evt.command === "EVENT_IF_VARIABLE_COMPARE"
+        ) {
+          const varIdx = parseVarIndex(evt.args?.variable);
+          const isFalseCheck = (evt.command === "EVENT_IF_FALSE" || evt.command === "EVENT_IF_VARIABLE_FALSE");
+          
+          let condExpr = isFalseCheck ? `(vm_get_var(${varIdx}) == 0)` : `(vm_get_var(${varIdx}) != 0)`;
+          if (evt.args?.operator) {
+            const op = evt.args.operator;
+            const val = typeof evt.args.value === "number" ? evt.args.value : (Number(evt.args.value) || 0);
+            if (op === "==" || op === "eq") condExpr = `(vm_get_var(${varIdx}) == ${val})`;
+            else if (op === "!=" || op === "ne") condExpr = `(vm_get_var(${varIdx}) != ${val})`;
+            else if (op === ">" || op === "gt") condExpr = `(vm_get_var(${varIdx}) > ${val})`;
+            else if (op === "<" || op === "lt") condExpr = `(vm_get_var(${varIdx}) < ${val})`;
+            else if (op === ">=" || op === "gte") condExpr = `(vm_get_var(${varIdx}) >= ${val})`;
+            else if (op === "<=" || op === "lte") condExpr = `(vm_get_var(${varIdx}) <= ${val})`;
+          }
+
+          const trueList = (evt.true && Array.isArray(evt.true)) ? evt.true : (evt.children?.true && Array.isArray(evt.children.true) ? evt.children.true : []);
+          const falseList = (evt.false && Array.isArray(evt.false)) ? evt.false : (evt.children?.false && Array.isArray(evt.children.false) ? evt.children.false : []);
+
+          const branchStep = stepIndex;
+          stepIndex++;
+
+          const trueStart = stepIndex;
+          processEventList(trueList, isStartupContext);
+          const trueEndJumpStep = stepIndex;
+          stepIndex++;
+
+          const falseStart = stepIndex;
+          processEventList(falseList, isStartupContext);
+          const afterStep = stepIndex;
+
+          stepCases += `      case ${branchStep}:\n        if ${condExpr} return ${trueStart};\n        else return ${falseStart};\n`;
+          stepCases += `      case ${trueEndJumpStep}:\n        return ${afterStep};\n`;
+          continue;
         } else if (evt.command === "EVENT_DIALOGUE_CLOSE_NONMODAL") {
           stepCases += `      case ${stepIndex}:\n        hide_dialogue();\n        return ${stepIndex + 1};\n`;
           stepIndex++;
@@ -1464,26 +1626,47 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         } else if (evt.command === "EVENT_MUSIC_STOP") {
           stepCases += `      case ${stepIndex}:\n        pce_sound_stop();\n        return ${stepIndex + 1};\n`;
           stepIndex++;
-        } else if (evt.command === "EVENT_MENU") {
-          stepCases += `      case ${stepIndex}:\n        show_dialogue("Menu...");\n        return ${stepIndex + 1};\n`;
+        } else if (evt.command === "EVENT_MATH_ADD" || evt.command === "EVENT_MATH_ADD_VALUE") {
+          const varIdx = parseVarIndex(evt.args?.variable);
+          const val = typeof evt.args?.value === "number" ? evt.args.value : (Number(evt.args?.value) || 0);
+          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) + ${val});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_MATH_SUB" || evt.command === "EVENT_MATH_SUB_VALUE") {
+          const varIdx = parseVarIndex(evt.args?.variable);
+          const val = typeof evt.args?.value === "number" ? evt.args.value : (Number(evt.args?.value) || 0);
+          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) - ${val});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (
+          evt.command === "EVENT_LOOP" ||
+          evt.command === "EVENT_LOOP_FOR" ||
+          evt.command === "EVENT_LOOP_WHILE" ||
+          evt.command === "EVENT_LOOP_WHILE_EXPRESSION"
+        ) {
+          const loopStart = stepIndex;
+          const loopBody = (evt.children?.true && Array.isArray(evt.children.true))
+            ? evt.children.true
+            : (evt.true && Array.isArray(evt.true))
+            ? evt.true
+            : (evt.children && typeof evt.children === "object")
+            ? Object.values(evt.children).flatMap((x: any) => Array.isArray(x) ? x : [])
+            : [];
+          processEventList(loopBody, isStartupContext);
+          const loopEnd = stepIndex;
+          stepCases += `      case ${loopEnd}:\n        return ${loopStart};\n`;
+          stepIndex++;
+          continue;
+        } else if (evt.command === "EVENT_LOOP_BREAK" || evt.command === "EVENT_BREAK") {
+          stepCases += `      case ${stepIndex}:\n        return -1;\n`;
           stepIndex++;
         } else if (
           evt.command === "EVENT_LOAD_DATA" ||
           evt.command === "EVENT_LOAD_PROJECTILE_SLOT" ||
-          evt.command === "EVENT_LOOP" ||
-          evt.command === "EVENT_LOOP_FOR" ||
-          evt.command === "EVENT_LOOP_WHILE" ||
-          evt.command === "EVENT_LOOP_WHILE_EXPRESSION" ||
-          evt.command === "EVENT_MATH_ADD" ||
-          evt.command === "EVENT_MATH_ADD_VALUE" ||
           evt.command === "EVENT_MATH_DIV" ||
           evt.command === "EVENT_MATH_DIV_VALUE" ||
           evt.command === "EVENT_MATH_MOD" ||
           evt.command === "EVENT_MATH_MOD_VALUE" ||
           evt.command === "EVENT_MATH_MUL" ||
           evt.command === "EVENT_MATH_MUL_VALUE" ||
-          evt.command === "EVENT_MATH_SUB" ||
-          evt.command === "EVENT_MATH_SUB_VALUE" ||
           evt.command === "EVENT_MUTE_CHANNEL" ||
           evt.command === "EVENT_NOTES" ||
           evt.command === "EVENT_OVERLAY_HIDE" ||
@@ -1497,7 +1680,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           evt.command === "EVENT_PLAYER_BOUNCE" ||
           evt.command === "EVENT_PLAYER_SET_SPRITE" ||
           evt.command === "EVENT_IDLE" ||
-          evt.command === "EVENT_IF" ||
           evt.command === "EVENT_IF_ACTOR_AT_POSITION" ||
           evt.command === "EVENT_IF_ACTOR_DIRECTION" ||
           evt.command === "EVENT_IF_ACTOR_DISTANCE_FROM_ACTOR" ||
@@ -1507,14 +1689,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           evt.command === "EVENT_IF_ENGINE_FIELD" ||
           evt.command === "EVENT_IF_ENGINE_FIELD_COMPARE" ||
           evt.command === "EVENT_IF_EXPRESSION" ||
-          evt.command === "EVENT_IF_FALSE" ||
+          evt.command === "EVENT_IF_FLAGS_COMPARE" ||
           evt.command === "EVENT_IF_FLAGS_COMPARE" ||
           evt.command === "EVENT_IF_INPUT" ||
           evt.command === "EVENT_IF_SAVED_DATA" ||
-          evt.command === "EVENT_IF_TRUE" ||
-          evt.command === "EVENT_IF_VALUE" ||
-          evt.command === "EVENT_IF_VALUE_COMPARE" ||
-          evt.command === "EVENT_INC_VALUE" ||
           evt.command === "EVENT_LAUNCH_PROJECTILE" ||
           evt.command === "EVENT_LAUNCH_PROJECTILE_SLOT" ||
           evt.command === "EVENT_ACTOR_EFFECTS" ||
@@ -1553,14 +1731,87 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         }
 
         if (evt.children && typeof evt.children === "object") {
-          Object.values(evt.children).forEach((cEvts: any) => processEventList(cEvts));
+          Object.values(evt.children).forEach((cEvts: any) => processEventList(cEvts, isStartupContext));
         }
-        if (evt.true && Array.isArray(evt.true)) processEventList(evt.true);
-        if (evt.false && Array.isArray(evt.false)) processEventList(evt.false);
+        if (evt.true && Array.isArray(evt.true) && evt.command !== "EVENT_SET_INPUT_SCRIPT" && evt.command !== "EVENT_INPUT_SCRIPT_SET") {
+          processEventList(evt.true, isStartupContext);
+        }
+        if (evt.false && Array.isArray(evt.false)) processEventList(evt.false, isStartupContext);
       }
     };
 
-    processEventList(events);
+    processEventList(events, true);
+    const startupStepsCount = stepIndex;
+    if (startupStepsCount > 0) {
+      stepCases += `      case ${stepIndex}:\n        return -1;\n`;
+      stepIndex++;
+    }
+
+    const sceneInputEvents = [
+      ...findInputScriptEvents(scene.script),
+      ...findInputScriptEvents(scene.startScript),
+      ...(scene.actors || []).flatMap((act: any) => [
+        ...findInputScriptEvents(act.script),
+        ...findInputScriptEvents(act.startScript)
+      ])
+    ];
+
+    const sceneInputScripts: { mask: number; startStep: number }[] = [];
+    for (const inputEvt of sceneInputEvents) {
+      const mask = parseInputButtonMask(inputEvt.args?.input);
+      const childEvents = (inputEvt.true && Array.isArray(inputEvt.true))
+        ? inputEvt.true
+        : (inputEvt.children?.true && Array.isArray(inputEvt.children.true))
+        ? inputEvt.children.true
+        : (inputEvt.children?.press && Array.isArray(inputEvt.children.press))
+        ? inputEvt.children.press
+        : [];
+
+      const startStep = stepIndex;
+      processEventList(childEvents, false);
+      stepCases += `      case ${stepIndex}:\n        return -1;\n`;
+      stepIndex++;
+      sceneInputScripts.push({ mask, startStep });
+    }
+
+    let inputChecks = "";
+    sceneInputScripts.forEach((inp) => {
+      const maskHex = `0x${inp.mask.toString(16).toUpperCase().padStart(2, "0")}`;
+      inputChecks += `  if (pressed & ${maskHex}) {\n    g_script_scene = ${scNum};\n    g_script_step = ${inp.startStep};\n    g_script_step = run_scene_${scNum}_step(g_script_step);\n    return 1;\n  }\n`;
+    });
+
+    if (inputChecks) {
+      sceneInputCheckHelpers += `int check_scene_${scNum}_input(unsigned int pressed) {\n${inputChecks}  return 0;\n}\n\n`;
+      sceneInputCheckCases += `  if (scene_num == ${scNum}) return check_scene_${scNum}_input(pressed);\n`;
+    }
+
+    const actorInteractCases: string[] = [];
+    (scene.actors || []).forEach((scActor: any, aIdx: number) => {
+      const actorNum = aIdx + 1;
+      if (scActor.script && Array.isArray(scActor.script) && scActor.script.length > 0) {
+        const actorStartStep = stepIndex;
+        processEventList(scActor.script, false);
+        stepCases += `      case ${stepIndex}:\n        return -1;\n`;
+        stepIndex++;
+        actorInteractCases.push(`    case ${actorNum}:\n      g_script_scene = ${scNum};\n      g_script_step = ${actorStartStep};\n      g_script_step = run_scene_${scNum}_step(g_script_step);\n      return 1;\n`);
+      } else {
+        const actText = extractActorText(scActor);
+        if (actText) {
+          const cleanText = actText.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n");
+          const textStep = stepIndex;
+          stepCases += `      case ${textStep}:\n        show_dialogue("${cleanText}");\n        return -1;\n`;
+          stepIndex++;
+          actorInteractCases.push(`    case ${actorNum}:\n      g_script_scene = ${scNum};\n      g_script_step = ${textStep};\n      g_script_step = run_scene_${scNum}_step(g_script_step);\n      return 1;\n`);
+        }
+      }
+    });
+
+    if (actorInteractCases.length > 0) {
+      sceneActorInteractHelpers += `int interact_scene_${scNum}_actor(int actor_num) {\n  switch (actor_num) {\n${actorInteractCases.join("")}    default:\n      return 0;\n  }\n}\n\n`;
+      sceneActorInteractCases += `  if (scene_num == ${scNum}) return interact_scene_${scNum}_actor(actor_num);\n`;
+    }
+
+    sceneStartupCases += `  if (scene_num == ${scNum}) return ${startupStepsCount > 0 ? 1 : 0};\n`;
 
     if (stepCases) {
       sceneStepHelpers += `int run_scene_${scNum}_step(int step) {\n  switch (step) {\n${stepCases}    default:\n      return -1;\n  }\n}\n\n`;
@@ -1587,8 +1838,27 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   });
 
   const sceneInitFunctionC = `#define HAS_SCENE_STEP_EVENTS 1
-${sceneStepHelpers}int run_scene_step(int scene_num, int step) {
+#define HAS_SCENE_INPUT_SCRIPTS 1
+#define HAS_SCENE_STARTUP_SCRIPTS 1
+#define HAS_INTERACT_ACTOR 1
+
+${sceneStepHelpers}
+${sceneInputCheckHelpers}
+${sceneActorInteractHelpers}
+int run_scene_step(int scene_num, int step) {
 ${sceneInitCases}  return -1;
+}
+
+int check_scene_input(int scene_num, unsigned int pressed) {
+${sceneInputCheckCases}  return 0;
+}
+
+int scene_has_startup_script(int scene_num) {
+${sceneStartupCases}  return 0;
+}
+
+int interact_actor(int scene_num, int actor_num) {
+${sceneActorInteractCases}  return 0;
 }
 
 void load_scene_music(int scene_num) {

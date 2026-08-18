@@ -7,12 +7,36 @@ void hide_dialogue(void);
 int g_script_scene = 0;
 int g_script_step = -1;
 int g_wait_timer = 0;
+unsigned int g_await_input_mask = 0;
 
 #ifndef HAS_SCENE_STEP_EVENTS
 int run_scene_step(int scene_num, int step) {
   (void)scene_num;
   (void)step;
   return -1;
+}
+#endif
+
+#ifndef HAS_SCENE_INPUT_SCRIPTS
+int check_scene_input(int scene_num, unsigned int pressed) {
+  (void)scene_num;
+  (void)pressed;
+  return 0;
+}
+#endif
+
+#ifndef HAS_SCENE_STARTUP_SCRIPTS
+int scene_has_startup_script(int scene_num) {
+  (void)scene_num;
+  return 0;
+}
+#endif
+
+#ifndef HAS_INTERACT_ACTOR
+int interact_actor(int scene_num, int actor_num) {
+  (void)scene_num;
+  (void)actor_num;
+  return 0;
 }
 #endif
 
@@ -5148,8 +5172,13 @@ void load_scene(int scene_num, int player_x, int player_y) {
   camera_apply();
 
   g_script_scene = scene_num;
-  g_script_step = 0;
+  if (scene_has_startup_script(scene_num)) {
+    g_script_step = 0;
+  } else {
+    g_script_step = -1;
+  }
   g_wait_timer = 0;
+  g_await_input_mask = 0;
 
   load_scene_music(scene_num);
 }
@@ -5206,6 +5235,15 @@ void engine_init(void) {
 
 int g_dialogue_active = 0;
 int g_dialogue_timer = 0;
+int g_choice_active = 0;
+int g_choice_var = 0;
+int g_choice_index = 0;
+int g_choice_count = 2;
+int g_choice_cancel_b = 1;
+char g_choice_opt0[28];
+char g_choice_opt1[28];
+char g_choice_opt2[28];
+char g_choice_opt3[28];
 
 void show_dialogue(const char *msg) {
   int i;
@@ -5216,7 +5254,7 @@ void show_dialogue(const char *msg) {
     return;
 
   g_dialogue_active = 1;
-  g_dialogue_timer = 180;
+  g_dialogue_timer = 0;
   actor_update_all();
   satb_update();
 
@@ -5269,7 +5307,6 @@ void show_dialogue(const char *msg) {
       line_buf[i] = ' ';
     }
   }
-  if (line_buf[30] == ' ') line_buf[30] = 'v';
   line_buf[31] = '|';
   line_buf[32] = '\0';
   put_string(line_buf, 0, 25);
@@ -5282,10 +5319,135 @@ void show_dialogue(const char *msg) {
   put_string(line_buf, 0, 26);
 }
 
+void copy_choice_opt(char *dst, const char *src, int max_len) {
+  int i;
+  if (!src) {
+    dst[0] = '\0';
+    return;
+  }
+  for (i = 0; i < max_len - 1 && src[i]; i++) {
+    dst[i] = src[i];
+  }
+  dst[i] = '\0';
+}
+
+void render_choice_dialogue(void) {
+  int i;
+  int opt_i;
+  char line_buf[33];
+
+  set_font_pal(15);
+  set_color(241, 0x000);
+  set_color(242, 0x1FF);
+
+  /* Top border at y = 22 */
+  line_buf[0] = '+';
+  for (i = 1; i <= 30; i++) line_buf[i] = '-';
+  line_buf[31] = '+';
+  line_buf[32] = '\0';
+  put_string(line_buf, 0, 22);
+
+  /* Option 1 at y = 23 */
+  line_buf[0] = '|';
+  line_buf[1] = (g_choice_index == 0) ? '>' : ' ';
+  line_buf[2] = ' ';
+  for (i = 3; i <= 30; i++) {
+    opt_i = i - 3;
+    if (g_choice_opt0[opt_i]) {
+      line_buf[i] = g_choice_opt0[opt_i];
+    } else {
+      line_buf[i] = ' ';
+    }
+  }
+  line_buf[31] = '|';
+  line_buf[32] = '\0';
+  put_string(line_buf, 0, 23);
+
+  /* Option 2 at y = 24 */
+  line_buf[0] = '|';
+  line_buf[1] = (g_choice_index == 1) ? '>' : ' ';
+  line_buf[2] = ' ';
+  for (i = 3; i <= 30; i++) {
+    opt_i = i - 3;
+    if (g_choice_opt1[opt_i]) {
+      line_buf[i] = g_choice_opt1[opt_i];
+    } else {
+      line_buf[i] = ' ';
+    }
+  }
+  line_buf[31] = '|';
+  line_buf[32] = '\0';
+  put_string(line_buf, 0, 24);
+
+  /* Option 3 or blank at y = 25 */
+  line_buf[0] = '|';
+  if (g_choice_count > 2) {
+    line_buf[1] = (g_choice_index == 2) ? '>' : ' ';
+    line_buf[2] = ' ';
+    for (i = 3; i <= 30; i++) {
+      opt_i = i - 3;
+      if (g_choice_opt2[opt_i]) {
+        line_buf[i] = g_choice_opt2[opt_i];
+      } else {
+        line_buf[i] = ' ';
+      }
+    }
+  } else {
+    for (i = 1; i <= 30; i++) line_buf[i] = ' ';
+  }
+  line_buf[31] = '|';
+  line_buf[32] = '\0';
+  put_string(line_buf, 0, 25);
+
+  /* Bottom border at y = 26 */
+  line_buf[0] = '+';
+  for (i = 1; i <= 30; i++) line_buf[i] = '-';
+  line_buf[31] = '+';
+  line_buf[32] = '\0';
+  put_string(line_buf, 0, 26);
+}
+
+void show_choice(int var_id, const char *opt1, const char *opt2) {
+  g_dialogue_active = 1;
+  g_dialogue_timer = 0;
+  g_choice_active = 1;
+  g_choice_var = var_id;
+  g_choice_index = 0;
+  g_choice_count = 2;
+  g_choice_cancel_b = 1;
+  copy_choice_opt(g_choice_opt0, opt1 ? opt1 : "Yes", 28);
+  copy_choice_opt(g_choice_opt1, opt2 ? opt2 : "No", 28);
+  g_choice_opt2[0] = '\0';
+  g_choice_opt3[0] = '\0';
+
+  actor_update_all();
+  satb_update();
+  render_choice_dialogue();
+}
+
+void show_menu(int var_id, int count, const char *opt1, const char *opt2, const char *opt3, const char *opt4, int cancel_b) {
+  g_dialogue_active = 1;
+  g_dialogue_timer = 0;
+  g_choice_active = 1;
+  g_choice_var = var_id;
+  g_choice_index = 0;
+  g_choice_count = (count >= 2 && count <= 4) ? count : 2;
+  g_choice_cancel_b = cancel_b;
+  copy_choice_opt(g_choice_opt0, opt1 ? opt1 : "Item 1", 28);
+  copy_choice_opt(g_choice_opt1, opt2 ? opt2 : "Item 2", 28);
+  copy_choice_opt(g_choice_opt2, opt3 ? opt3 : "Item 3", 28);
+  copy_choice_opt(g_choice_opt3, opt4 ? opt4 : "Item 4", 28);
+
+  actor_update_all();
+  satb_update();
+  render_choice_dialogue();
+}
+
 void hide_dialogue(void) {
   if (g_dialogue_active) {
     g_dialogue_active = 0;
     g_dialogue_timer = 0;
+    g_choice_active = 0;
     load_scene_background(g_current_scene);
     actor_update_all();
     satb_update();
@@ -5300,6 +5462,33 @@ void check_actor_interaction(unsigned int input) {
   pressed = input & ~g_last_input;
   g_last_input = input;
 
+  if (g_choice_active) {
+    if (pressed & (JOY_UP | JOY_LEFT)) {
+      if (g_choice_index > 0) {
+        g_choice_index--;
+        render_choice_dialogue();
+      }
+    } else if (pressed & (JOY_DOWN | JOY_RIGHT)) {
+      if (g_choice_index < g_choice_count - 1) {
+        g_choice_index++;
+        render_choice_dialogue();
+      }
+    } else if (pressed & (JOY_I | JOY_A | JOY_STRT)) {
+      if (g_choice_count == 2) {
+        /* Choice: option 0 = true (1), option 1 = false (0) */
+        vm_set_var(g_choice_var, (g_choice_index == 0) ? 1 : 0);
+      } else {
+        /* Menu: option 1-based index */
+        vm_set_var(g_choice_var, g_choice_index + 1);
+      }
+      hide_dialogue();
+    } else if ((pressed & (JOY_II | JOY_B | JOY_SEL)) && g_choice_cancel_b) {
+      vm_set_var(g_choice_var, 0);
+      hide_dialogue();
+    }
+    return;
+  }
+
   if (g_dialogue_active) {
     if (pressed & (JOY_I | JOY_II | JOY_A | JOY_B | JOY_STRT | JOY_SEL)) {
       hide_dialogue();
@@ -5307,7 +5496,13 @@ void check_actor_interaction(unsigned int input) {
     return;
   }
 
-  if (pressed & (JOY_I | JOY_II)) {
+  if (pressed) {
+    if (check_scene_input(g_current_scene, pressed)) {
+      return;
+    }
+  }
+
+  if (pressed & (JOY_I | JOY_II | JOY_A | JOY_B)) {
     for (i = 1; i < g_actor_count; i++) {
       if (g_actor_active[i]) {
         dx = g_actor_x[0] - g_actor_x[i];
@@ -5317,6 +5512,9 @@ void check_actor_interaction(unsigned int input) {
         if (dy < 0)
           dy = -dy;
         if (dx <= 24 && dy <= 24) {
+          if (interact_actor(g_current_scene, i)) {
+            return;
+          }
           if (g_current_scene == 1) {
               if (i == 1) {
 #ifdef ACTOR_SCENE_1_1_TEXT
@@ -5690,13 +5888,15 @@ void update_shmup(void) {
 }
 
 void update_pointnclick(void) {
-  int dummy;
-  dummy = 0;
+  unsigned int input;
+  input = pce_sys_read_joy(0);
+  check_actor_interaction(input);
 }
 
 void update_logo(void) {
-  int dummy;
-  dummy = 0;
+  unsigned int input;
+  input = pce_sys_read_joy(0);
+  check_actor_interaction(input);
 }
 
 void engine_update(void) {
@@ -5715,6 +5915,18 @@ void engine_update(void) {
   if (g_script_step >= 0) {
     if (g_wait_timer > 0) {
       g_wait_timer--;
+    } else if (g_await_input_mask != 0) {
+      unsigned int joy_in;
+      unsigned int joy_pressed;
+      joy_in = pce_sys_read_joy(0);
+      joy_pressed = joy_in & ~g_last_input;
+      if (joy_pressed & g_await_input_mask) {
+        g_await_input_mask = 0;
+        g_last_input = joy_in;
+        g_script_step = run_scene_step(g_script_scene, g_script_step);
+      }
+    } else if (g_choice_active) {
+      /* Waiting for choice selection */
     } else if (!g_dialogue_active) {
       g_script_step = run_scene_step(g_script_scene, g_script_step);
     }
