@@ -5,10 +5,10 @@
   "type": "TOPDOWN",
   "name": "Cave",
   "symbol": "scene_cave",
-  "x": 638,
-  "y": 73,
-  "width": 20,
-  "height": 18,
+  "x": 680,
+  "y": 80,
+  "width": 32,
+  "height": 32,
   "backgroundId": "6fad1892-bcb2-4924-bd1c-1e4d03dfeabb",
   "tilesetId": "",
   "colorModeOverride": "none",
@@ -27,5 +27,5 @@
   "playerHit1Script": [],
   "playerHit2Script": [],
   "playerHit3Script": [],
-  "collisions": "003d+0f12+002+0f!0010+0f!002+0f!0010+0f!002+0f!0010+0f!002+0f!0010+0f!002+0f!0010+0f!002+0f!0010+0f!002+0f!0010+0f!002+0f!0010+0f!002+0f!0010+0f!002+0f!0010+0f!002+0f!0010+0f!002+0f!0010+0f!002+0f8+002+0f8+009+0f!002+0f!008+"
+  "collisions": "0061+0f12+00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f8+002+0f8+0015+0f!002+0f!001d4+"
 }

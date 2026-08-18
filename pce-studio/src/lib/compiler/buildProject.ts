@@ -387,8 +387,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           if (buf.length >= 24) {
             const pngW = buf.readUInt32BE(16) >> 3;
             const pngH = buf.readUInt32BE(20) >> 3;
-            if (pngW > 0) scWidth = Math.max(scWidth, pngW);
-            if (pngH > 0) scHeight = Math.max(scHeight, pngH);
+            // Use the actual PNG pixel dimensions as ground truth.
+            // Math.max was causing scenes with height:32 to generate
+            // .incchr with 32 tile rows even when the PNG is only 28
+            // tiles tall (224px), triggering "Coordinates out of range!"
+            if (pngW > 0) scWidth = pngW;
+            if (pngH > 0) scHeight = pngH;
           }
         } catch (e) {}
         break;
