@@ -1,11 +1,6 @@
 #define PCE_CAMERA_C 1
 #include "include/camera.h"
 
-int g_cam_x;
-int g_cam_y;
-int g_cam_max_x = 0;
-int g_cam_max_y = 0;
-
 void camera_init(void) {
     g_cam_x = 0;
     g_cam_y = 0;

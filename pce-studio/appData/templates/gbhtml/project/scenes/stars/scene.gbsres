@@ -5,8 +5,8 @@
   "type": "TOPDOWN",
   "name": "Stars",
   "symbol": "scene_stars",
-  "x": 928,
-  "y": 648,
+  "x": 1032,
+  "y": 432,
   "width": 32,
   "height": 32,
   "backgroundId": "40fda058-df90-4205-a239-fe77bce4fa79",
@@ -27,5 +27,6 @@
   "playerHit1Script": [],
   "playerHit2Script": [],
   "playerHit3Script": [],
-  "collisions": "00400+"
+  "collisions": "00400+",
+  "playerSpriteSheetId": "ac1e8ef4-ffe6-47cd-b16f-9af5da77ec26"
 }

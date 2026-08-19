@@ -1,8 +1,8 @@
-static unsigned char g_psg_reg_ch;
-static unsigned char g_psg_reg_val;
-static unsigned short g_psg_reg_freq;
+unsigned char g_psg_reg_ch;
+unsigned char g_psg_reg_val;
+unsigned short g_psg_reg_freq;
 
-static void hw_set_ch(unsigned char ch) {
+void hw_set_ch(unsigned char ch) {
   g_psg_reg_ch = ch;
 #asm
   lda _g_psg_reg_ch
@@ -10,7 +10,7 @@ static void hw_set_ch(unsigned char ch) {
 #endasm
 }
 
-static void hw_set_ctrl(unsigned char ctrl) {
+void hw_set_ctrl(unsigned char ctrl) {
   g_psg_reg_val = ctrl;
 #asm
   lda _g_psg_reg_val
@@ -18,7 +18,7 @@ static void hw_set_ctrl(unsigned char ctrl) {
 #endasm
 }
 
-static void hw_set_freq(unsigned short freq) {
+void hw_set_freq(unsigned short freq) {
   g_psg_reg_freq = freq;
 #asm
   lda _g_psg_reg_freq
@@ -28,7 +28,7 @@ static void hw_set_freq(unsigned short freq) {
 #endasm
 }
 
-static void hw_set_pan(unsigned char pan) {
+void hw_set_pan(unsigned char pan) {
   g_psg_reg_val = pan;
 #asm
   lda _g_psg_reg_val
@@ -36,7 +36,7 @@ static void hw_set_pan(unsigned char pan) {
 #endasm
 }
 
-static void hw_set_noise(unsigned char noise) {
+void hw_set_noise(unsigned char noise) {
   g_psg_reg_val = noise;
 #asm
   lda _g_psg_reg_val
@@ -44,7 +44,7 @@ static void hw_set_noise(unsigned char noise) {
 #endasm
 }
 
-static void hw_set_mainvol(unsigned char vol) {
+void hw_set_mainvol(unsigned char vol) {
   g_psg_reg_val = vol;
 #asm
   lda _g_psg_reg_val
@@ -52,7 +52,7 @@ static void hw_set_mainvol(unsigned char vol) {
 #endasm
 }
 
-static void hw_set_wave_data(unsigned char data) {
+void hw_set_wave_data(unsigned char data) {
   g_psg_reg_val = data;
 #asm
   lda _g_psg_reg_val
@@ -61,7 +61,7 @@ static void hw_set_wave_data(unsigned char data) {
 }
 
 /* PCE 12-bit frequency divisor table for 72 notes (C_3 to B_8) */
-static const unsigned short g_pce_note_freq[72] = {
+const unsigned short g_pce_note_freq[72] = {
     855, 807, 762, 719, 679, 641, 605, 571, 539, 508, 480, 453,
     428, 404, 381, 360, 339, 320, 302, 285, 269, 254, 240, 227,
     214, 202, 190, 180, 170, 160, 151, 143, 135, 127, 120, 113,
@@ -71,12 +71,12 @@ static const unsigned short g_pce_note_freq[72] = {
 };
 
 /* Vibrato sine table (16 steps) */
-static const char g_vibrato_table[16] = {
+const char g_vibrato_table[16] = {
     0, 6, 11, 15, 16, 15, 11, 6, 0, -6, -11, -15, -16, -15, -11, -6
 };
 
 /* Duty waveforms: 12.5%, 25%, 50%, 75% DC-centered (midpoint 16, 4 * 32 = 128 bytes) */
-static const unsigned char g_duty_table[128] = {
+const unsigned char g_duty_table[128] = {
     /* 12.5% (Bright Pulse / Harpsichord) */
     16, 22, 27, 30, 31, 30, 27, 22, 16, 12,  9,  7,  5,  4,  3,  3,
      4,  5,  7,  9, 11, 13, 14, 15, 16, 16, 16, 16, 16, 16, 16, 16,
@@ -91,64 +91,82 @@ static const unsigned char g_duty_table[128] = {
     13, 10,  7,  5,  3,  2,  1,  1,  2,  3,  5,  8, 11, 13, 15, 16
 };
 
-static unsigned int *g_pce_song;
-static unsigned char g_pce_music_playing;
-static unsigned char g_pce_order_idx;
-static unsigned char g_pce_row_idx;
-static unsigned char g_pce_tick_cnt;
-static unsigned char g_ticks_per_row;
+unsigned int *g_pce_song;
+unsigned char g_pce_music_playing;
+unsigned char g_pce_order_idx;
+unsigned char g_pce_row_idx;
+unsigned char g_pce_tick_cnt;
+unsigned char g_ticks_per_row;
 
 /* Per-channel state: CH0=Duty1, CH1=Duty2, CH2=Wave, CH3=Noise (mapped to PCE CH4) */
-static unsigned short g_ch_period[4];
-static unsigned short g_ch_target_period[4];
-static unsigned char g_ch_note[4];
-static unsigned char g_ch_vol[4];
-static unsigned char g_ch_env_val[4];
-static unsigned char g_ch_env_dir[4];
-static unsigned char g_ch_env_step[4];
-static unsigned char g_ch_env_timer[4];
-static unsigned char g_ch_len_enabled[4];
-static unsigned char g_ch_len_cnt[4];
-static unsigned char g_ch_active[4];
-static unsigned char g_ch_duty[2];
-static unsigned char g_ch_wave_idx;
+unsigned short g_ch_period[4];
+unsigned short g_ch_target_period[4];
+unsigned char g_ch_note[4];
+unsigned char g_ch_vol[4];
+unsigned char g_ch_env_val[4];
+unsigned char g_ch_env_dir[4];
+unsigned char g_ch_env_step[4];
+unsigned char g_ch_env_timer[4];
+unsigned char g_ch_len_enabled[4];
+unsigned char g_ch_len_cnt[4];
+unsigned char g_ch_active[4];
+unsigned char g_ch_duty[2];
+unsigned char g_ch_wave_idx;
 
 /* Effect states per channel */
-static unsigned char g_fx_type[4];
-static unsigned char g_fx_param[4];
-static unsigned char g_fx_vib_phase[4];
-static unsigned char g_fx_delayed_note[4];
-static unsigned char g_fx_delayed_inst[4];
+unsigned char g_fx_type[4];
+unsigned char g_fx_param[4];
+unsigned char g_fx_vib_phase[4];
+unsigned char g_fx_delayed_note[4];
+unsigned char g_fx_delayed_inst[4];
 
-static unsigned char g_next_order_idx;
-static unsigned char g_next_row_idx;
-static unsigned char g_has_jump;
+unsigned char g_next_order_idx;
+unsigned char g_next_row_idx;
+unsigned char g_has_jump;
 
-static unsigned char g_ch_last_inst[4];
-static unsigned char g_wave_buf[32];
+unsigned char g_ch_last_inst[4];
+unsigned char g_wave_buf[32];
 
-/* Static pointers to avoid any local stack frame allocations in HuC */
-static unsigned char *g_duty_instrs;
-static unsigned char *g_wave_instrs;
-static unsigned char *g_noise_instrs;
-static unsigned char *g_waves_ptr;
-static unsigned char *g_d_inst;
-static unsigned char *g_w_inst;
-static unsigned char *g_n_inst;
-static unsigned char *g_raw_wave;
+/* Pointers to avoid any local stack frame allocations in HuC */
+unsigned char *g_duty_instrs;
+unsigned char *g_wave_instrs;
+unsigned char *g_noise_instrs;
+unsigned char *g_waves_ptr;
+unsigned char *g_d_inst;
+unsigned char *g_w_inst;
+unsigned char *g_n_inst;
+unsigned char *g_raw_wave;
 
-static unsigned char g_t_track;
-static unsigned char g_t_note;
-static unsigned char g_t_inst;
-static unsigned char g_t_pce_ch;
-static unsigned char g_t_duty_idx;
-static unsigned char g_t_wave_idx;
-static unsigned char g_t_noise_freq;
-static unsigned char g_t_init_vol;
-static unsigned char g_t_nib;
-static int g_t_i;
+unsigned char g_t_track;
+unsigned char g_t_note;
+unsigned char g_t_inst;
+unsigned char g_t_pce_ch;
+unsigned char g_t_duty_idx;
+unsigned char g_t_wave_idx;
+unsigned char g_t_noise_freq;
+unsigned char g_t_init_vol;
+unsigned char g_t_nib;
+int g_t_i;
 
-static void load_wave_ram_ch(unsigned char ch) {
+unsigned char g_r_track;
+unsigned char *g_r_ptr;
+unsigned char g_r_note, g_r_inst_eff, g_r_param, g_r_inst, g_r_effect, g_r_pce_ch, g_r_left, g_r_right;
+
+unsigned char g_eff_t, g_eff_pce_ch, g_eff_fx, g_eff_param, g_eff_arpmode, g_eff_arpoffset, g_eff_note_idx, g_eff_speed, g_eff_depth;
+unsigned short g_eff_freq;
+char g_eff_vib_val;
+
+unsigned char *g_u_order_cnt_ptr;
+unsigned int *g_u_order1;
+unsigned int *g_u_order2;
+unsigned int *g_u_order3;
+unsigned int *g_u_order4;
+unsigned char g_u_max_orders;
+unsigned char *g_u_p0, *g_u_p1, *g_u_p2, *g_u_p3;
+unsigned char g_u_pce_ch, g_u_val;
+int g_u_t;
+
+void load_wave_ram_ch(unsigned char ch) {
   hw_set_ch(ch);
   /* Reset internal waveform write index: 0x40 (DDA on, ch off), then 0x00 (DDA off, ch off) */
   hw_set_ctrl(0x40);
@@ -158,7 +176,7 @@ static void load_wave_ram_ch(unsigned char ch) {
   }
 }
 
-static unsigned short get_track_note_freq(unsigned char track, unsigned char note) {
+unsigned short get_track_note_freq(unsigned char track, unsigned char note) {
   if (note >= 72) return 0;
   if (track == 2) {
     if (note >= 12) {
@@ -170,7 +188,7 @@ static unsigned short get_track_note_freq(unsigned char track, unsigned char not
   return g_pce_note_freq[note];
 }
 
-static void trigger_note_core_current(void) {
+void trigger_note_core_current(void) {
   if (g_t_note >= 72)
     return;
 
@@ -357,11 +375,7 @@ void pce_sound_stop(void) {
   pce_sound_init();
 }
 
-static unsigned char g_r_track;
-static unsigned char *g_r_ptr;
-static unsigned char g_r_note, g_r_inst_eff, g_r_param, g_r_inst, g_r_effect, g_r_pce_ch, g_r_left, g_r_right;
-
-static void process_row_channel_cur(void) {
+void process_row_channel_cur(void) {
   if (!g_r_ptr)
     return;
 
@@ -436,11 +450,7 @@ static void process_row_channel_cur(void) {
   }
 }
 
-static unsigned char g_eff_t, g_eff_pce_ch, g_eff_fx, g_eff_param, g_eff_arpmode, g_eff_arpoffset, g_eff_note_idx, g_eff_speed, g_eff_depth;
-static unsigned short g_eff_freq;
-static char g_eff_vib_val;
-
-static void process_tick_effects(unsigned char tick) {
+void process_tick_effects(unsigned char tick) {
   for (g_eff_t = 0; g_eff_t < 4; g_eff_t++) {
     g_eff_pce_ch = (g_eff_t < 3) ? g_eff_t : 4;
     g_eff_fx = g_fx_type[g_eff_t];
@@ -541,16 +551,6 @@ static void process_tick_effects(unsigned char tick) {
   }
 }
 
-static unsigned char *g_u_order_cnt_ptr;
-static unsigned char **g_u_order1;
-static unsigned char **g_u_order2;
-static unsigned char **g_u_order3;
-static unsigned char **g_u_order4;
-static unsigned char g_u_max_orders;
-static unsigned char *g_u_p0, *g_u_p1, *g_u_p2, *g_u_p3;
-static unsigned char g_u_pce_ch, g_u_val;
-static int g_u_t;
-
 void pce_sound_update(void) {
   if (!g_pce_music_playing || !g_pce_song)
     return;
@@ -621,15 +621,15 @@ void pce_sound_update(void) {
   g_u_order_cnt_ptr = (unsigned char *)(g_pce_song[1]);
   g_u_max_orders = (*g_u_order_cnt_ptr) / 2;
 
-  g_u_order1 = (unsigned char **)(g_pce_song[2]);
-  g_u_order2 = (unsigned char **)(g_pce_song[3]);
-  g_u_order3 = (unsigned char **)(g_pce_song[4]);
-  g_u_order4 = (unsigned char **)(g_pce_song[5]);
+  g_u_order1 = (unsigned int *)(g_pce_song[2]);
+  g_u_order2 = (unsigned int *)(g_pce_song[3]);
+  g_u_order3 = (unsigned int *)(g_pce_song[4]);
+  g_u_order4 = (unsigned int *)(g_pce_song[5]);
 
-  g_u_p0 = g_u_order1[g_pce_order_idx];
-  g_u_p1 = g_u_order2[g_pce_order_idx];
-  g_u_p2 = g_u_order3[g_pce_order_idx];
-  g_u_p3 = g_u_order4[g_pce_order_idx];
+  g_u_p0 = (unsigned char *)(g_u_order1[g_pce_order_idx]);
+  g_u_p1 = (unsigned char *)(g_u_order2[g_pce_order_idx]);
+  g_u_p2 = (unsigned char *)(g_u_order3[g_pce_order_idx]);
+  g_u_p3 = (unsigned char *)(g_u_order4[g_pce_order_idx]);
 
   g_has_jump = 0;
   g_r_track = 0;

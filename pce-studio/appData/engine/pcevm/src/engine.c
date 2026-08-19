@@ -4,11 +4,6 @@
 void show_dialogue(const char *msg);
 void hide_dialogue(void);
 
-int g_script_scene = 0;
-int g_script_step = -1;
-int g_wait_timer = 0;
-unsigned int g_await_input_mask = 0;
-
 #ifndef HAS_SCENE_STEP_EVENTS
 int run_scene_step(int scene_num, int step) {
   (void)scene_num;
@@ -40,6 +35,25 @@ int interact_actor(int scene_num, int actor_num) {
 }
 #endif
 
+#ifndef HAS_SCENE_BACKGROUND
+void load_scene_background(int scene_num) {
+  (void)scene_num;
+}
+#endif
+
+#ifndef HAS_SCENE_MUSIC
+void load_scene_music(int scene_num) {
+  (void)scene_num;
+  pce_sound_stop();
+}
+#endif
+
+#ifndef HAS_SCENE_PLAYER_SPRITE
+void load_scene_player_sprite(int scene_num) {
+  (void)scene_num;
+}
+#endif
+
 #ifndef PLAYER_START_X
 #define PLAYER_START_X 104
 #endif
@@ -47,17 +61,6 @@ int interact_actor(int scene_num, int actor_num) {
 #ifndef PLAYER_START_Y
 #define PLAYER_START_Y 112
 #endif
-
-int g_current_scene = 1;
-int g_current_scene_type = SCENE_1_TYPE;
-int g_player_spr_vram_size = 0x40;
-int g_player_spr_size = SZ_16x16;
-
-int g_plat_sub_x = 0;
-int g_plat_sub_y = 0;
-int g_plat_vy = 0;
-int g_plat_on_ground = 0;
-int g_shmup_scroll_x = 0;
 
 void load_scene_part1(int scene_num) {
   if (scene_num == 1) {
@@ -5179,6 +5182,14 @@ void load_scene(int scene_num, int player_x, int player_y) {
   }
   g_wait_timer = 0;
   g_await_input_mask = 0;
+  g_dialogue_active = 0;
+  g_choice_active = 0;
+  g_dialogue_timer = 0;
+
+  set_font_pal(15);
+  set_font_color(1, 2);
+  set_color(241, 0x000);
+  set_color(242, 0x1FF);
 
   load_scene_music(scene_num);
 }
@@ -5219,7 +5230,11 @@ void engine_init(void) {
 #define PLAYER_SPR_SIZE SZ_16x16
 #endif
 
+#ifdef START_SCENE_NUM
   load_scene_player_sprite(START_SCENE_NUM);
+#else
+  load_scene_player_sprite(1);
+#endif
 
   actor_spawn(PLAYER_START_X, PLAYER_START_Y, 0x5000, 0, g_player_spr_size);
 
@@ -5232,18 +5247,6 @@ void engine_init(void) {
   load_scene(1, PLAYER_START_X, PLAYER_START_Y);
 #endif
 }
-
-int g_dialogue_active = 0;
-int g_dialogue_timer = 0;
-int g_choice_active = 0;
-int g_choice_var = 0;
-int g_choice_index = 0;
-int g_choice_count = 2;
-int g_choice_cancel_b = 1;
-char g_choice_opt0[28];
-char g_choice_opt1[28];
-char g_choice_opt2[28];
-char g_choice_opt3[28];
 
 void show_dialogue(const char *msg) {
   int i;

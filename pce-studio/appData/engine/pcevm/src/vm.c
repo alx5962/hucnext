@@ -2,7 +2,6 @@
 #include "include/actor.h"
 #include "include/pce_sound.h"
 
-int g_vm_vars[VM_MAX_VARS];
 static vm_context_t g_ctx;
 
 void vm_init(void) {

@@ -1,6 +1,8 @@
 #ifndef PCE_ENGINE_H
 #define PCE_ENGINE_H
 
+#include <huc.h>
+#include "include/gbs_types.h"
 #include "include/pce_system.h"
 #include "include/actor.h"
 #include "include/camera.h"
@@ -8,16 +10,68 @@
 #include "include/trigger.h"
 #include "include/vm.h"
 
-extern int g_current_scene;
-extern int g_current_scene_type;
-extern int g_wait_timer;
-extern int g_player_spr_vram_size;
-extern int g_player_spr_size;
-extern int g_dialogue_active;
-extern int g_choice_active;
-extern int g_script_scene;
-extern int g_script_step;
-extern unsigned int g_await_input_mask;
+int g_current_scene = 1;
+int g_current_scene_type = 0;
+int g_player_spr_vram_size = 0x40;
+int g_player_spr_size = SZ_16x16;
+
+int g_plat_sub_x = 0;
+int g_plat_sub_y = 0;
+int g_plat_vy = 0;
+int g_plat_on_ground = 0;
+int g_shmup_scroll_x = 0;
+
+int g_script_scene = 1;
+int g_script_step = -1;
+int g_wait_timer = 0;
+unsigned int g_await_input_mask = 0;
+
+int g_dialogue_active = 0;
+int g_dialogue_timer = 0;
+int g_choice_active = 0;
+int g_choice_var = 0;
+int g_choice_index = 0;
+int g_choice_count = 2;
+int g_choice_cancel_b = 1;
+char g_choice_opt0[28];
+char g_choice_opt1[28];
+char g_choice_opt2[28];
+char g_choice_opt3[28];
+
+/* Global actor state */
+int g_actor_active[PCE_MAX_ACTORS];
+int g_actor_hidden[PCE_MAX_ACTORS];
+int g_actor_x[PCE_MAX_ACTORS];
+int g_actor_y[PCE_MAX_ACTORS];
+int g_actor_tile_id[PCE_MAX_ACTORS];
+int g_actor_palette[PCE_MAX_ACTORS];
+unsigned char g_actor_size[PCE_MAX_ACTORS];
+int g_actor_dir[PCE_MAX_ACTORS];
+int g_actor_anim_frame[PCE_MAX_ACTORS];
+int g_actor_anim_speed[PCE_MAX_ACTORS];
+int g_actor_move_speed[PCE_MAX_ACTORS];
+int g_actor_collisions_disabled[PCE_MAX_ACTORS];
+int g_actor_sprite_handle[PCE_MAX_ACTORS];
+int g_actor_count;
+
+/* Global camera state */
+int g_cam_x;
+int g_cam_y;
+int g_cam_max_x;
+int g_cam_max_y;
+
+/* Global collision state */
+int g_collision_width;
+int g_collision_height;
+int g_player_bbox_left;
+int g_player_bbox_right;
+int g_player_bbox_top;
+int g_player_bbox_bottom;
+
+/* Global trigger & VM state */
+pce_trigger_t g_triggers[MAX_TRIGGERS];
+int g_trigger_count;
+int g_vm_vars[VM_MAX_VARS];
 
 void show_dialogue(const char *msg);
 void show_choice(int var_id, const char *opt1, const char *opt2);
@@ -26,6 +80,7 @@ void hide_dialogue(void);
 void load_scene(int scene_num, int player_x, int player_y);
 void load_scene_music(int scene_num);
 void load_scene_background(int scene_num);
+void load_scene_player_sprite(int scene_num);
 int run_scene_step(int scene_num, int step);
 int check_scene_input(int scene_num, unsigned int pressed);
 int scene_has_startup_script(int scene_num);

@@ -164,7 +164,7 @@ function applyTransparentSlotFixup(pixels: Uint8Array, palette: [number, number,
   }
 }
 
-function writeIndexedPng(
+export function writeIndexedPng(
   destPath: string,
   palette: [number, number, number][],
   pixels: Uint8Array,
@@ -199,6 +199,15 @@ function writeIndexedPng(
   const idatChunk = makeChunk("IDAT", zlib.deflateSync(scanlines));
   const iendChunk = makeChunk("IEND", Buffer.alloc(0));
   fs.writeFileSync(destPath, Buffer.concat([sig, ihdrChunk, plteChunk, idatChunk, iendChunk]));
+}
+
+export function createBlankIndexedPng(destPath: string, W = 256, H = 224): void {
+  const palette: [number, number, number][] = [
+    [0, 0, 0], [32, 32, 32], [64, 64, 64], [128, 128, 128]
+  ];
+  while (palette.length < 16) palette.push([0, 0, 0]);
+  const pixels = new Uint8Array(W * H);
+  writeIndexedPng(destPath, palette, pixels, W, H);
 }
 
 /**

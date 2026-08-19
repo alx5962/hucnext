@@ -42,20 +42,6 @@
 #define DIR_DOWN  3
 #endif
 
-#ifndef PCE_ACTOR_C
-extern int g_actor_active[];
-extern int g_actor_hidden[];
-extern int g_actor_x[];
-extern int g_actor_y[];
-extern int g_actor_tile_id[];
-extern int g_actor_palette[];
-extern unsigned char g_actor_size[];
-extern int g_actor_dir[];
-extern int g_actor_anim_frame[];
-extern int g_actor_sprite_handle[];
-extern int g_actor_count;
-#endif
-
 void actor_init(void);
 int actor_spawn(int x, int y, int tile_id, int palette, int size);
 void actor_update_all(void);

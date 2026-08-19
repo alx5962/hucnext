@@ -3,13 +3,6 @@
 
 #include "include/pce_system.h"
 
-#ifndef PCE_CAMERA_C
-extern int g_cam_x;
-extern int g_cam_y;
-extern int g_cam_max_x;
-extern int g_cam_max_y;
-#endif
-
 void camera_init(void);
 void camera_set_bounds(int width_tiles, int height_tiles);
 void camera_update(int target_x, int target_y);

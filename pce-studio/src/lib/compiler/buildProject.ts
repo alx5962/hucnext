@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import Path from "path";
 import { convertPngToPcx, buildPngPalette } from "./convertPngToPcx";
-import convertToIndexedPngDefault, { convertToIndexedPng as convertToIndexedPngFn } from "./indexedPngWriter";
+import convertToIndexedPngDefault, { convertToIndexedPng as convertToIndexedPngFn, createBlankIndexedPng } from "./indexedPngWriter";
 
 const pathModule = (Path as any).default || Path;
 const convertToIndexedPng = (convertToIndexedPngDefault || convertToIndexedPngFn) as typeof convertToIndexedPngFn;
@@ -69,12 +69,20 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   let projDir = "";
   if (typeof projectDirPath === "string") {
     projDir = projectDirPath;
-  } else if (projectDirPath?.path) {
-    projDir = projectDirPath.path;
   } else if (outputBuildDir?.projectRoot) {
     projDir = outputBuildDir.projectRoot;
+  } else if (projectDirPath?.projectRoot) {
+    projDir = projectDirPath.projectRoot;
+  } else if (projectDirPath?.path) {
+    projDir = projectDirPath.path;
+  } else if (projectDirPath?.dir) {
+    projDir = projectDirPath.dir;
   } else {
     projDir = process.cwd();
+  }
+
+  if (projDir && (projDir.endsWith(".gbsproj") || projDir.endsWith(".json"))) {
+    projDir = pathModule.dirname(projDir);
   }
 
   let buildDir = "";
@@ -95,7 +103,14 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const { defaultEngineRoot } = require("../../consts");
   try {
     if (fs.existsSync(defaultEngineRoot)) {
-      await fs.copy(defaultEngineRoot, buildDir, { overwrite: true, errorOnExist: false });
+      const engineSrc = pathModule.join(defaultEngineRoot, "src");
+      const engineInclude = pathModule.join(defaultEngineRoot, "include");
+      if (fs.existsSync(engineSrc)) {
+        await fs.copy(engineSrc, pathModule.join(buildDir, "src"), { overwrite: true, errorOnExist: false });
+      }
+      if (fs.existsSync(engineInclude)) {
+        await fs.copy(engineInclude, pathModule.join(buildDir, "include"), { overwrite: true, errorOnExist: false });
+      }
     }
   } catch (e) {
     // Ignore transient EPERM file lock issues when overwriting engine files
@@ -148,7 +163,23 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
   }
 
-  const allSprites = [...(projectData.sprites || []), ...spritesFromGbsres];
+  const toEntityArray = (val: any): any[] => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    if (val.entities && typeof val.entities === "object") {
+      if (Array.isArray(val.ids)) {
+        return val.ids.map((id: string) => val.entities[id]).filter(Boolean);
+      }
+      return Object.values(val.entities);
+    }
+    if (typeof val === "object") {
+      return Object.values(val);
+    }
+    return [];
+  };
+
+  const projectSpritesArr = toEntityArray(projectData.sprites);
+  const allSprites = [...projectSpritesArr, ...spritesFromGbsres];
 
   // Parse scene and actor gbsres files
   let scenesFromGbsres: any[] = [];
@@ -159,35 +190,56 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       const sceneGbs = pathModule.join(scenesDir, String(sd), "scene.gbsres");
       if (fs.existsSync(sceneGbs)) {
         try {
-          const scJson = fs.readJsonSync(sceneGbs);
-          scJson.actors = [];
-          scJson.triggers = [];
-
-          const actorsDir = pathModule.join(scenesDir, String(sd), "actors");
-          if (fs.existsSync(actorsDir)) {
-            const actFiles = fs.readdirSync(actorsDir).filter(f => typeof f === "string" && f.endsWith(".gbsres") && !f.endsWith(".bak"));
-            for (const af of actFiles) {
-              const actJson = fs.readJsonSync(pathModule.join(actorsDir, af));
-              scJson.actors.push(actJson);
+          const json = fs.readJsonSync(sceneGbs);
+          if (json) {
+            const actorsDir = pathModule.join(scenesDir, String(sd), "actors");
+            if (fs.existsSync(actorsDir)) {
+              const actorFiles = fs.readdirSync(actorsDir).filter(f => typeof f === "string" && f.endsWith(".gbsres"));
+              const sceneActors: any[] = [];
+              for (const af of actorFiles) {
+                try {
+                  const aJson = fs.readJsonSync(pathModule.join(actorsDir, af));
+                  if (aJson) sceneActors.push(aJson);
+                } catch (e) { }
+              }
+              json.actors = sceneActors;
             }
-          }
-
-          const triggersDir = pathModule.join(scenesDir, String(sd), "triggers");
-          if (fs.existsSync(triggersDir)) {
-            const trigFiles = fs.readdirSync(triggersDir).filter(f => typeof f === "string" && f.endsWith(".gbsres") && !f.endsWith(".bak"));
-            for (const tf of trigFiles) {
-              const trJson = fs.readJsonSync(pathModule.join(triggersDir, tf));
-              scJson.triggers.push(trJson);
+            const triggersDir = pathModule.join(scenesDir, String(sd), "triggers");
+            if (fs.existsSync(triggersDir)) {
+              const trigFiles = fs.readdirSync(triggersDir).filter(f => typeof f === "string" && f.endsWith(".gbsres"));
+              const sceneTriggers: any[] = [];
+              for (const tf of trigFiles) {
+                try {
+                  const tJson = fs.readJsonSync(pathModule.join(triggersDir, tf));
+                  if (tJson) sceneTriggers.push(tJson);
+                } catch (e) { }
+              }
+              json.triggers = sceneTriggers;
             }
+            scenesFromGbsres.push(json);
           }
-
-          scenesFromGbsres.push(scJson);
         } catch (e) { }
       }
     }
   }
 
-  if (settingsGbsData && Array.isArray(settingsGbsData.sceneIds) && scenesFromGbsres.length > 0) {
+  if (projectData.sceneOrder && Array.isArray(projectData.sceneOrder)) {
+    const sceneMap = new Map<string, any>();
+    scenesFromGbsres.forEach((sc) => {
+      if (sc.id) sceneMap.set(sc.id, sc);
+    });
+    const orderedScenes: any[] = [];
+    projectData.sceneOrder.forEach((id: string) => {
+      if (sceneMap.has(id)) {
+        orderedScenes.push(sceneMap.get(id));
+        sceneMap.delete(id);
+      }
+    });
+    sceneMap.forEach((sc) => orderedScenes.push(sc));
+    if (orderedScenes.length > 0) {
+      scenesFromGbsres = orderedScenes;
+    }
+  } else if (settingsGbsData && Array.isArray(settingsGbsData.sceneIds) && scenesFromGbsres.length > 0) {
     const sceneMap = new Map<string, any>();
     scenesFromGbsres.forEach((sc: any) => {
       if (sc.id) sceneMap.set(sc.id, sc);
@@ -215,8 +267,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     });
   }
 
-  const allScenes = (projectData.scenes && projectData.scenes.length > 0)
-    ? projectData.scenes
+  const projectScenesArr = toEntityArray(projectData.scenes);
+  const allScenes = (projectScenesArr.length > 0)
+    ? projectScenesArr
     : (scenesFromGbsres.length > 0 ? scenesFromGbsres : []);
 
   // Parse background gbsres files and projectData.backgrounds
@@ -240,7 +293,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
   }
 
-  const allBackgrounds = [...(projectData.backgrounds || []), ...bgsFromGbsres];
+  const projectBgArr = toEntityArray(projectData.backgrounds);
+  const allBackgrounds = [...projectBgArr, ...bgsFromGbsres];
   const bgIdMap: Record<string, string> = {};
   allBackgrounds.forEach((bg: any) => {
     if (bg) {
@@ -427,6 +481,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
   const uniqueBgFiles = Array.from(new Set(sceneBgFilenames));
   for (const bgFile of uniqueBgFiles) {
+    let copied = false;
     for (const bDir of bgDirsToScan) {
       const srcPng = pathModule.join(bDir, bgFile);
       if (fs.existsSync(srcPng)) {
@@ -436,13 +491,46 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         } catch (e) {
           await fs.copy(srcPng, destPng, { overwrite: true });
         }
+        copied = true;
         break;
+      }
+    }
+    if (!copied) {
+      const destPng = pathModule.join(destBgDir, bgFile);
+      if (!fs.existsSync(destPng)) {
+        let fallbackSrc = "";
+        for (const bDir of bgDirsToScan) {
+          if (fs.existsSync(bDir)) {
+            const pngs = fs.readdirSync(bDir).filter((f: any) => typeof f === "string" && f.endsWith(".png"));
+            if (pngs.length > 0) {
+              fallbackSrc = pathModule.join(bDir, pngs[0]);
+              break;
+            }
+          }
+        }
+        if (fallbackSrc && fs.existsSync(fallbackSrc)) {
+          try {
+            convertToIndexedPng(fallbackSrc, destPng);
+          } catch (e) {
+            await fs.copy(fallbackSrc, destPng, { overwrite: true });
+          }
+        } else {
+          try {
+            createBlankIndexedPng(destPng, 256, 224);
+          } catch (e) {}
+        }
       }
     }
   }
 
+  const defaultScenePng = pathModule.join(destBgDir, "scene.png");
+  if (!fs.existsSync(defaultScenePng)) {
+    try {
+      createBlankIndexedPng(defaultScenePng, 256, 224);
+    } catch (e) {}
+  }
+
   let bgAsmDirectives = "";
-  let bgSymbolDefines = "";
   const bgSymbolMap = new Map<string, string>();
   let bgUniqueIndex = 0;
 
@@ -457,18 +545,15 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       bgAsmDirectives += `_${symPrefix}_chr .incchr "assets/backgrounds/${bgFile}",0,0,${dim.width},${dim.height},1\n`;
       bgAsmDirectives += `_${symPrefix}_pal .incpal "assets/backgrounds/${bgFile}"\n`;
       bgAsmDirectives += `_${symPrefix}_bat .incbat "assets/backgrounds/${bgFile}",$1000,0,0,${dim.width},${dim.height},_${symPrefix}_chr\n`;
-      bgSymbolDefines += `extern const unsigned int ${symPrefix}_chr[];\n`;
-      bgSymbolDefines += `extern const unsigned int ${symPrefix}_pal[];\n`;
-      bgSymbolDefines += `extern const unsigned int ${symPrefix}_bat[];\n`;
     }
 
     const symPrefix = bgSymbolMap.get(key)!;
-    bgSymbolDefines += `#define bg_scene${scNum}_chr ${symPrefix}_chr\n`;
-    bgSymbolDefines += `#define bg_scene${scNum}_pal ${symPrefix}_pal\n`;
-    bgSymbolDefines += `#define bg_scene${scNum}_bat ${symPrefix}_bat\n`;
+    bgAsmDirectives += `_bg_scene${scNum}_chr = _${symPrefix}_chr\n`;
+    bgAsmDirectives += `_bg_scene${scNum}_pal = _${symPrefix}_pal\n`;
+    bgAsmDirectives += `_bg_scene${scNum}_bat = _${symPrefix}_bat\n`;
   });
 
-  const bgDirectives = `#asm\n .data\n${bgAsmDirectives} .code\n#endasm\n\n${bgSymbolDefines}`;
+  const bgDirectives = `#asm\n .data\n${bgAsmDirectives} .code\n#endasm\n`;
 
   let collisionIncludes = "";
   const colSymbolMap = new Map<string, string>();
@@ -1793,7 +1878,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         processEventList(scActor.script, false);
         stepCases += `      case ${stepIndex}:\n        return -1;\n`;
         stepIndex++;
-        actorInteractCases.push(`    case ${actorNum}:\n      g_script_scene = ${scNum};\n      g_script_step = ${actorStartStep};\n      g_script_step = run_scene_${scNum}_step(g_script_step);\n      return 1;\n`);
+        actorInteractCases.push(`    case ${actorNum}:\n      g_script_scene = ${scNum};\n      g_script_step = ${actorStartStep};\n      g_script_step = run_scene_step(${scNum}, ${actorStartStep});\n      return 1;\n`);
       } else {
         const actText = extractActorText(scActor);
         if (actText) {
@@ -1801,7 +1886,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           const textStep = stepIndex;
           stepCases += `      case ${textStep}:\n        show_dialogue("${cleanText}");\n        return -1;\n`;
           stepIndex++;
-          actorInteractCases.push(`    case ${actorNum}:\n      g_script_scene = ${scNum};\n      g_script_step = ${textStep};\n      g_script_step = run_scene_${scNum}_step(g_script_step);\n      return 1;\n`);
+          actorInteractCases.push(`    case ${actorNum}:\n      g_script_scene = ${scNum};\n      g_script_step = ${textStep};\n      g_script_step = run_scene_step(${scNum}, ${textStep});\n      return 1;\n`);
         }
       }
     });
@@ -1815,7 +1900,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
     if (stepCases) {
       sceneStepHelpers += `int run_scene_${scNum}_step(int step) {\n  switch (step) {\n${stepCases}    default:\n      return -1;\n  }\n}\n\n`;
-      sceneInitCases += `  if (scene_num == ${scNum}) return run_scene_${scNum}_step(step);\n`;
+      sceneInitCases += `  if (scene_num == ${scNum}) res_step = run_scene_${scNum}_step(step);\n`;
     }
   });
 
@@ -1841,12 +1926,23 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 #define HAS_SCENE_INPUT_SCRIPTS 1
 #define HAS_SCENE_STARTUP_SCRIPTS 1
 #define HAS_INTERACT_ACTOR 1
+#define HAS_SCENE_BACKGROUND 1
+#define HAS_SCENE_MUSIC 1
+#define HAS_SCENE_PLAYER_SPRITE 1
 
 ${sceneStepHelpers}
 ${sceneInputCheckHelpers}
 ${sceneActorInteractHelpers}
 int run_scene_step(int scene_num, int step) {
-${sceneInitCases}  return -1;
+  int prev_sc;
+  int res_step;
+  prev_sc = g_script_scene;
+  res_step = -1;
+${sceneInitCases}
+  if (g_script_scene != prev_sc) {
+    return g_script_step;
+  }
+  return res_step;
 }
 
 int check_scene_input(int scene_num, unsigned int pressed) {

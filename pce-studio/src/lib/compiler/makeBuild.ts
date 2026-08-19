@@ -34,6 +34,19 @@ export const makeBuild = async ({
     throw new Error(`HuC toolchain missing at ${hucBinRoot}`);
   }
 
+  // Ensure engine files and headers are present in buildRoot (do not overwrite main.c)
+  const { defaultEngineRoot } = require("consts");
+  if (fs.existsSync(defaultEngineRoot)) {
+    const engineSrc = Path.join(defaultEngineRoot, "src");
+    const engineInclude = Path.join(defaultEngineRoot, "include");
+    if (fs.existsSync(engineSrc)) {
+      await fs.copy(engineSrc, Path.join(buildRoot, "src"), { overwrite: true, errorOnExist: false });
+    }
+    if (fs.existsSync(engineInclude)) {
+      await fs.copy(engineInclude, Path.join(buildRoot, "include"), { overwrite: true, errorOnExist: false });
+    }
+  }
+
   // Copy HuC system headers into buildRoot/include/huc for guaranteed local resolution
   const localIncludeHuc = Path.join(buildRoot, "include", "huc");
   await fs.copy(hucIncludeRoot, localIncludeHuc, { overwrite: true });

@@ -13,7 +13,8 @@ class GeargrafxMCP {
 
   start() {
     return new Promise((resolve, reject) => {
-      this.child = spawn(this.geargrafxExe, ["--headless", "--mcp-stdio", this.romPath]);
+      const normalizedPath = path.resolve(this.romPath);
+      this.child = spawn(this.geargrafxExe, ["--headless", "--mcp-stdio", normalizedPath]);
 
       this.child.stdout.on("data", (data) => {
         this.buffer += data.toString();

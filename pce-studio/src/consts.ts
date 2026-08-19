@@ -46,7 +46,7 @@ if (isDist) {
 }
 
 // Paths
-export const buildUUID = "_pcebuild";
+export const buildUUID = `_pcebuild_${Date.now()}`;
 export const enginesRoot = normalize(`${appDataRoot}/engine`);
 export const defaultEngineRoot = normalize(`${enginesRoot}/pcevm`);
 export const defaultEngineMetaPath = normalize(`${enginesRoot}/engine.json`);

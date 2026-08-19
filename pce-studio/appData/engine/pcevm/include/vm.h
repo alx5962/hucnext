@@ -26,8 +26,6 @@ typedef struct {
     int active;
 } vm_context_t;
 
-extern int g_vm_vars[VM_MAX_VARS];
-
 void vm_init(void);
 void vm_start_script(unsigned char* script_ptr);
 void vm_step(void);

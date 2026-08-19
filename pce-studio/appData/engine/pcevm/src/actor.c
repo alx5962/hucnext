@@ -2,18 +2,6 @@
 #include "include/actor.h"
 #include "include/engine.h"
 
-int g_actor_active[PCE_MAX_ACTORS];
-int g_actor_hidden[PCE_MAX_ACTORS];
-int g_actor_x[PCE_MAX_ACTORS];
-int g_actor_y[PCE_MAX_ACTORS];
-int g_actor_tile_id[PCE_MAX_ACTORS];
-int g_actor_palette[PCE_MAX_ACTORS];
-unsigned char g_actor_size[PCE_MAX_ACTORS];
-int g_actor_dir[PCE_MAX_ACTORS];
-int g_actor_anim_frame[PCE_MAX_ACTORS];
-int g_actor_sprite_handle[PCE_MAX_ACTORS];
-int g_actor_count;
-
 void actor_init(void) {
     int i;
     init_satb();
@@ -119,10 +107,6 @@ void actor_set_hidden(int id, int hidden) {
         g_actor_hidden[id] = hidden;
     }
 }
-
-int g_actor_collisions_disabled[PCE_MAX_ACTORS];
-int g_actor_move_speed[PCE_MAX_ACTORS];
-int g_actor_anim_speed[PCE_MAX_ACTORS];
 
 void actor_activate(int id) {
     if (id >= 0 && id < PCE_MAX_ACTORS) g_actor_active[id] = 1;

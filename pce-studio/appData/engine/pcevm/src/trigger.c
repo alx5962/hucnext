@@ -3,8 +3,6 @@
 #include "include/vm.h"
 #include "include/actor.h"
 
-pce_trigger_t g_triggers[MAX_TRIGGERS];
-int g_trigger_count;
 static unsigned char g_trigger_cooldown = 0;
 void load_scene(int scene_num, int player_x, int player_y);
 

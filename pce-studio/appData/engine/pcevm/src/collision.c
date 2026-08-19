@@ -2,14 +2,6 @@
 #include "include/collision.h"
 #include "include/actor.h"
 
-int g_collision_width = 32;
-int g_collision_height = 28;
-
-int g_player_bbox_left = 2;
-int g_player_bbox_right = 13;
-int g_player_bbox_top = 8;
-int g_player_bbox_bottom = 23;
-
 int collision_check_tile(int tile_x, int tile_y) {
     if (tile_x < 0 || tile_x >= g_collision_width || tile_y < 0 || tile_y >= g_collision_height) {
         return COLLISION_SOLID;

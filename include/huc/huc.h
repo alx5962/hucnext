@@ -1,3 +1,6 @@
+#ifndef _HUC_H_
+#define _HUC_H_
+
 /*
  * backup ram defines
  */
@@ -136,3 +139,5 @@ unsigned char timer_get(void);
 
 void irq_enable(unsigned char irq);
 void irq_disable(unsigned char irq);
+
+#endif /* _HUC_H_ */

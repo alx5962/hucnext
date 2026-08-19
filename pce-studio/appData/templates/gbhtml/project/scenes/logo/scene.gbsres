@@ -68,7 +68,7 @@
           "type": "number",
           "value": 0
         },
-        "direction": "",
+        "direction": "right",
         "fadeSpeed": "2"
       }
     }
