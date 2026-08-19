@@ -157,11 +157,11 @@ void actor_emote(int id, int emote_id) {
 }
 
 void actor_push(int id, int dir) {
-    if (id >= 0 && id < PCE_MAX_ACTORS) {
-        if (dir == 0) g_actor_y[id] += 16;
-        else if (dir == 1) g_actor_x[id] += 16;
-        else if (dir == 2) g_actor_y[id] -= 16;
-        else if (dir == 3) g_actor_x[id] -= 16;
+    if (id > 0 && id < PCE_MAX_ACTORS && g_actor_active[id]) {
+        if (dir == DIR_RIGHT) g_actor_x[id] += 16;
+        else if (dir == DIR_LEFT) g_actor_x[id] -= 16;
+        else if (dir == DIR_UP) g_actor_y[id] -= 16;
+        else if (dir == DIR_DOWN) g_actor_y[id] += 16;
     }
 }
 

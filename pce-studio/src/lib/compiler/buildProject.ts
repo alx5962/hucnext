@@ -1451,17 +1451,18 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       ...(Array.isArray(scene.startScript) ? scene.startScript : [])
     ];
 
-    const findTargetNum = (actArg: string): number => {
-      if (actArg === "player" || actArg === "$self$") return 0;
+    const findTargetNum = (actArg: string | undefined, defaultActor: number = 0): number => {
+      if (!actArg || actArg === "$self$") return defaultActor;
+      if (actArg === "player") return 0;
       const targetIdx = (scene.actors || []).findIndex((a: any) => a.id === actArg);
       if (targetIdx !== -1) return targetIdx + 1;
-      return 0;
+      return defaultActor;
     };
 
     let stepIndex = 0;
     let stepCases = "";
 
-    const processEventList = (evts: any[], isStartupContext = false) => {
+    const processEventList = (evts: any[], isStartupContext = false, currentActorNum = 0) => {
       if (!Array.isArray(evts)) return;
       for (const evt of evts) {
         if (!evt || typeof evt !== "object" || evt.args?.__comment) continue;
@@ -1538,70 +1539,65 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           stepCases += `      case ${stepIndex}:\n#ifdef HAS_MUSIC_DATA\n        pce_sound_play(${songSymbol}_Data);\n#endif\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_SHOW") {
-          const targetNum = findTargetNum(evt.args?.actorId);
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
           stepCases += `      case ${stepIndex}:\n        actor_show(${targetNum});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_HIDE") {
-          const targetNum = findTargetNum(evt.args?.actorId);
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
           stepCases += `      case ${stepIndex}:\n        actor_hide(${targetNum});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_COLLISIONS_DISABLE") {
-          const targetNum = findTargetNum(evt.args?.actorId);
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
           stepCases += `      case ${stepIndex}:\n        actor_set_collisions(${targetNum}, 0);\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_COLLISIONS_ENABLE") {
-          const targetNum = findTargetNum(evt.args?.actorId);
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
           stepCases += `      case ${stepIndex}:\n        actor_set_collisions(${targetNum}, 1);\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_MOVE_TO" || evt.command === "EVENT_ACTOR_MOVE_TO_VALUE") {
-          const targetNum = findTargetNum(evt.args?.actorId);
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
           const px = parseCoord(evt.args?.x, 0) * 8;
           const py = parseCoord(evt.args?.y, 0) * 8;
           stepCases += `      case ${stepIndex}:\n        actor_move_to(${targetNum}, ${px}, ${py});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_MOVE_RELATIVE") {
-          const targetNum = findTargetNum(evt.args?.actorId);
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
           const dx = parseCoord(evt.args?.x, 0) * 8;
           const dy = parseCoord(evt.args?.y, 0) * 8;
           stepCases += `      case ${stepIndex}:\n        actor_set_pos_rel(${targetNum}, ${dx}, ${dy});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_SET_DIRECTION" || evt.command === "EVENT_ACTOR_SET_DIRECTION_TO_VALUE") {
-          const targetNum = findTargetNum(evt.args?.actorId);
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
           const dStr = String(evt.args?.direction || "down").toLowerCase();
-          let dNum = 0;
-          if (dStr === "right") dNum = 1;
+          let dNum = 3;
+          if (dStr === "right") dNum = 0;
+          else if (dStr === "left") dNum = 1;
           else if (dStr === "up") dNum = 2;
-          else if (dStr === "left") dNum = 3;
           stepCases += `      case ${stepIndex}:\n        actor_set_dir(${targetNum}, ${dNum});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_SET_MOVEMENT_SPEED") {
-          const targetNum = findTargetNum(evt.args?.actorId);
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
           const spd = parseCoord(evt.args?.speed, 1);
           stepCases += `      case ${stepIndex}:\n        actor_set_move_speed(${targetNum}, ${spd});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_SET_ANIMATION_SPEED") {
-          const targetNum = findTargetNum(evt.args?.actorId);
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
           const spd = parseCoord(evt.args?.speed, 1);
           stepCases += `      case ${stepIndex}:\n        actor_set_anim_speed(${targetNum}, ${spd});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_SET_FRAME" || evt.command === "EVENT_ACTOR_SET_FRAME_TO_VALUE") {
-          const targetNum = findTargetNum(evt.args?.actorId);
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
           const frm = parseCoord(evt.args?.frame, 0);
           stepCases += `      case ${stepIndex}:\n        actor_set_frame(${targetNum}, ${frm});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_EMOTE") {
-          const targetNum = findTargetNum(evt.args?.actorId);
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
           const emoteId = parseCoord(evt.args?.emoteId, 0);
           stepCases += `      case ${stepIndex}:\n        actor_emote(${targetNum}, ${emoteId});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_PUSH") {
-          const targetNum = findTargetNum(evt.args?.actorId);
-          const dStr = String(evt.args?.direction || "down").toLowerCase();
-          let dNum = 0;
-          if (dStr === "right") dNum = 1;
-          else if (dStr === "up") dNum = 2;
-          else if (dStr === "left") dNum = 3;
-          stepCases += `      case ${stepIndex}:\n        actor_push(${targetNum}, ${dNum});\n        return ${stepIndex + 1};\n`;
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
+          stepCases += `      case ${stepIndex}:\n        actor_push(${targetNum}, g_actor_dir[0]);\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_CAMERA_MOVE_TO" || evt.command === "EVENT_CAMERA_SET_POSITION") {
           const cx = parseCoord(evt.args?.x, 0) * 8;
@@ -1816,16 +1812,16 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         }
 
         if (evt.children && typeof evt.children === "object") {
-          Object.values(evt.children).forEach((cEvts: any) => processEventList(cEvts, isStartupContext));
+          Object.values(evt.children).forEach((cEvts: any) => processEventList(cEvts, isStartupContext, currentActorNum));
         }
         if (evt.true && Array.isArray(evt.true) && evt.command !== "EVENT_SET_INPUT_SCRIPT" && evt.command !== "EVENT_INPUT_SCRIPT_SET") {
-          processEventList(evt.true, isStartupContext);
+          processEventList(evt.true, isStartupContext, currentActorNum);
         }
-        if (evt.false && Array.isArray(evt.false)) processEventList(evt.false, isStartupContext);
+        if (evt.false && Array.isArray(evt.false)) processEventList(evt.false, isStartupContext, currentActorNum);
       }
     };
 
-    processEventList(events, true);
+    processEventList(events, true, 0);
     const startupStepsCount = stepIndex;
     if (startupStepsCount > 0) {
       stepCases += `      case ${stepIndex}:\n        return -1;\n`;
@@ -1853,7 +1849,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         : [];
 
       const startStep = stepIndex;
-      processEventList(childEvents, false);
+      processEventList(childEvents, false, 0);
       stepCases += `      case ${stepIndex}:\n        return -1;\n`;
       stepIndex++;
       sceneInputScripts.push({ mask, startStep });
@@ -1875,7 +1871,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       const actorNum = aIdx + 1;
       if (scActor.script && Array.isArray(scActor.script) && scActor.script.length > 0) {
         const actorStartStep = stepIndex;
-        processEventList(scActor.script, false);
+        processEventList(scActor.script, false, actorNum);
         stepCases += `      case ${stepIndex}:\n        return -1;\n`;
         stepIndex++;
         actorInteractCases.push(`    case ${actorNum}:\n      g_script_scene = ${scNum};\n      g_script_step = ${actorStartStep};\n      g_script_step = run_scene_step(${scNum}, ${actorStartStep});\n      return 1;\n`);
