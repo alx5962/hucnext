@@ -311,15 +311,25 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
   });
 
-  // Load platformer settings from project/engine_field_values.gbsres if present
+  // Load platformer settings from projectData and project/engine_field_values.gbsres if present
   let engineFieldValuesMap: Record<string, any> = {};
+  if (projectData && projectData.engineFieldValues) {
+    const efList = Array.isArray(projectData.engineFieldValues)
+      ? projectData.engineFieldValues
+      : Object.entries(projectData.engineFieldValues).map(([id, value]) => ({ id, value }));
+    for (const ef of efList) {
+      if (ef && ef.id) {
+        engineFieldValuesMap[ef.id] = ef.value;
+      }
+    }
+  }
   const engineFieldsGbsPath = pathModule.join(projDir, "project", "engine_field_values.gbsres");
   if (fs.existsSync(engineFieldsGbsPath)) {
     try {
       const efJson = fs.readJsonSync(engineFieldsGbsPath);
       if (efJson && Array.isArray(efJson.engineFieldValues)) {
         for (const ef of efJson.engineFieldValues) {
-          if (ef && ef.id) {
+          if (ef && ef.id && engineFieldValuesMap[ef.id] === undefined) {
             engineFieldValuesMap[ef.id] = ef.value;
           }
         }
@@ -328,14 +338,28 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   }
 
   const rawWalkVel = typeof engineFieldValuesMap["plat_walk_vel"] === "number" ? engineFieldValuesMap["plat_walk_vel"] : 6400;
-  const rawGrav = typeof engineFieldValuesMap["plat_grav"] === "number" ? engineFieldValuesMap["plat_grav"] : 1792;
+  const rawGrav = typeof engineFieldValuesMap["plat_grav"] === "number" ? engineFieldValuesMap["plat_grav"] : 1024;
+  const rawHoldGrav = typeof engineFieldValuesMap["plat_hold_grav"] === "number" ? engineFieldValuesMap["plat_hold_grav"] : 512;
   const rawMaxFall = typeof engineFieldValuesMap["plat_max_fall_vel"] === "number" ? engineFieldValuesMap["plat_max_fall_vel"] : 20000;
+  const rawJumpVel = typeof engineFieldValuesMap["plat_jump_vel"] === "number" ? engineFieldValuesMap["plat_jump_vel"] : 16384;
 
   // Convert 16-bit fixed point engine field values to PC Engine subpixels (8 subpixels = 1 pixel)
+  // 1 PPF in GBS = 4096 -> 8 subpixels in PCE (divide by 512)
   const platWalkSubpx = Math.max(1, Math.round(rawWalkVel / 512));
   const platGravitySubpx = Math.max(1, Math.round(rawGrav / 512));
+  const platHoldGravitySubpx = Math.max(1, Math.round(rawHoldGrav / 512));
   const platMaxFallSubpx = Math.max(4, Math.round(rawMaxFall / 512));
-  const platJumpVelSubpx = Math.max(16, Math.round(Math.sqrt(2 * platGravitySubpx * 210)));
+  const platJumpVelSubpx = Math.max(8, Math.round(rawJumpVel / 512));
+
+  let platJumpBtnDefine = "(JOY_I | JOY_A | JOY_II | JOY_B)";
+  const jumpBtnVal = String(engineFieldValuesMap["plat_jump_btn"] || engineFieldValuesMap["jump_btn"] || "").toUpperCase();
+  if (jumpBtnVal.includes("UP")) {
+    platJumpBtnDefine = "JOY_UP";
+  } else if (jumpBtnVal.includes("B") || jumpBtnVal.includes("II")) {
+    platJumpBtnDefine = "(JOY_II | JOY_B)";
+  } else if (jumpBtnVal.includes("A") || jumpBtnVal.includes("I")) {
+    platJumpBtnDefine = "(JOY_I | JOY_A)";
+  }
 
   const sceneBgFilenames: string[] = [];
   const sceneTypeDefineList: string[] = [];
@@ -476,7 +500,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
   const firstType = (allScenes[0]?.type || "TOPDOWN").toUpperCase();
   const firstTypeNum = SCENE_TYPE_MAP[firstType] ?? SCENE_TYPE_MAP["TOPDOWN"];
-  const sceneTypeDefine = sceneTypeDefineList.join("\n") + `\n#define SCENE_TYPE ${firstTypeNum}\n#define PLAT_WALK_SUBPX ${platWalkSubpx}\n#define PLAT_GRAVITY ${platGravitySubpx}\n#define PLAT_JUMP_SUBPX ${platJumpVelSubpx}\n#define PLAT_MAX_FALL ${platMaxFallSubpx}\n`;
+  const sceneTypeDefine = sceneTypeDefineList.join("\n") + `\n#define SCENE_TYPE ${firstTypeNum}\n#define PLAT_WALK_SUBPX ${platWalkSubpx}\n#define PLAT_GRAVITY ${platGravitySubpx}\n#define PLAT_HOLD_GRAVITY ${platHoldGravitySubpx}\n#define PLAT_JUMP_SUBPX ${platJumpVelSubpx}\n#define PLAT_MAX_FALL ${platMaxFallSubpx}\n#define PLAT_JUMP_BTN ${platJumpBtnDefine}\n`;
 
   // Ensure background PNGs exist in build assets/backgrounds directory
   const destBgDir = pathModule.join(buildDir, "assets", "backgrounds");

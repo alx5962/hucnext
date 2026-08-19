@@ -5771,12 +5771,16 @@ void update_platform(void) {
       g_plat_sub_x = g_actor_x[0] * 8;
     }
 
-    if ((input & JOY_II) && g_plat_on_ground) {
+    if ((input & PLAT_JUMP_BTN) && g_plat_on_ground) {
       g_plat_vy = -PLAT_JUMP_SUBPX;
       g_plat_on_ground = 0;
     }
 
-    g_plat_vy += PLAT_GRAVITY;
+    if ((input & PLAT_JUMP_BTN) && g_plat_vy < 0) {
+      g_plat_vy += PLAT_HOLD_GRAVITY;
+    } else {
+      g_plat_vy += PLAT_GRAVITY;
+    }
     if (g_plat_vy > PLAT_MAX_FALL)
       g_plat_vy = PLAT_MAX_FALL;
 

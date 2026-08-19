@@ -117,6 +117,9 @@ int interact_actor(int scene_num, int actor_num);
 #ifndef PLAT_GRAVITY
 #define PLAT_GRAVITY    3
 #endif
+#ifndef PLAT_HOLD_GRAVITY
+#define PLAT_HOLD_GRAVITY 1
+#endif
 #ifndef PLAT_JUMP_SUBPX
 #define PLAT_JUMP_SUBPX 35
 #endif
@@ -125,6 +128,9 @@ int interact_actor(int scene_num, int actor_num);
 #endif
 #ifndef PLAT_MAX_FALL
 #define PLAT_MAX_FALL   39
+#endif
+#ifndef PLAT_JUMP_BTN
+#define PLAT_JUMP_BTN   (JOY_I | JOY_A | JOY_II | JOY_B)
 #endif
 
 /* Adventure / Top-down speeds */
