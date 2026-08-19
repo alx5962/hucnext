@@ -23,6 +23,13 @@ void actor_init(void) {
         g_actor_size[i] = SZ_16x16;
         g_actor_dir[i] = 0;
         g_actor_anim_frame[i] = 0;
+        g_actor_anim_speed[i] = 15;
+        g_actor_anim_timer[i] = 0;
+        g_actor_num_frames[i] = 1;
+        g_actor_frame_vram_size[i] = 0x40;
+        g_actor_base_tile_id[i] = 0;
+        g_actor_move_speed[i] = 1;
+        g_actor_collisions_disabled[i] = 0;
         g_actor_sprite_handle[i] = i;
     }
 }
@@ -39,6 +46,11 @@ int actor_spawn(int x, int y, int tile_id, int palette, int size) {
     g_actor_tile_id[id] = tile_id;
     g_actor_palette[id] = palette;
     g_actor_size[id] = (unsigned char)size;
+    g_actor_base_tile_id[id] = tile_id;
+    g_actor_frame_vram_size[id] = 0x40;
+    g_actor_num_frames[id] = 1;
+    g_actor_anim_frame[id] = 0;
+    g_actor_anim_timer[id] = 0;
     return id;
 }
 
@@ -46,7 +58,21 @@ void actor_update_all(void) {
     int i, flip;
     int screen_x, screen_y;
     int is_dialogue;
+    int spd;
     is_dialogue = (g_dialogue_active || g_choice_active);
+
+    /* Animate non-player actors that have multiple frames */
+    for (i = 1; i < g_actor_count; i++) {
+        if (g_actor_active[i] && !g_actor_hidden[i] && g_actor_num_frames[i] > 1) {
+            g_actor_anim_timer[i]++;
+            spd = (g_actor_anim_speed[i] > 0) ? g_actor_anim_speed[i] : 15;
+            if (g_actor_anim_timer[i] >= spd) {
+                g_actor_anim_timer[i] = 0;
+                g_actor_anim_frame[i] = (g_actor_anim_frame[i] + 1) % g_actor_num_frames[i];
+                g_actor_tile_id[i] = g_actor_base_tile_id[i] + (g_actor_anim_frame[i] * g_actor_frame_vram_size[i]);
+            }
+        }
+    }
 
     for (i = 0; i < 64; i++) {
         if (i >= g_actor_count || !g_actor_active[i] || g_actor_hidden[i] || g_current_scene_type == SCENE_TYPE_LOGO) {

@@ -156,6 +156,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         try {
           const json = fs.readJsonSync(pathModule.join(sDir, gf));
           if (json) {
+            if (!json.filename) {
+              json.filename = gf.replace(/\.gbsres$/i, "");
+            }
             spritesFromGbsres.push(json);
           }
         } catch (e) { }
@@ -179,7 +182,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   };
 
   const projectSpritesArr = toEntityArray(projectData.sprites);
-  const allSprites = [...projectSpritesArr, ...spritesFromGbsres];
+  const allSprites = [...spritesFromGbsres, ...projectSpritesArr];
 
   // Parse scene and actor gbsres files
   let scenesFromGbsres: any[] = [];
@@ -1118,8 +1121,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         cropW = canvasW;
         cropH = origH16 * 16;
         const padWidthTo = actVramW16 * 16;
-
-        const dims = convertPngToPcx(srcPng, destPcx, { cropX, cropY, cropW, cropH, padWidthTo });
         const w16 = actVramW16;
         const h16 = origH16;
 
@@ -1142,11 +1143,66 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           vramSizeHex = "0x200";
         }
 
-        const relPcx = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcx).replace(/\\/g, "/")}`;
-        actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_spr, "${relPcx}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc${sceneNum}_${actorNum}_pal, "${relPcx}")\n`;
+        const sharedPal = buildPngPalette(srcPng);
 
-        if (aIdx === 0) {
-          actorDirectives += `#incspr(actor_sc${sceneNum}_spr, "${relPcx}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc${sceneNum}_pal, "${relPcx}")\n`;
+        // Extract all animation frames for this actor
+        let actorAnimFrames: any[] = [];
+        if (sprObj?.states?.[0]?.animations) {
+          const animType = sprObj.states[0].animationType || "fixed";
+          let animIdx = 0;
+          if (animType === "multi_movement" || animType === "multi") {
+            const dir = scActor?.direction?.toLowerCase() || "down";
+            if (dir === "right") animIdx = 0;
+            else if (dir === "left") animIdx = 1;
+            else if (dir === "up") animIdx = 2;
+            else animIdx = 3;
+          } else {
+            animIdx = 0;
+          }
+          const anim = sprObj.states[0].animations[animIdx] || sprObj.states[0].animations[0];
+          if (anim && Array.isArray(anim.frames)) {
+            actorAnimFrames = anim.frames;
+          }
+        }
+
+        let maxAllowedFrames = 1;
+        if (vramSizeHex === "0x40") maxAllowedFrames = 4;
+        else if (vramSizeHex === "0x80" || vramSizeHex === "0x100") maxAllowedFrames = 2;
+
+        const numFrames = Math.max(1, Math.min(maxAllowedFrames, actorAnimFrames.length > 0 ? actorAnimFrames.length : 1));
+
+        for (let fIdx = 0; fIdx < numFrames; fIdx++) {
+          let fCropX = cropX;
+          let fCropY = cropY;
+          if (actorAnimFrames[fIdx]?.tiles && Array.isArray(actorAnimFrames[fIdx].tiles)) {
+            const validTiles = actorAnimFrames[fIdx].tiles.filter((t: any) => typeof t.sliceX === "number" && typeof t.sliceY === "number");
+            if (validTiles.length > 0) {
+              let minX = 9999;
+              let minY = 9999;
+              validTiles.forEach((t: any) => {
+                if (t.sliceX < minX) minX = t.sliceX;
+                if (t.sliceY < minY) minY = t.sliceY;
+              });
+              if (minX !== 9999 && minY !== 9999) {
+                fCropX = minX;
+                fCropY = minY;
+              }
+            }
+          } else if (fIdx > 0) {
+            fCropX = cropX + (fIdx * canvasW);
+          }
+
+          const destPcxF = pathModule.join(destSpritesDir, sprFilename.replace(/\.png$/i, `_sc${sceneNum}_${actorNum}_f${fIdx}.pcx`));
+          convertPngToPcx(srcPng, destPcxF, { cropX: fCropX, cropY: fCropY, cropW, cropH, padWidthTo, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+
+          const relPcxF = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxF).replace(/\\/g, "/")}`;
+          actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_f${fIdx}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n`;
+          if (fIdx === 0) {
+            actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc${sceneNum}_${actorNum}_pal, "${relPcxF}")\n`;
+            if (aIdx === 0) {
+              actorDirectives += `#incspr(actor_sc${sceneNum}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc${sceneNum}_pal, "${relPcxF}")\n`;
+            }
+          }
         }
 
         const actX = parseCoord(scActor.x, 8);
@@ -1169,8 +1225,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         }
 
         const interactDefs = getInteractionDefines(scene, scActor, sceneNum, actorNum);
+        const animSpeedVal = (typeof scActor.animSpeed === "number" && scActor.animSpeed > 0) ? scActor.animSpeed : 15;
 
-        actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum}_${actorNum} 1\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_SPRITE_SIZE ${sprSizeConst}\n${textDef}${hiddenDef}${interactDefs}`;
+        actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum}_${actorNum} 1\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_SPRITE_SIZE ${sprSizeConst}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_NUM_FRAMES ${numFrames}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_ANIM_SPEED ${animSpeedVal}\n${textDef}${hiddenDef}${interactDefs}`;
 
         if (aIdx === 0) {
           actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum} 1\n#define ACTOR_SCENE_${sceneNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_SPRITE_SIZE ${sprSizeConst}\n`;
@@ -1934,11 +1991,66 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       const palIdx = 1 + (aIdx % 15);
       const vramHex = `0x${currentVram.toString(16).toUpperCase()}`;
 
+      let sprObj: any = null;
+      if (scActor.spriteSheetId && allSprites.length > 0) {
+        sprObj = allSprites.find((s: any) => s.id === scActor.spriteSheetId);
+      }
+      let actorAnimFrames: any[] = [];
+      if (sprObj?.states?.[0]?.animations) {
+        const animType = sprObj.states[0].animationType || "fixed";
+        let animIdx = 0;
+        if (animType === "multi_movement" || animType === "multi") {
+          const dir = scActor?.direction?.toLowerCase() || "down";
+          if (dir === "right") animIdx = 0;
+          else if (dir === "left") animIdx = 1;
+          else if (dir === "up") animIdx = 2;
+          else animIdx = 3;
+        } else {
+          animIdx = 0;
+        }
+        const anim = sprObj.states[0].animations[animIdx] || sprObj.states[0].animations[0];
+        if (anim && Array.isArray(anim.frames)) {
+          actorAnimFrames = anim.frames;
+        }
+      }
+      const canvasW = sprObj?.canvasWidth || 16;
+      const canvasH = sprObj?.canvasHeight || 16;
+      const origW16 = Math.max(1, Math.min(2, Math.ceil(canvasW / 16)));
+      let origH16 = Math.max(1, Math.min(4, Math.ceil(canvasH / 16)));
+      if (origH16 === 3) origH16 = 4;
+      let vramSizeHex = "0x40";
+      if (origW16 === 1 && origH16 === 2) vramSizeHex = "0x100";
+      else if (origW16 === 2 && origH16 === 1) vramSizeHex = "0x80";
+      else if (origW16 === 2 && origH16 === 2) vramSizeHex = "0x100";
+      else if (origW16 === 2 && origH16 === 4) vramSizeHex = "0x200";
+      else if (origW16 === 1 && origH16 === 4) vramSizeHex = "0x200";
+
+      let maxAllowedFrames = 1;
+      if (vramSizeHex === "0x40") maxAllowedFrames = 4;
+      else if (vramSizeHex === "0x80" || vramSizeHex === "0x100") maxAllowedFrames = 2;
+
+      const numFrames = Math.max(1, Math.min(maxAllowedFrames, actorAnimFrames.length > 0 ? actorAnimFrames.length : 1));
+
       actCaseCode += `      #ifdef HAS_ACTOR_SCENE_${scNum}_${actorNum}\n`;
-      actCaseCode += `      load_vram(${vramHex}, actor_sc${scNum}_${actorNum}_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+      actCaseCode += `      load_vram(${vramHex}, actor_sc${scNum}_${actorNum}_f0_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+      if (numFrames >= 2) {
+        actCaseCode += `      load_vram(${vramHex} + ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE, actor_sc${scNum}_${actorNum}_f1_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+      }
+      if (numFrames >= 3) {
+        actCaseCode += `      load_vram(${vramHex} + 2 * ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE, actor_sc${scNum}_${actorNum}_f2_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+      }
+      if (numFrames >= 4) {
+        actCaseCode += `      load_vram(${vramHex} + 3 * ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE, actor_sc${scNum}_${actorNum}_f3_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+      }
       actCaseCode += `      load_palette(${16 + palIdx}, actor_sc${scNum}_${actorNum}_pal, 1);\n`;
       actCaseCode += `      g_actor_active[${actorNum}] = 1;\n`;
       actCaseCode += `      g_actor_tile_id[${actorNum}] = ${vramHex};\n`;
+      actCaseCode += `      g_actor_base_tile_id[${actorNum}] = ${vramHex};\n`;
+      actCaseCode += `      g_actor_frame_vram_size[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE;\n`;
+      actCaseCode += `      g_actor_num_frames[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_NUM_FRAMES;\n`;
+      actCaseCode += `      g_actor_anim_speed[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_ANIM_SPEED;\n`;
+      actCaseCode += `      g_actor_anim_frame[${actorNum}] = 0;\n`;
+      actCaseCode += `      g_actor_anim_timer[${actorNum}] = 0;\n`;
       actCaseCode += `      g_actor_palette[${actorNum}] = ${palIdx};\n`;
       actCaseCode += `      g_actor_size[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_SPRITE_SIZE;\n`;
       actCaseCode += `      actor_set_pos(${actorNum}, ACTOR_SCENE_${scNum}_${actorNum}_X, ACTOR_SCENE_${scNum}_${actorNum}_Y);\n`;
