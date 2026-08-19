@@ -45,9 +45,12 @@ int actor_spawn(int x, int y, int tile_id, int palette, int size) {
 void actor_update_all(void) {
     int i, flip;
     int screen_x, screen_y;
-    for (i = 0; i < g_actor_count; i++) {
-        if (!g_actor_active[i] || g_actor_hidden[i] || g_current_scene_type == SCENE_TYPE_LOGO) {
-            spr_set(g_actor_sprite_handle[i]);
+    int is_dialogue;
+    is_dialogue = (g_dialogue_active || g_choice_active);
+
+    for (i = 0; i < 64; i++) {
+        if (i >= g_actor_count || !g_actor_active[i] || g_actor_hidden[i] || g_current_scene_type == SCENE_TYPE_LOGO) {
+            spr_set(i);
             spr_x(512);
             spr_y(512);
             spr_hide();
@@ -59,13 +62,15 @@ void actor_update_all(void) {
 
         flip = (i > 0 && g_actor_dir[i] == 1) ? FLIP_X : NO_FLIP;
 
-        if ((g_dialogue_active && screen_y >= 168) || screen_x < -64 || screen_x > 256 || screen_y < -64 || screen_y > 224) {
-            spr_set(g_actor_sprite_handle[i]);
+        /* Dialogue box is at y = 22..26 tiles (pixel y = 176..216, top border at y=176).
+           Sprites extending down into dialogue area (screen_y >= 144) must be hidden during dialogue */
+        if ((is_dialogue && screen_y >= 144) || screen_x < -64 || screen_x > 256 || screen_y < -64 || screen_y > 224) {
+            spr_set(i);
             spr_x(512);
             spr_y(512);
             spr_hide();
         } else {
-            spr_set(g_actor_sprite_handle[i]);
+            spr_set(i);
             spr_x(screen_x);
             spr_y(screen_y);
             spr_pattern(g_actor_tile_id[i]);

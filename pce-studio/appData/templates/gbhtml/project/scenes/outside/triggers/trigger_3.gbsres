@@ -6,9 +6,9 @@
   "prefabId": "",
   "name": "",
   "x": 10,
-  "y": 8,
+  "y": 7,
   "width": 2,
-  "height": 1,
+  "height": 2,
   "prefabScriptOverrides": {},
   "script": [
     {
@@ -21,7 +21,7 @@
         },
         "y": {
           "type": "number",
-          "value": 14
+          "value": 22
         },
         "direction": "up",
         "sceneId": "1b7f9ffd-2bbb-470b-9189-c2ac435d2a55",

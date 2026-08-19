@@ -5128,19 +5128,20 @@ void load_scene(int scene_num, int player_x, int player_y) {
 
   load_scene_player_sprite(scene_num);
 
-  if (g_actor_count > 0) {
-    g_actor_active[0] = 1;
-    g_actor_palette[0] = 0;
-    g_actor_size[0] = g_player_spr_size;
-    if (g_current_scene_type == SCENE_TYPE_PLATFORM) {
-      if (g_actor_dir[0] != DIR_LEFT && g_actor_dir[0] != DIR_RIGHT) {
-        g_actor_dir[0] = DIR_RIGHT;
-      }
+  g_actor_active[0] = 1;
+  g_actor_palette[0] = 0;
+  g_actor_size[0] = g_player_spr_size;
+  if (g_current_scene_type == SCENE_TYPE_PLATFORM) {
+    if (g_actor_dir[0] != DIR_LEFT && g_actor_dir[0] != DIR_RIGHT) {
+      g_actor_dir[0] = DIR_RIGHT;
     }
-    g_actor_tile_id[0] = 0x5000 + g_actor_dir[0] * 2 * g_player_spr_vram_size;
-    actor_set_pos(0, player_x, player_y);
   }
+  g_actor_tile_id[0] = 0x5000 + g_actor_dir[0] * 2 * g_player_spr_vram_size;
+  actor_set_pos(0, player_x, player_y);
 
+#ifdef HAS_SCENE_ACTORS
+  load_scene_actors(scene_num);
+#else
   if (scene_num <= 25) {
     load_scene_part1(scene_num);
   } else if (scene_num <= 50) {
@@ -5158,6 +5159,7 @@ void load_scene(int scene_num, int player_x, int player_y) {
   } else {
     load_scene_part8(scene_num);
   }
+#endif
 
   load_scene_background(scene_num);
 
@@ -5232,18 +5234,9 @@ void engine_init(void) {
 
 #ifdef START_SCENE_NUM
   load_scene_player_sprite(START_SCENE_NUM);
-#else
-  load_scene_player_sprite(1);
-#endif
-
-  actor_spawn(PLAYER_START_X, PLAYER_START_Y, 0x5000, 0, g_player_spr_size);
-
-  actor_spawn(0, 0, 0x5800, 1, SZ_16x16);
-  actor_spawn(0, 0, 0x5A00, 2, SZ_16x16);
-
-#ifdef START_SCENE_NUM
   load_scene(START_SCENE_NUM, PLAYER_START_X, PLAYER_START_Y);
 #else
+  load_scene_player_sprite(1);
   load_scene(1, PLAYER_START_X, PLAYER_START_Y);
 #endif
 }
@@ -5257,7 +5250,7 @@ void show_dialogue(const char *msg) {
     return;
 
   g_dialogue_active = 1;
-  g_dialogue_timer = 0;
+  g_dialogue_timer = 300; /* Auto-close dialogue after 5 seconds (300 frames at 60Hz) */
   actor_update_all();
   satb_update();
 
@@ -5493,7 +5486,7 @@ void check_actor_interaction(unsigned int input) {
   }
 
   if (g_dialogue_active) {
-    if (pressed & (JOY_I | JOY_II | JOY_A | JOY_B | JOY_STRT | JOY_SEL)) {
+    if (pressed) {
       hide_dialogue();
     }
     return;

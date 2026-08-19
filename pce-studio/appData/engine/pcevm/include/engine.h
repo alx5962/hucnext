@@ -81,6 +81,7 @@ void load_scene(int scene_num, int player_x, int player_y);
 void load_scene_music(int scene_num);
 void load_scene_background(int scene_num);
 void load_scene_player_sprite(int scene_num);
+void load_scene_actors(int scene_num);
 int run_scene_step(int scene_num, int step);
 int check_scene_input(int scene_num, unsigned int pressed);
 int scene_has_startup_script(int scene_num);

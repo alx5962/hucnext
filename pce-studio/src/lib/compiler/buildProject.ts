@@ -1922,6 +1922,42 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     sceneBackgroundCases += `    case ${scNum}:\n      g_current_scene_type = SCENE_${scNum}_TYPE;\n      g_collision_width = SCENE_${scNum}_WIDTH;\n      g_collision_height = SCENE_${scNum}_HEIGHT;\n      set_screen_size(SCENE_${scNum}_SCR_SIZE);\n      camera_set_bounds(SCENE_${scNum}_WIDTH, SCENE_${scNum}_HEIGHT);\n      load_background(bg_scene${scNum}_chr, bg_scene${scNum}_pal, bg_scene${scNum}_bat, ${dim.width}, ${dim.height});\n      set_map_data(scene_${scNum}_collisions, ${dim.width}, ${dim.height});\n      break;\n`;
   });
 
+  let sceneActorCases = "";
+  allScenes.forEach((scene: any, idx: number) => {
+    const scNum = idx + 1;
+    const sceneActors = scene.actors || [];
+    let actCaseCode = `    case ${scNum}:\n`;
+    actCaseCode += `      g_actor_count = ${1 + sceneActors.length};\n`;
+    actCaseCode += `      #ifdef ACTOR_SCENE_${scNum}_PLAYER_HIDDEN\n`;
+    actCaseCode += `      actor_hide(0);\n`;
+    actCaseCode += `      #endif\n`;
+
+    let currentVram = 0x5800;
+    sceneActors.forEach((scActor: any, aIdx: number) => {
+      const actorNum = aIdx + 1;
+      const palIdx = 1 + (aIdx % 15);
+      const vramHex = `0x${currentVram.toString(16).toUpperCase()}`;
+
+      actCaseCode += `      #ifdef HAS_ACTOR_SCENE_${scNum}_${actorNum}\n`;
+      actCaseCode += `      load_vram(${vramHex}, actor_sc${scNum}_${actorNum}_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+      actCaseCode += `      load_palette(${16 + palIdx}, actor_sc${scNum}_${actorNum}_pal, 1);\n`;
+      actCaseCode += `      g_actor_active[${actorNum}] = 1;\n`;
+      actCaseCode += `      g_actor_tile_id[${actorNum}] = ${vramHex};\n`;
+      actCaseCode += `      g_actor_palette[${actorNum}] = ${palIdx};\n`;
+      actCaseCode += `      g_actor_size[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_SPRITE_SIZE;\n`;
+      actCaseCode += `      actor_set_pos(${actorNum}, ACTOR_SCENE_${scNum}_${actorNum}_X, ACTOR_SCENE_${scNum}_${actorNum}_Y);\n`;
+      actCaseCode += `      #ifdef ACTOR_SCENE_${scNum}_${actorNum}_HIDDEN\n`;
+      actCaseCode += `      actor_hide(${actorNum});\n`;
+      actCaseCode += `      #endif\n`;
+      actCaseCode += `      #endif\n`;
+
+      currentVram += 0x200;
+    });
+
+    actCaseCode += `      break;\n`;
+    sceneActorCases += actCaseCode;
+  });
+
   const sceneInitFunctionC = `#define HAS_SCENE_STEP_EVENTS 1
 #define HAS_SCENE_INPUT_SCRIPTS 1
 #define HAS_SCENE_STARTUP_SCRIPTS 1
@@ -1929,6 +1965,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 #define HAS_SCENE_BACKGROUND 1
 #define HAS_SCENE_MUSIC 1
 #define HAS_SCENE_PLAYER_SPRITE 1
+#define HAS_SCENE_ACTORS 1
 
 ${sceneStepHelpers}
 ${sceneInputCheckHelpers}
@@ -1975,6 +2012,14 @@ ${scenePlayerSpriteCases}    default:
 void load_scene_background(int scene_num) {
   switch (scene_num) {
 ${sceneBackgroundCases}    default:
+      break;
+  }
+}
+
+void load_scene_actors(int scene_num) {
+  switch (scene_num) {
+${sceneActorCases}    default:
+      g_actor_count = 1;
       break;
   }
 }
