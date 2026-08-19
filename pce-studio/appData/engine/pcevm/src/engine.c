@@ -5258,14 +5258,14 @@ void show_dialogue(const char *msg) {
   set_color(241, 0x000);
   set_color(242, 0x1FF);
 
-  /* Top border at y = 22 */
+  /* Top border at y = 23 */
   line_buf[0] = '+';
   for (i = 1; i <= 30; i++) line_buf[i] = '-';
   line_buf[31] = '+';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 22);
+  put_string(line_buf, 0, 23);
 
-  /* Text line 1 at y = 23 */
+  /* Text line 1 at y = 24 */
   line_buf[0] = '|';
   p = msg;
   for (i = 1; i <= 30; i++) {
@@ -5277,23 +5277,9 @@ void show_dialogue(const char *msg) {
   }
   line_buf[31] = '|';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 23);
-
-  /* Text line 2 at y = 24 */
-  line_buf[0] = '|';
-  if (*p == '\n') p++;
-  for (i = 1; i <= 30; i++) {
-    if (*p && *p != '\n') {
-      line_buf[i] = *p++;
-    } else {
-      line_buf[i] = ' ';
-    }
-  }
-  line_buf[31] = '|';
-  line_buf[32] = '\0';
   put_string(line_buf, 0, 24);
 
-  /* Text line 3 at y = 25 */
+  /* Text line 2 at y = 25 */
   line_buf[0] = '|';
   if (*p == '\n') p++;
   for (i = 1; i <= 30; i++) {
@@ -5307,12 +5293,26 @@ void show_dialogue(const char *msg) {
   line_buf[32] = '\0';
   put_string(line_buf, 0, 25);
 
-  /* Bottom border at y = 26 */
+  /* Text line 3 at y = 26 */
+  line_buf[0] = '|';
+  if (*p == '\n') p++;
+  for (i = 1; i <= 30; i++) {
+    if (*p && *p != '\n') {
+      line_buf[i] = *p++;
+    } else {
+      line_buf[i] = ' ';
+    }
+  }
+  line_buf[31] = '|';
+  line_buf[32] = '\0';
+  put_string(line_buf, 0, 26);
+
+  /* Bottom border at y = 27 */
   line_buf[0] = '+';
   for (i = 1; i <= 30; i++) line_buf[i] = '-';
   line_buf[31] = '+';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 26);
+  put_string(line_buf, 0, 27);
 }
 
 void copy_choice_opt(char *dst, const char *src, int max_len) {
@@ -5336,14 +5336,14 @@ void render_choice_dialogue(void) {
   set_color(241, 0x000);
   set_color(242, 0x1FF);
 
-  /* Top border at y = 22 */
+  /* Top border at y = 23 */
   line_buf[0] = '+';
   for (i = 1; i <= 30; i++) line_buf[i] = '-';
   line_buf[31] = '+';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 22);
+  put_string(line_buf, 0, 23);
 
-  /* Option 1 at y = 23 */
+  /* Option 1 at y = 24 */
   line_buf[0] = '|';
   line_buf[1] = (g_choice_index == 0) ? '>' : ' ';
   line_buf[2] = ' ';
@@ -5357,9 +5357,9 @@ void render_choice_dialogue(void) {
   }
   line_buf[31] = '|';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 23);
+  put_string(line_buf, 0, 24);
 
-  /* Option 2 at y = 24 */
+  /* Option 2 at y = 25 */
   line_buf[0] = '|';
   line_buf[1] = (g_choice_index == 1) ? '>' : ' ';
   line_buf[2] = ' ';
@@ -5373,9 +5373,9 @@ void render_choice_dialogue(void) {
   }
   line_buf[31] = '|';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 24);
+  put_string(line_buf, 0, 25);
 
-  /* Option 3 or blank at y = 25 */
+  /* Option 3 or blank at y = 26 */
   line_buf[0] = '|';
   if (g_choice_count > 2) {
     line_buf[1] = (g_choice_index == 2) ? '>' : ' ';
@@ -5393,14 +5393,14 @@ void render_choice_dialogue(void) {
   }
   line_buf[31] = '|';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 25);
+  put_string(line_buf, 0, 26);
 
-  /* Bottom border at y = 26 */
+  /* Bottom border at y = 27 */
   line_buf[0] = '+';
   for (i = 1; i <= 30; i++) line_buf[i] = '-';
   line_buf[31] = '+';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 26);
+  put_string(line_buf, 0, 27);
 }
 
 void show_choice(int var_id, const char *opt1, const char *opt2) {

@@ -31,6 +31,10 @@ void actor_init(void) {
         g_actor_move_speed[i] = 1;
         g_actor_collisions_disabled[i] = 0;
         g_actor_sprite_handle[i] = i;
+        g_actor_bbox_left[i] = 0;
+        g_actor_bbox_right[i] = 15;
+        g_actor_bbox_top[i] = 0;
+        g_actor_bbox_bottom[i] = 15;
     }
 }
 
@@ -88,9 +92,9 @@ void actor_update_all(void) {
 
         flip = (i > 0 && g_actor_dir[i] == 1) ? FLIP_X : NO_FLIP;
 
-        /* Dialogue box is at y = 22..26 tiles (pixel y = 176..216, top border at y=176).
-           Sprites extending down into dialogue area (screen_y >= 144) must be hidden during dialogue */
-        if ((is_dialogue && screen_y >= 144) || screen_x < -64 || screen_x > 256 || screen_y < -64 || screen_y > 224) {
+        /* Dialogue box is at y = 23..27 tiles (pixel y = 184..223, top border at y=184).
+           Sprites inside dialogue area (screen_y >= 184) must be hidden during dialogue */
+        if ((is_dialogue && screen_y >= 184) || screen_x < -64 || screen_x > 256 || screen_y < -64 || screen_y > 224) {
             spr_set(i);
             spr_x(512);
             spr_y(512);

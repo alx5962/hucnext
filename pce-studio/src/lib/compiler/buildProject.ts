@@ -877,9 +877,18 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       });
 
       const bboxBottom = maxBottom > 0 ? maxBottom : (height16 * 16 - 1);
-      const bboxTop = (minTop < maxBottom && minTop >= 0) ? (minTop + Math.floor((maxBottom - minTop) / 2)) : 8;
-      const bboxLeft = (minLeft >= 0 && minLeft < 16) ? Math.max(1, minLeft + 1) : 2;
-      const bboxRight = (maxRight >= 0 && maxRight < 32) ? Math.min(width16 * 16 - 2, maxRight - 1) : 13;
+      let bboxTop = (minTop < maxBottom && minTop >= 0) ? (minTop + Math.floor((maxBottom - minTop) / 2)) : 8;
+      let bboxLeft = (minLeft >= 0 && minLeft < 16) ? Math.max(1, minLeft + 1) : 2;
+      let bboxRight = (maxRight >= 0 && maxRight < 32) ? Math.min(width16 * 16 - 2, maxRight - 1) : 13;
+
+      if (typeof sprObj?.boundsWidth === "number" && sprObj.boundsWidth > 0) {
+        const bX = typeof sprObj.boundsX === "number" && sprObj.boundsX >= 0 ? sprObj.boundsX : 0;
+        bboxLeft = bX;
+        bboxRight = Math.min(width16 * 16 - 1, bX + sprObj.boundsWidth - 1);
+      }
+      if (typeof sprObj?.boundsHeight === "number" && sprObj.boundsHeight > 0) {
+        bboxTop = Math.max(0, bboxBottom - sprObj.boundsHeight + 1);
+      }
 
       const relR0 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxR0).replace(/\\/g, "/")}`;
       const relR1 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxR1).replace(/\\/g, "/")}`;
@@ -946,6 +955,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       g_player_bbox_right = ${compiled.bboxRight};
       g_player_bbox_top = ${compiled.bboxTop};
       g_player_bbox_bottom = ${compiled.bboxBottom};
+      g_actor_bbox_left[0] = ${compiled.bboxLeft};
+      g_actor_bbox_right[0] = ${compiled.bboxRight};
+      g_actor_bbox_top[0] = ${compiled.bboxTop};
+      g_actor_bbox_bottom[0] = ${compiled.bboxBottom};
       load_vram(0x5000 + 0 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r0, ${compiled.vramSizeHex});
       load_vram(0x5000 + 1 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r1, ${compiled.vramSizeHex});
       load_vram(0x5000 + 2 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_l0, ${compiled.vramSizeHex});
@@ -1227,7 +1240,22 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         const interactDefs = getInteractionDefines(scene, scActor, sceneNum, actorNum);
         const animSpeedVal = (typeof scActor.animSpeed === "number" && scActor.animSpeed > 0) ? scActor.animSpeed : 15;
 
-        actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum}_${actorNum} 1\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_SPRITE_SIZE ${sprSizeConst}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_NUM_FRAMES ${numFrames}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_ANIM_SPEED ${animSpeedVal}\n${textDef}${hiddenDef}${interactDefs}`;
+        let actBBoxLeft = 0;
+        let actBBoxRight = canvasW - 1;
+        let actBBoxBottom = canvasH - 1;
+        let actBBoxTop = 0;
+
+        if (typeof sprObj?.boundsX === "number" && sprObj.boundsX >= 0) {
+          actBBoxLeft = sprObj.boundsX;
+        }
+        if (typeof sprObj?.boundsWidth === "number" && sprObj.boundsWidth > 0) {
+          actBBoxRight = Math.min(canvasW - 1, actBBoxLeft + sprObj.boundsWidth - 1);
+        }
+        if (typeof sprObj?.boundsHeight === "number" && sprObj.boundsHeight > 0) {
+          actBBoxTop = Math.max(0, actBBoxBottom - sprObj.boundsHeight + 1);
+        }
+
+        actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum}_${actorNum} 1\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_SPRITE_SIZE ${sprSizeConst}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_NUM_FRAMES ${numFrames}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_ANIM_SPEED ${animSpeedVal}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_LEFT ${actBBoxLeft}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_RIGHT ${actBBoxRight}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_TOP ${actBBoxTop}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_BOTTOM ${actBBoxBottom}\n${textDef}${hiddenDef}${interactDefs}`;
 
         if (aIdx === 0) {
           actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum} 1\n#define ACTOR_SCENE_${sceneNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_SPRITE_SIZE ${sprSizeConst}\n`;
@@ -2052,8 +2080,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       actCaseCode += `      g_actor_anim_frame[${actorNum}] = 0;\n`;
       actCaseCode += `      g_actor_anim_timer[${actorNum}] = 0;\n`;
       actCaseCode += `      g_actor_palette[${actorNum}] = ${palIdx};\n`;
-      actCaseCode += `      g_actor_size[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_SPRITE_SIZE;\n`;
-      actCaseCode += `      actor_set_pos(${actorNum}, ACTOR_SCENE_${scNum}_${actorNum}_X, ACTOR_SCENE_${scNum}_${actorNum}_Y);\n`;
+      actCaseCode += `      g_actor_size[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_SPRITE_SIZE;\n      g_actor_bbox_left[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_LEFT;\n      g_actor_bbox_right[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_RIGHT;\n      g_actor_bbox_top[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_TOP;\n      g_actor_bbox_bottom[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_BOTTOM;\n      actor_set_pos(${actorNum}, ACTOR_SCENE_${scNum}_${actorNum}_X, ACTOR_SCENE_${scNum}_${actorNum}_Y);\n`;
       actCaseCode += `      #ifdef ACTOR_SCENE_${scNum}_${actorNum}_HIDDEN\n`;
       actCaseCode += `      actor_hide(${actorNum});\n`;
       actCaseCode += `      #endif\n`;
