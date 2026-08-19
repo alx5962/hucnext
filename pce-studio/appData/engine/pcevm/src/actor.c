@@ -60,7 +60,7 @@ int actor_spawn(int x, int y, int tile_id, int palette, int size) {
 
 void actor_update_all(void) {
     int i, flip;
-    int screen_x, screen_y;
+    int screen_x, screen_y, spr_h;
     int is_dialogue;
     int spd;
     is_dialogue = (g_dialogue_active || g_choice_active);
@@ -91,10 +91,13 @@ void actor_update_all(void) {
         screen_y = g_actor_y[i] - g_cam_y;
 
         flip = (i > 0 && g_actor_dir[i] == 1) ? FLIP_X : NO_FLIP;
+        spr_h = (g_actor_size[i] == SZ_16x32 || g_actor_size[i] == SZ_32x32) ? 32 : ((g_actor_size[i] == SZ_32x64) ? 64 : 16);
 
-        /* Dialogue box is at y = 23..27 tiles (pixel y = 184..223, top border at y=184).
-           Sprites inside dialogue area (screen_y >= 184) must be hidden during dialogue */
-        if ((is_dialogue && screen_y >= 184) || screen_x < -64 || screen_x > 256 || screen_y < -64 || screen_y > 224) {
+        /* Dialogue box is at y = 23..27 tiles (pixel y = 184..223).
+           Sprites whose bottom edge extends into dialogue area (screen_y + spr_h > 184) must be hidden during dialogue
+           so they do not draw over the dialogue text or top border.
+           All sprites above the dialogue area (e.g. cat, duck, upper actors) remain fully visible. */
+        if ((is_dialogue && (screen_y + spr_h > 184)) || screen_x < -64 || screen_x > 256 || screen_y < -64 || screen_y > 224) {
             spr_set(i);
             spr_x(512);
             spr_y(512);

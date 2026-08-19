@@ -5243,6 +5243,7 @@ void engine_init(void) {
 
 void show_dialogue(const char *msg) {
   int i;
+  int base_y;
   char line_buf[33];
   const char *p;
 
@@ -5258,14 +5259,17 @@ void show_dialogue(const char *msg) {
   set_color(241, 0x000);
   set_color(242, 0x1FF);
 
-  /* Top border at y = 23 */
+  /* Calculate bottom 5 rows relative to camera scroll position */
+  base_y = (g_cam_y >> 3) + 23;
+
+  /* Top border */
   line_buf[0] = '+';
   for (i = 1; i <= 30; i++) line_buf[i] = '-';
   line_buf[31] = '+';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 23);
+  put_string(line_buf, 0, base_y);
 
-  /* Text line 1 at y = 24 */
+  /* Text line 1 */
   line_buf[0] = '|';
   p = msg;
   for (i = 1; i <= 30; i++) {
@@ -5277,9 +5281,9 @@ void show_dialogue(const char *msg) {
   }
   line_buf[31] = '|';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 24);
+  put_string(line_buf, 0, base_y + 1);
 
-  /* Text line 2 at y = 25 */
+  /* Text line 2 */
   line_buf[0] = '|';
   if (*p == '\n') p++;
   for (i = 1; i <= 30; i++) {
@@ -5291,9 +5295,9 @@ void show_dialogue(const char *msg) {
   }
   line_buf[31] = '|';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 25);
+  put_string(line_buf, 0, base_y + 2);
 
-  /* Text line 3 at y = 26 */
+  /* Text line 3 */
   line_buf[0] = '|';
   if (*p == '\n') p++;
   for (i = 1; i <= 30; i++) {
@@ -5305,14 +5309,14 @@ void show_dialogue(const char *msg) {
   }
   line_buf[31] = '|';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 26);
+  put_string(line_buf, 0, base_y + 3);
 
-  /* Bottom border at y = 27 */
+  /* Bottom border */
   line_buf[0] = '+';
   for (i = 1; i <= 30; i++) line_buf[i] = '-';
   line_buf[31] = '+';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 27);
+  put_string(line_buf, 0, base_y + 4);
 }
 
 void copy_choice_opt(char *dst, const char *src, int max_len) {
@@ -5330,20 +5334,23 @@ void copy_choice_opt(char *dst, const char *src, int max_len) {
 void render_choice_dialogue(void) {
   int i;
   int opt_i;
+  int base_y;
   char line_buf[33];
 
   set_font_pal(15);
   set_color(241, 0x000);
   set_color(242, 0x1FF);
 
-  /* Top border at y = 23 */
+  base_y = (g_cam_y >> 3) + 23;
+
+  /* Top border */
   line_buf[0] = '+';
   for (i = 1; i <= 30; i++) line_buf[i] = '-';
   line_buf[31] = '+';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 23);
+  put_string(line_buf, 0, base_y);
 
-  /* Option 1 at y = 24 */
+  /* Option 1 */
   line_buf[0] = '|';
   line_buf[1] = (g_choice_index == 0) ? '>' : ' ';
   line_buf[2] = ' ';
@@ -5357,9 +5364,9 @@ void render_choice_dialogue(void) {
   }
   line_buf[31] = '|';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 24);
+  put_string(line_buf, 0, base_y + 1);
 
-  /* Option 2 at y = 25 */
+  /* Option 2 */
   line_buf[0] = '|';
   line_buf[1] = (g_choice_index == 1) ? '>' : ' ';
   line_buf[2] = ' ';
@@ -5373,9 +5380,9 @@ void render_choice_dialogue(void) {
   }
   line_buf[31] = '|';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 25);
+  put_string(line_buf, 0, base_y + 2);
 
-  /* Option 3 or blank at y = 26 */
+  /* Option 3 or blank */
   line_buf[0] = '|';
   if (g_choice_count > 2) {
     line_buf[1] = (g_choice_index == 2) ? '>' : ' ';
@@ -5393,14 +5400,14 @@ void render_choice_dialogue(void) {
   }
   line_buf[31] = '|';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 26);
+  put_string(line_buf, 0, base_y + 3);
 
-  /* Bottom border at y = 27 */
+  /* Bottom border */
   line_buf[0] = '+';
   for (i = 1; i <= 30; i++) line_buf[i] = '-';
   line_buf[31] = '+';
   line_buf[32] = '\0';
-  put_string(line_buf, 0, 27);
+  put_string(line_buf, 0, base_y + 4);
 }
 
 void show_choice(int var_id, const char *opt1, const char *opt2) {
@@ -5659,7 +5666,6 @@ int g_player_anim_frame = 0;
 
 void update_player_anim(int is_moving) {
   int dir;
-  int base_vram;
   dir = g_actor_dir[0];
   if (is_moving) {
     g_player_anim_timer++;
@@ -5672,22 +5678,12 @@ void update_player_anim(int is_moving) {
     g_player_anim_frame = 0;
   }
 
-#ifdef HAS_PLAYER_4DIR
   /* dir: 0=Right, 1=Left, 2=Up, 3=Down */
-  g_actor_tile_id[0] = 0x5000 + (dir * 2 + g_player_anim_frame) * g_player_spr_vram_size;
-#else
-#ifdef HAS_PLAYER_FRAME_1
-  base_vram = (dir == 1) ? (0x5000 + 2 * g_player_spr_vram_size) : 0x5000;
-  if (g_player_anim_frame == 1) {
-    g_actor_tile_id[0] = base_vram + g_player_spr_vram_size;
+  if (dir >= 0 && dir <= 3) {
+    g_actor_tile_id[0] = 0x5000 + (dir * 2 + g_player_anim_frame) * g_player_spr_vram_size;
   } else {
-    g_actor_tile_id[0] = base_vram;
+    g_actor_tile_id[0] = 0x5000 + g_player_anim_frame * g_player_spr_vram_size;
   }
-#else
-  base_vram = (dir == 1) ? (0x5000 + g_player_spr_vram_size) : 0x5000;
-  g_actor_tile_id[0] = base_vram;
-#endif
-#endif
 }
 
 void update_topdown(void) {
@@ -5809,21 +5805,27 @@ void update_adventure(void) {
 
   input = pce_sys_read_joy(0);
   check_actor_interaction(input);
+  if (g_dialogue_active) {
+    update_player_anim(0);
+    actor_update_all();
+    return;
+  }
   if (g_actor_count > 0 && g_actor_active[0]) {
     dx = 0;
     dy = 0;
     if (input & JOY_LEFT) {
       dx -= ADVENTURE_SPEED;
-      g_actor_dir[0] = 1;
-    }
-    if (input & JOY_RIGHT) {
+      g_actor_dir[0] = DIR_LEFT;
+    } else if (input & JOY_RIGHT) {
       dx += ADVENTURE_SPEED;
-      g_actor_dir[0] = 0;
-    }
-    if (input & JOY_UP)
+      g_actor_dir[0] = DIR_RIGHT;
+    } else if (input & JOY_UP) {
       dy -= ADVENTURE_SPEED;
-    if (input & JOY_DOWN)
+      g_actor_dir[0] = DIR_UP;
+    } else if (input & JOY_DOWN) {
       dy += ADVENTURE_SPEED;
+      g_actor_dir[0] = DIR_DOWN;
+    }
 
     update_player_anim(dx != 0 || dy != 0);
 

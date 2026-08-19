@@ -154,5 +154,8 @@ void engine_init(void);
 void engine_update(void);
 void engine_render(void);
 void engine_run(void);
+void load_scene_background(int scene_num);
+void hide_dialogue(void);
+void show_dialogue(const char *msg);
 
 #endif
