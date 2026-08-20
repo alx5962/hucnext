@@ -6,7 +6,7 @@
   "prefabId": "",
   "name": "Radio",
   "coordinateType": "tiles",
-  "x": 15,
+  "x": 16,
   "y": 5,
   "frame": 0,
   "animate": false,
@@ -35,7 +35,8 @@
           "valueB": {
             "type": "false"
           }
-        }
+        },
+        "__collapse": false
       },
       "children": {
         "true": [

@@ -43,3 +43,62 @@ int collision_check_box(int x, int y) {
 
     return 0;
 }
+
+int collision_check_actor(int id, int x, int y) {
+    int x_left, x_right, y_top, y_bottom;
+    int tx_start, tx_end, ty_start, ty_end, tx, ty;
+    int i, other_l, other_r, other_t, other_b;
+
+    if (id < 0 || id >= PCE_MAX_ACTORS) return 1;
+
+    x_left = x + g_actor_bbox_left[id];
+    x_right = x + g_actor_bbox_right[id];
+    y_top = y + g_actor_bbox_top[id];
+    y_bottom = y + g_actor_bbox_bottom[id];
+
+    /* 1. Scene boundaries */
+    if (x_left < 0 || y_top < 0 || (x_right >> 3) >= g_collision_width || (y_bottom >> 3) >= g_collision_height) {
+        return 1;
+    }
+
+    /* 2. Tile map collisions */
+    tx_start = x_left >> 3;
+    tx_end = x_right >> 3;
+    ty_start = y_top >> 3;
+    ty_end = y_bottom >> 3;
+
+    for (ty = ty_start; ty <= ty_end; ty++) {
+        for (tx = tx_start; tx <= tx_end; tx++) {
+            if (collision_check_tile(tx, ty) != COLLISION_NONE) {
+                return 1;
+            }
+        }
+    }
+
+    /* 3. Collisions with other solid actors & player */
+    for (i = 0; i < g_actor_count; i++) {
+        if (i == id) continue;
+        if (i == 0) {
+            other_l = g_actor_x[0] + g_player_bbox_left;
+            other_r = g_actor_x[0] + g_player_bbox_right;
+            other_t = g_actor_y[0] + g_player_bbox_top;
+            other_b = g_actor_y[0] + g_player_bbox_bottom;
+            if (x_right >= other_l && x_left <= other_r && y_bottom >= other_t && y_top <= other_b) {
+                return 1;
+            }
+        } else {
+            if (g_actor_active[i] && !g_actor_hidden[i] && !g_actor_collisions_disabled[i]) {
+                other_l = g_actor_x[i] + g_actor_bbox_left[i];
+                other_r = g_actor_x[i] + g_actor_bbox_right[i];
+                other_t = g_actor_y[i] + g_actor_bbox_top[i];
+                other_b = g_actor_y[i] + g_actor_bbox_bottom[i];
+
+                if (x_right >= other_l && x_left <= other_r && y_bottom >= other_t && y_top <= other_b) {
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}

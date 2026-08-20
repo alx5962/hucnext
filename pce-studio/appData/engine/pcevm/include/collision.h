@@ -7,5 +7,6 @@
 int collision_check_tile(int tile_x, int tile_y);
 int collision_check_point(int px, int py);
 int collision_check_box(int x, int y);
+int collision_check_actor(int id, int x, int y);
 
 #endif /* PCE_COLLISION_H */

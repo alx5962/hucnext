@@ -189,12 +189,34 @@ void actor_emote(int id, int emote_id) {
     (void)emote_id;
 }
 
-void actor_push(int id, int dir) {
-    if (id > 0 && id < PCE_MAX_ACTORS && g_actor_active[id]) {
-        if (dir == DIR_RIGHT) g_actor_x[id] += 16;
-        else if (dir == DIR_LEFT) g_actor_x[id] -= 16;
-        else if (dir == DIR_UP) g_actor_y[id] -= 16;
-        else if (dir == DIR_DOWN) g_actor_y[id] += 16;
+void actor_push(int id, int dir, int slide) {
+    int step_x, step_y, new_x, new_y, step;
+    if (id <= 0 || id >= PCE_MAX_ACTORS || !g_actor_active[id]) return;
+
+    step_x = 0;
+    step_y = 0;
+    if (dir == DIR_RIGHT) step_x = 16;
+    else if (dir == DIR_LEFT) step_x = -16;
+    else if (dir == DIR_UP) step_y = -16;
+    else if (dir == DIR_DOWN) step_y = 16;
+
+    if (!slide) {
+        new_x = g_actor_x[id] + step_x;
+        new_y = g_actor_y[id] + step_y;
+        if (!collision_check_actor(id, new_x, new_y)) {
+            g_actor_x[id] = new_x;
+            g_actor_y[id] = new_y;
+        }
+    } else {
+        for (step = 0; step < 64; step++) {
+            new_x = g_actor_x[id] + step_x;
+            new_y = g_actor_y[id] + step_y;
+            if (collision_check_actor(id, new_x, new_y)) {
+                break;
+            }
+            g_actor_x[id] = new_x;
+            g_actor_y[id] = new_y;
+        }
     }
 }
 

@@ -59,7 +59,7 @@ void actor_set_move_speed(int id, int speed);
 void actor_set_anim_speed(int id, int speed);
 void actor_set_frame(int id, int frame);
 void actor_emote(int id, int emote_id);
-void actor_push(int id, int dir);
+void actor_push(int id, int dir, int slide);
 void actor_effects(int id, int effect_id);
 void actor_hide_all(void);
 

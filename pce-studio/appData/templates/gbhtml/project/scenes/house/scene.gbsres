@@ -5,8 +5,8 @@
   "type": "TOPDOWN",
   "name": "House",
   "symbol": "scene_house",
-  "x": 340,
-  "y": 74,
+  "x": 328,
+  "y": 80,
   "width": 32,
   "height": 28,
   "backgroundId": "4d80362f-55bd-4992-a6f9-391091122083",
@@ -22,11 +22,18 @@
         "customEventId": "872f61cf-bd62-4e58-92ee-a751e7335fe9"
       },
       "id": "e65f2dfe-ecb7-4497-8e0d-6f54a107c004"
+    },
+    {
+      "command": "EVENT_SET_FALSE",
+      "args": {
+        "variable": "2"
+      },
+      "id": "396ebda1-86f4-478f-ae04-c4b88c0d3c12"
     }
   ],
   "playerHit1Script": [],
   "playerHit2Script": [],
   "playerHit3Script": [],
-  "collisions": "00380+",
+  "collisions": "00!0f1e+002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f!001c+0f!002+0f7+004+0f13+0041+",
   "playerSpriteSheetId": "ac1e8ef4-ffe6-47cd-b16f-9af5da77ec26"
 }

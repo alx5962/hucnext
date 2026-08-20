@@ -1629,7 +1629,81 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       const num = parseInt(vArg.replace(/\D/g, ""), 10);
       if (!isNaN(num)) return num & 0xFF;
     }
+    if (typeof vArg === "object" && vArg !== null) {
+      if (vArg.value !== undefined) return parseVarIndex(vArg.value);
+    }
     return 0;
+  };
+
+  const parseValueExpr = (valArg: any): string => {
+    if (valArg === undefined || valArg === null) return "0";
+    if (typeof valArg === "number") return String(valArg);
+    if (typeof valArg === "boolean") return valArg ? "1" : "0";
+    if (typeof valArg === "string") {
+      if (valArg === "true") return "1";
+      if (valArg === "false") return "0";
+      const n = Number(valArg);
+      return isNaN(n) ? "0" : String(n);
+    }
+    if (typeof valArg === "object") {
+      if (valArg.type === "true") return "1";
+      if (valArg.type === "false") return "0";
+      if (valArg.type === "number") return String(typeof valArg.value === "number" ? valArg.value : (Number(valArg.value) || 0));
+      if (valArg.type === "variable") return `vm_get_var(${parseVarIndex(valArg.value)})`;
+      if (valArg.value !== undefined) return parseValueExpr(valArg.value);
+    }
+    return "0";
+  };
+
+  const parseConditionExpr = (evt: any): string => {
+    const cond = evt.args?.condition;
+    const varIdx = parseVarIndex(evt.args?.variable);
+    const isFalseCheck = (evt.command === "EVENT_IF_FALSE" || evt.command === "EVENT_IF_VARIABLE_FALSE");
+
+    if (cond && typeof cond === "object") {
+      if (cond.type === "variable") {
+        return `(vm_get_var(${parseVarIndex(cond.value)}) != 0)`;
+      }
+      if (cond.type === "not") {
+        if (cond.value?.type === "variable") {
+          return `(vm_get_var(${parseVarIndex(cond.value.value)}) == 0)`;
+        }
+        return `(!${parseValueExpr(cond.value)})`;
+      }
+      if (cond.type === "eq") {
+        return `(${parseValueExpr(cond.valueA)} == ${parseValueExpr(cond.valueB)})`;
+      }
+      if (cond.type === "ne") {
+        return `(${parseValueExpr(cond.valueA)} != ${parseValueExpr(cond.valueB)})`;
+      }
+      if (cond.type === "gt") {
+        return `(${parseValueExpr(cond.valueA)} > ${parseValueExpr(cond.valueB)})`;
+      }
+      if (cond.type === "gte") {
+        return `(${parseValueExpr(cond.valueA)} >= ${parseValueExpr(cond.valueB)})`;
+      }
+      if (cond.type === "lt") {
+        return `(${parseValueExpr(cond.valueA)} < ${parseValueExpr(cond.valueB)})`;
+      }
+      if (cond.type === "lte") {
+        return `(${parseValueExpr(cond.valueA)} <= ${parseValueExpr(cond.valueB)})`;
+      }
+      if (cond.type === "true") return "(1)";
+      if (cond.type === "false") return "(0)";
+    }
+
+    if (evt.args?.operator) {
+      const op = evt.args.operator;
+      const rhs = parseValueExpr(evt.args.value ?? evt.args.otherVariable);
+      if (op === "==" || op === "eq") return `(vm_get_var(${varIdx}) == ${rhs})`;
+      if (op === "!=" || op === "ne") return `(vm_get_var(${varIdx}) != ${rhs})`;
+      if (op === ">" || op === "gt") return `(vm_get_var(${varIdx}) > ${rhs})`;
+      if (op === "<" || op === "lt") return `(vm_get_var(${varIdx}) < ${rhs})`;
+      if (op === ">=" || op === "gte") return `(vm_get_var(${varIdx}) >= ${rhs})`;
+      if (op === "<=" || op === "lte") return `(vm_get_var(${varIdx}) <= ${rhs})`;
+    }
+
+    return isFalseCheck ? `(vm_get_var(${varIdx}) == 0)` : `(vm_get_var(${varIdx}) != 0)`;
   };
 
   let sceneStepHelpers = "";
@@ -1793,7 +1867,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_PUSH") {
           const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
-          stepCases += `      case ${stepIndex}:\n        actor_push(${targetNum}, g_actor_dir[0]);\n        return ${stepIndex + 1};\n`;
+          const slide = (evt.args?.continue === true || evt.args?.slide === true) ? 1 : 0;
+          stepCases += `      case ${stepIndex}:\n        actor_push(${targetNum}, g_actor_dir[0], ${slide});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_CAMERA_MOVE_TO" || evt.command === "EVENT_CAMERA_SET_POSITION") {
           const cx = parseCoord(evt.args?.x, 0) * 8;
@@ -1831,16 +1906,36 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           evt.command === "EVENT_SET_VARIABLE"
         ) {
           const varIdx = parseVarIndex(evt.args?.variable);
-          const val = typeof evt.args?.value === "number" ? evt.args.value : (Number(evt.args?.value) || 0);
-          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, ${val});\n        return ${stepIndex + 1};\n`;
+          const valExpr = parseValueExpr(evt.args?.value);
+          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, ${valExpr});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
-        } else if (evt.command === "EVENT_VARIABLE_SET_TO_TRUE") {
+        } else if (
+          evt.command === "EVENT_SET_TRUE" ||
+          evt.command === "EVENT_VARIABLE_SET_TO_TRUE"
+        ) {
           const varIdx = parseVarIndex(evt.args?.variable);
           stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, 1);\n        return ${stepIndex + 1};\n`;
           stepIndex++;
-        } else if (evt.command === "EVENT_VARIABLE_SET_TO_FALSE") {
+        } else if (
+          evt.command === "EVENT_SET_FALSE" ||
+          evt.command === "EVENT_VARIABLE_SET_TO_FALSE"
+        ) {
           const varIdx = parseVarIndex(evt.args?.variable);
           stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, 0);\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (
+          evt.command === "EVENT_COPY_VALUE" ||
+          evt.command === "EVENT_VARIABLE_COPY"
+        ) {
+          const varIdx = parseVarIndex(evt.args?.variable);
+          const otherIdx = parseVarIndex(evt.args?.otherVariable);
+          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${otherIdx}));\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (
+          evt.command === "EVENT_RESET_VARIABLES" ||
+          evt.command === "EVENT_VARIABLES_RESET"
+        ) {
+          stepCases += `      case ${stepIndex}:\n        vm_init();\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_INC_VALUE" || evt.command === "EVENT_VARIABLE_INC") {
           const varIdx = parseVarIndex(evt.args?.variable);
@@ -1859,22 +1954,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           evt.command === "EVENT_IF_VALUE" ||
           evt.command === "EVENT_IF_VARIABLE_VALUE" ||
           evt.command === "EVENT_IF_VALUE_COMPARE" ||
-          evt.command === "EVENT_IF_VARIABLE_COMPARE"
+          evt.command === "EVENT_IF_VARIABLE_COMPARE" ||
+          evt.command === "EVENT_IF_EXPRESSION" ||
+          evt.command === "EVENT_IF_ENGINE_FIELD" ||
+          evt.command === "EVENT_IF_ENGINE_FIELD_COMPARE"
         ) {
-          const varIdx = parseVarIndex(evt.args?.variable);
-          const isFalseCheck = (evt.command === "EVENT_IF_FALSE" || evt.command === "EVENT_IF_VARIABLE_FALSE");
-          
-          let condExpr = isFalseCheck ? `(vm_get_var(${varIdx}) == 0)` : `(vm_get_var(${varIdx}) != 0)`;
-          if (evt.args?.operator) {
-            const op = evt.args.operator;
-            const val = typeof evt.args.value === "number" ? evt.args.value : (Number(evt.args.value) || 0);
-            if (op === "==" || op === "eq") condExpr = `(vm_get_var(${varIdx}) == ${val})`;
-            else if (op === "!=" || op === "ne") condExpr = `(vm_get_var(${varIdx}) != ${val})`;
-            else if (op === ">" || op === "gt") condExpr = `(vm_get_var(${varIdx}) > ${val})`;
-            else if (op === "<" || op === "lt") condExpr = `(vm_get_var(${varIdx}) < ${val})`;
-            else if (op === ">=" || op === "gte") condExpr = `(vm_get_var(${varIdx}) >= ${val})`;
-            else if (op === "<=" || op === "lte") condExpr = `(vm_get_var(${varIdx}) <= ${val})`;
-          }
+          const condExpr = parseConditionExpr(evt);
 
           const trueList = (evt.true && Array.isArray(evt.true)) ? evt.true : (evt.children?.true && Array.isArray(evt.children.true) ? evt.children.true : []);
           const falseList = (evt.false && Array.isArray(evt.false)) ? evt.false : (evt.children?.false && Array.isArray(evt.children.false) ? evt.children.false : []);
@@ -1905,13 +1990,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           stepIndex++;
         } else if (evt.command === "EVENT_MATH_ADD" || evt.command === "EVENT_MATH_ADD_VALUE") {
           const varIdx = parseVarIndex(evt.args?.variable);
-          const val = typeof evt.args?.value === "number" ? evt.args.value : (Number(evt.args?.value) || 0);
-          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) + ${val});\n        return ${stepIndex + 1};\n`;
+          const valExpr = parseValueExpr(evt.args?.value);
+          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) + ${valExpr});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_MATH_SUB" || evt.command === "EVENT_MATH_SUB_VALUE") {
           const varIdx = parseVarIndex(evt.args?.variable);
-          const val = typeof evt.args?.value === "number" ? evt.args.value : (Number(evt.args?.value) || 0);
-          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) - ${val});\n        return ${stepIndex + 1};\n`;
+          const valExpr = parseValueExpr(evt.args?.value);
+          stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) - ${valExpr});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (
           evt.command === "EVENT_LOOP" ||

@@ -28,7 +28,7 @@
       "command": "EVENT_GROUP",
       "args": {
         "__label": "Set Checkboxes",
-        "__collapse": true
+        "__collapse": false
       },
       "children": {
         "true": [
