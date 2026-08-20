@@ -15,17 +15,27 @@ int collision_check_point(int px, int py) {
 
 int collision_check_box(int x, int y) {
     int x_left, x_right, y_top, y_bottom;
+    int tx1, tx2, ty1, ty2;
     int i, act_l, act_r, act_t, act_b;
+
     x_left = x + g_player_bbox_left;
     x_right = x + g_player_bbox_right;
     y_top = y + g_player_bbox_top;
     y_bottom = y + g_player_bbox_bottom;
 
+    if (x_left < 0 || y_top < 0) return 1;
+    tx1 = x_left >> 3;
+    tx2 = x_right >> 3;
+    ty1 = y_top >> 3;
+    ty2 = y_bottom >> 3;
+
+    if (tx2 >= g_collision_width || ty2 >= g_collision_height) return 1;
+
     /* Tile map collisions */
-    if (collision_check_point(x_left, y_top) != COLLISION_NONE) return 1;
-    if (collision_check_point(x_right, y_top) != COLLISION_NONE) return 1;
-    if (collision_check_point(x_left, y_bottom) != COLLISION_NONE) return 1;
-    if (collision_check_point(x_right, y_bottom) != COLLISION_NONE) return 1;
+    if (collision_check_tile(tx1, ty1) != COLLISION_NONE) return 1;
+    if (tx2 != tx1 && collision_check_tile(tx2, ty1) != COLLISION_NONE) return 1;
+    if (ty2 != ty1 && collision_check_tile(tx1, ty2) != COLLISION_NONE) return 1;
+    if (tx2 != tx1 && ty2 != ty1 && collision_check_tile(tx2, ty2) != COLLISION_NONE) return 1;
 
     /* Solid actor collisions (prevents player from walking over actors) */
     for (i = 1; i < g_actor_count; i++) {

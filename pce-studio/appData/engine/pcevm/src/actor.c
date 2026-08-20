@@ -78,8 +78,8 @@ void actor_update_all(void) {
         }
     }
 
-    for (i = 0; i < 64; i++) {
-        if (i >= g_actor_count || !g_actor_active[i] || g_actor_hidden[i] || g_current_scene_type == SCENE_TYPE_LOGO) {
+    for (i = 0; i < g_actor_count; i++) {
+        if (!g_actor_active[i] || g_actor_hidden[i] || g_current_scene_type == SCENE_TYPE_LOGO) {
             spr_set(i);
             spr_x(512);
             spr_y(512);

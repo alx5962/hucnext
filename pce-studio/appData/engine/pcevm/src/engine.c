@@ -5125,6 +5125,13 @@ void load_scene(int scene_num, int player_x, int player_y) {
   for (i = 1; i < PCE_MAX_ACTORS; i++) {
     g_actor_active[i] = 0;
   }
+  for (i = 0; i < 64; i++) {
+    spr_set(i);
+    spr_x(512);
+    spr_y(512);
+    spr_hide();
+  }
+  satb_update();
 
   load_scene_player_sprite(scene_num);
 
@@ -5716,18 +5723,24 @@ void update_topdown(void) {
 
     update_player_anim(dx != 0 || dy != 0);
 
-    new_x = g_actor_x[0] + dx;
-    if (!collision_check_box(new_x, g_actor_y[0])) {
-      g_actor_x[0] = new_x;
+    if (dx != 0) {
+      new_x = g_actor_x[0] + dx;
+      if (!collision_check_box(new_x, g_actor_y[0])) {
+        g_actor_x[0] = new_x;
+      }
     }
 
-    new_y = g_actor_y[0] + dy;
-    if (!collision_check_box(g_actor_x[0], new_y)) {
-      g_actor_y[0] = new_y;
+    if (dy != 0) {
+      new_y = g_actor_y[0] + dy;
+      if (!collision_check_box(g_actor_x[0], new_y)) {
+        g_actor_y[0] = new_y;
+      }
     }
 
-    camera_update(g_actor_x[0], g_actor_y[0]);
-    trigger_check(g_actor_x[0], g_actor_y[0]);
+    if (dx != 0 || dy != 0) {
+      camera_update(g_actor_x[0], g_actor_y[0]);
+      trigger_check(g_actor_x[0], g_actor_y[0]);
+    }
   }
 }
 
@@ -5829,18 +5842,24 @@ void update_adventure(void) {
 
     update_player_anim(dx != 0 || dy != 0);
 
-    new_x = g_actor_x[0] + dx;
-    if (!collision_check_box(new_x, g_actor_y[0])) {
-      g_actor_x[0] = new_x;
+    if (dx != 0) {
+      new_x = g_actor_x[0] + dx;
+      if (!collision_check_box(new_x, g_actor_y[0])) {
+        g_actor_x[0] = new_x;
+      }
     }
 
-    new_y = g_actor_y[0] + dy;
-    if (!collision_check_box(g_actor_x[0], new_y)) {
-      g_actor_y[0] = new_y;
+    if (dy != 0) {
+      new_y = g_actor_y[0] + dy;
+      if (!collision_check_box(g_actor_x[0], new_y)) {
+        g_actor_y[0] = new_y;
+      }
     }
 
-    camera_update(g_actor_x[0], g_actor_y[0]);
-    trigger_check(g_actor_x[0], g_actor_y[0]);
+    if (dx != 0 || dy != 0) {
+      camera_update(g_actor_x[0], g_actor_y[0]);
+      trigger_check(g_actor_x[0], g_actor_y[0]);
+    }
   }
 }
 
