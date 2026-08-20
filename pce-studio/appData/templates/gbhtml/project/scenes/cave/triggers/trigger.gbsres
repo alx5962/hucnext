@@ -21,7 +21,7 @@
         },
         "y": {
           "type": "number",
-          "value": 9
+          "value": 10
         },
         "direction": "down",
         "sceneId": "94c18861-b352-4f49-a64d-52f2e3415077",

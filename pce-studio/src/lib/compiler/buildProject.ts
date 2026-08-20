@@ -1,6 +1,7 @@
 import fs from "fs-extra";
 import Path from "path";
 import { convertPngToPcx, buildPngPalette } from "./convertPngToPcx";
+import { animationMapBySpriteType } from "shared/lib/sprites/helpers";
 import convertToIndexedPngDefault, { convertToIndexedPng as convertToIndexedPngFn, createBlankIndexedPng } from "./indexedPngWriter";
 
 const pathModule = (Path as any).default || Path;
@@ -827,10 +828,23 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     playerSprHeight16 = height16;
 
     try {
-      const getAnimFrameInfo = (animIdx: number, frameIdx = 0) => {
-        const anim = sprObj?.states?.[0]?.animations?.[animIdx];
-        if (!anim || !anim.frames || !anim.frames[frameIdx] || !anim.frames[frameIdx].tiles) return null;
-        const tiles = anim.frames[frameIdx].tiles.filter((t: any) => typeof t.sliceX === "number" && typeof t.sliceY === "number");
+      const animType = sprObj?.states?.[0]?.animationType || "fixed";
+      const flipLeft = sprObj?.states?.[0]?.flipLeft ?? true;
+      const rawAnims = sprObj?.states?.[0]?.animations || [];
+
+      // Map raw animation slots to the 8 logical slots:
+      // 0: idleRight, 1: idleLeft, 2: idleUp, 3: idleDown,
+      // 4: movingRight, 5: movingLeft, 6: movingUp, 7: movingDown
+      const mappedAnims = animationMapBySpriteType(
+        rawAnims,
+        animType,
+        flipLeft,
+        (anim, flip) => ({ anim, flip })
+      );
+
+      const extractFrameInfo = (frame: any) => {
+        if (!frame || !frame.tiles || !Array.isArray(frame.tiles)) return null;
+        const tiles = frame.tiles.filter((t: any) => typeof t.sliceX === "number" && typeof t.sliceY === "number");
         if (tiles.length === 0) return null;
 
         const cellCounts = new Map<string, number>();
@@ -860,22 +874,86 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         return { cropX, cropY, flipX: hasTileFlipX };
       };
 
-      // 0: idleRight, 1: idleLeft, 2: idleUp, 3: idleDown, 4: movingRight, 5: movingLeft, 6: movingUp, 7: movingDown
-      // infoR0 must be the Idle Right frame (Anim 0 Frame 0)
-      const infoR0 = getAnimFrameInfo(0, 0) || getAnimFrameInfo(4, 0) || { cropX: 0, cropY: 0, flipX: false };
-      const infoR1 = getAnimFrameInfo(4, 0) || getAnimFrameInfo(4, 1) || infoR0;
-      const infoU0 = getAnimFrameInfo(2, 0) || getAnimFrameInfo(6, 0) || infoR0;
-      const infoU1 = getAnimFrameInfo(6, 1) || getAnimFrameInfo(6, 0) || getAnimFrameInfo(2, 1) || infoU0;
-      const infoD0 = getAnimFrameInfo(3, 0) || getAnimFrameInfo(7, 0) || infoR0;
-      const infoD1 = getAnimFrameInfo(7, 1) || getAnimFrameInfo(7, 0) || getAnimFrameInfo(3, 1) || infoD0;
+      const getFramesFromMapped = (mapped: { anim: any; flip: boolean } | undefined) => {
+        if (!mapped || !mapped.anim || !Array.isArray(mapped.anim.frames)) return [];
+        const res: { cropX: number; cropY: number; flipX: boolean }[] = [];
+        for (const f of mapped.anim.frames) {
+          const info = extractFrameInfo(f);
+          if (info) {
+            res.push({
+              cropX: info.cropX,
+              cropY: info.cropY,
+              flipX: mapped.flip ? !info.flipX : info.flipX,
+            });
+          }
+        }
+        return res;
+      };
 
-      const flipLeft = sprObj?.states?.[0]?.flipLeft ?? true;
-      const infoL0 = flipLeft
-        ? { cropX: infoR0.cropX, cropY: infoR0.cropY, flipX: !infoR0.flipX }
-        : (getAnimFrameInfo(1, 0) || getAnimFrameInfo(5, 0) || infoR0);
-      const infoL1 = flipLeft
-        ? { cropX: infoR1.cropX, cropY: infoR1.cropY, flipX: !infoR1.flipX }
-        : (getAnimFrameInfo(5, 0) || getAnimFrameInfo(5, 1) || infoR1);
+      const resolveDirectionFrames = (dirIdx: number, fallback?: { cropX: number; cropY: number; flipX: boolean }) => {
+        const idleMapped = mappedAnims[dirIdx];
+        const moveMapped = mappedAnims[dirIdx + 4];
+
+        const idleFrames = getFramesFromMapped(idleMapped);
+        const moveFrames = getFramesFromMapped(moveMapped);
+
+        let f0: { cropX: number; cropY: number; flipX: boolean } | null = null;
+        let f1: { cropX: number; cropY: number; flipX: boolean } | null = null;
+
+        const isSameAnim = idleMapped?.anim && moveMapped?.anim && idleMapped.anim.id === moveMapped.anim.id;
+
+        if (moveFrames.length >= 2) {
+          if (idleFrames.length > 0 && !isSameAnim) {
+            f0 = idleFrames[0];
+            f1 = moveFrames.find(mf => mf.cropX !== f0!.cropX || mf.cropY !== f0!.cropY || mf.flipX !== f0!.flipX) || moveFrames[0];
+          } else {
+            f0 = moveFrames[0];
+            f1 = moveFrames[1];
+          }
+        } else if (moveFrames.length === 1) {
+          if (idleFrames.length >= 1) {
+            f0 = idleFrames[0];
+            if (!isSameAnim) {
+              f1 = moveFrames[0];
+            } else if (idleFrames.length >= 2) {
+              f1 = idleFrames[1];
+            } else {
+              f1 = idleFrames[0];
+            }
+          } else {
+            f0 = moveFrames[0];
+            f1 = moveFrames[0];
+          }
+        } else if (idleFrames.length >= 2) {
+          f0 = idleFrames[0];
+          f1 = idleFrames[1];
+        } else if (idleFrames.length === 1) {
+          f0 = idleFrames[0];
+          f1 = idleFrames[0];
+        }
+
+        const defFallback = fallback || { cropX: 0, cropY: 0, flipX: false };
+        return {
+          f0: f0 || defFallback,
+          f1: f1 || f0 || defFallback,
+        };
+      };
+
+      const rightFrames = resolveDirectionFrames(0);
+      const infoR0 = rightFrames.f0;
+      const infoR1 = rightFrames.f1;
+
+      const leftFrames = resolveDirectionFrames(1, { cropX: infoR0.cropX, cropY: infoR0.cropY, flipX: !infoR0.flipX });
+      const infoL0 = leftFrames.f0;
+      const infoL1 = leftFrames.f1;
+
+      const upFrames = resolveDirectionFrames(2, infoR0);
+      const infoU0 = upFrames.f0;
+      const infoU1 = upFrames.f1;
+
+      const downFrames = resolveDirectionFrames(3, infoR0);
+      const infoD0 = downFrames.f0;
+      const infoD1 = downFrames.f1;
 
       const sharedPal = buildPngPalette(srcPng);
 
@@ -1184,21 +1262,27 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
         // Extract all animation frames for this actor
         let actorAnimFrames: any[] = [];
-        if (sprObj?.states?.[0]?.animations) {
+        let actorFlipX = false;
+        if (sprObj?.states?.[0]) {
           const animType = sprObj.states[0].animationType || "fixed";
-          let animIdx = 0;
-          if (animType === "multi_movement" || animType === "multi") {
-            const dir = scActor?.direction?.toLowerCase() || "down";
-            if (dir === "right") animIdx = 0;
-            else if (dir === "left") animIdx = 1;
-            else if (dir === "up") animIdx = 2;
-            else animIdx = 3;
-          } else {
-            animIdx = 0;
-          }
-          const anim = sprObj.states[0].animations[animIdx] || sprObj.states[0].animations[0];
-          if (anim && Array.isArray(anim.frames)) {
-            actorAnimFrames = anim.frames;
+          const flipLeft = sprObj.states[0].flipLeft ?? true;
+          const rawAnims = sprObj.states[0].animations || [];
+          const mapped = animationMapBySpriteType(
+            rawAnims,
+            animType,
+            flipLeft,
+            (anim, flip) => ({ anim, flip })
+          );
+          const dir = scActor?.direction?.toLowerCase() || "down";
+          let dirSlot = 3;
+          if (dir === "right") dirSlot = 0;
+          else if (dir === "left") dirSlot = 1;
+          else if (dir === "up") dirSlot = 2;
+
+          const chosenMapped = mapped[dirSlot] || mapped[0];
+          if (chosenMapped?.anim && Array.isArray(chosenMapped.anim.frames)) {
+            actorAnimFrames = chosenMapped.anim.frames;
+            actorFlipX = chosenMapped.flip;
           }
         }
 
@@ -1211,6 +1295,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         for (let fIdx = 0; fIdx < numFrames; fIdx++) {
           let fCropX = cropX;
           let fCropY = cropY;
+          let tileFlipX = false;
           if (actorAnimFrames[fIdx]?.tiles && Array.isArray(actorAnimFrames[fIdx].tiles)) {
             const validTiles = actorAnimFrames[fIdx].tiles.filter((t: any) => typeof t.sliceX === "number" && typeof t.sliceY === "number");
             if (validTiles.length > 0) {
@@ -1219,6 +1304,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
               validTiles.forEach((t: any) => {
                 if (t.sliceX < minX) minX = t.sliceX;
                 if (t.sliceY < minY) minY = t.sliceY;
+                if (t.flipX) tileFlipX = true;
               });
               if (minX !== 9999 && minY !== 9999) {
                 fCropX = minX;
@@ -1230,7 +1316,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           }
 
           const destPcxF = pathModule.join(destSpritesDir, sprFilename.replace(/\.png$/i, `_sc${sceneNum}_${actorNum}_f${fIdx}.pcx`));
-          convertPngToPcx(srcPng, destPcxF, { cropX: fCropX, cropY: fCropY, cropW, cropH, padWidthTo, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+          const finalFlipX = actorFlipX ? !tileFlipX : tileFlipX;
+          convertPngToPcx(srcPng, destPcxF, { cropX: fCropX, cropY: fCropY, cropW, cropH, padWidthTo, flipX: finalFlipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
 
           const relPcxF = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxF).replace(/\\/g, "/")}`;
           actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_f${fIdx}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n`;
@@ -2048,21 +2135,25 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         sprObj = allSprites.find((s: any) => s.id === scActor.spriteSheetId);
       }
       let actorAnimFrames: any[] = [];
-      if (sprObj?.states?.[0]?.animations) {
+      if (sprObj?.states?.[0]) {
         const animType = sprObj.states[0].animationType || "fixed";
-        let animIdx = 0;
-        if (animType === "multi_movement" || animType === "multi") {
-          const dir = scActor?.direction?.toLowerCase() || "down";
-          if (dir === "right") animIdx = 0;
-          else if (dir === "left") animIdx = 1;
-          else if (dir === "up") animIdx = 2;
-          else animIdx = 3;
-        } else {
-          animIdx = 0;
-        }
-        const anim = sprObj.states[0].animations[animIdx] || sprObj.states[0].animations[0];
-        if (anim && Array.isArray(anim.frames)) {
-          actorAnimFrames = anim.frames;
+        const flipLeft = sprObj.states[0].flipLeft ?? true;
+        const rawAnims = sprObj.states[0].animations || [];
+        const mapped = animationMapBySpriteType(
+          rawAnims,
+          animType,
+          flipLeft,
+          (anim, flip) => ({ anim, flip })
+        );
+        const dir = scActor?.direction?.toLowerCase() || "down";
+        let dirSlot = 3;
+        if (dir === "right") dirSlot = 0;
+        else if (dir === "left") dirSlot = 1;
+        else if (dir === "up") dirSlot = 2;
+
+        const chosenMapped = mapped[dirSlot] || mapped[0];
+        if (chosenMapped?.anim && Array.isArray(chosenMapped.anim.frames)) {
+          actorAnimFrames = chosenMapped.anim.frames;
         }
       }
       const canvasW = sprObj?.canvasWidth || 16;
