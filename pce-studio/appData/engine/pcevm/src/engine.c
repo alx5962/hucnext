@@ -1,5 +1,6 @@
 #include "include/engine.h"
 #include "include/pce_sound.h"
+#include "src/dialogue_font.h"
 
 void show_dialogue(const char *msg);
 void hide_dialogue(void);
@@ -5203,15 +5204,7 @@ void load_scene(int scene_num, int player_x, int player_y) {
   load_scene_music(scene_num);
 }
 
-const unsigned int font_pal[16] = {
-    0x1FF, /* 0: White background */
-    0x000, /* 1: Pure black text */
-    0x000, 0x000, 0x000, 0x000, 0x000, 0x000,
-    0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000, 0x000
-};
-
 void engine_init(void) {
-  int i;
   pce_sys_init();
   pce_sound_init();
 #ifdef HAS_MUSIC_DATA
@@ -5225,12 +5218,14 @@ void engine_init(void) {
   vm_init();
 
   set_font_pal(15);
-  set_font_color(1, 2);
-  load_default_font();
-  set_color(241, 0x000);
-  set_color(242, 0x1FF);
+  set_color(241, 0x1FF); /* Color 1 = Crisp White text */
 
   trigger_load_all();
+
+#ifdef HAS_UI_FRAME
+  load_vram(UI_FRAME_VRAM_ADDR, ui_frame_chr, 9 * 16);
+  load_palette(UI_FRAME_PAL, ui_frame_pal, 1);
+#endif
 
 #ifndef PLAYER_SPR_VRAM_SIZE
 #define PLAYER_SPR_VRAM_SIZE 0x40
@@ -5248,10 +5243,80 @@ void engine_init(void) {
 #endif
 }
 
-void show_dialogue(const char *msg) {
+void draw_ui_frame(int x, int y, int w, int h) {
+  int ix, iy;
+#ifdef HAS_UI_FRAME
+  int top_left;
+  int top_mid;
+  int top_right;
+  int mid_left;
+  int mid_fill;
+  int mid_right;
+  int bot_left;
+  int bot_mid;
+  int bot_right;
+
+  top_left  = 0xE0F0;
+  top_mid   = 0xE0F1;
+  top_right = 0xE0F2;
+  mid_left  = 0xE0F3;
+  mid_fill  = 0xE0F4;
+  mid_right = 0xE0F5;
+  bot_left  = 0xE0F6;
+  bot_mid   = 0xE0F7;
+  bot_right = 0xE0F8;
+
+  /* Top border */
+  put_raw(top_left, x, y);
+  for (ix = x + 1; ix < x + w - 1; ix++) put_raw(top_mid, ix, y);
+  put_raw(top_right, x + w - 1, y);
+
+  /* Middle fill and borders */
+  for (iy = y + 1; iy < y + h - 1; iy++) {
+    put_raw(mid_left, x, iy);
+    for (ix = x + 1; ix < x + w - 1; ix++) put_raw(mid_fill, ix, iy);
+    put_raw(mid_right, x + w - 1, iy);
+  }
+
+  /* Bottom border */
+  put_raw(bot_left, x, y + h - 1);
+  for (ix = x + 1; ix < x + w - 1; ix++) put_raw(bot_mid, ix, y + h - 1);
+  put_raw(bot_right, x + w - 1, y + h - 1);
+#else
   int i;
-  int base_y;
   char line_buf[33];
+  line_buf[0] = '+';
+  for (i = 1; i <= w - 2; i++) line_buf[i] = '-';
+  line_buf[w - 1] = '+';
+  line_buf[w] = '\0';
+  put_string(line_buf, x, y);
+  for (iy = y + 1; iy < y + h - 1; iy++) {
+    line_buf[0] = '|';
+    for (i = 1; i <= w - 2; i++) line_buf[i] = ' ';
+    line_buf[w - 1] = '|';
+    line_buf[w] = '\0';
+    put_string(line_buf, x, iy);
+  }
+  line_buf[0] = '+';
+  for (i = 1; i <= w - 2; i++) line_buf[i] = '-';
+  line_buf[w - 1] = '+';
+  line_buf[w] = '\0';
+  put_string(line_buf, x, y + h - 1);
+#endif
+}
+
+void pce_put_text_line(const char *str, int x, int y, int max_w) {
+  int i;
+  for (i = 0; i < max_w; i++) {
+    if (str && *str && *str != '\n') {
+      put_char(*str, x + i, y);
+      str++;
+    }
+  }
+}
+
+void show_dialogue(const char *msg) {
+  int base_y;
   const char *p;
 
   if (!msg || !*msg)
@@ -5262,68 +5327,39 @@ void show_dialogue(const char *msg) {
   actor_update_all();
   satb_update();
 
+#ifdef HAS_UI_FRAME
+  load_vram(UI_FRAME_VRAM_ADDR, ui_frame_chr, 9 * 16);
+  load_palette(UI_FRAME_PAL, ui_frame_pal, 1);
+#endif
+
+  load_vram(0x0800, dialogue_font_chr, 96 * 16);
   set_font_pal(15);
-  set_color(241, 0x000);
-  set_color(242, 0x1FF);
+  set_color(241, 0x000); /* Color 1 = Solid Black text */
+  set_color(243, 0x1FF); /* Color 3 = Solid White background */
 
   /* Calculate bottom 5 rows relative to camera scroll position */
   base_y = (g_cam_y >> 3) + 23;
 
-  /* Top border */
-  line_buf[0] = '+';
-  for (i = 1; i <= 30; i++) line_buf[i] = '-';
-  line_buf[31] = '+';
-  line_buf[32] = '\0';
-  put_string(line_buf, 0, base_y);
+  /* Draw 9-slice stretched frame across 32 columns x 5 rows */
+  draw_ui_frame(0, base_y, 32, 5);
 
   /* Text line 1 */
-  line_buf[0] = '|';
   p = msg;
-  for (i = 1; i <= 30; i++) {
-    if (*p && *p != '\n') {
-      line_buf[i] = *p++;
-    } else {
-      line_buf[i] = ' ';
-    }
-  }
-  line_buf[31] = '|';
-  line_buf[32] = '\0';
-  put_string(line_buf, 0, base_y + 1);
+  pce_put_text_line(p, 2, base_y + 1, 28);
 
   /* Text line 2 */
-  line_buf[0] = '|';
-  if (*p == '\n') p++;
-  for (i = 1; i <= 30; i++) {
-    if (*p && *p != '\n') {
-      line_buf[i] = *p++;
-    } else {
-      line_buf[i] = ' ';
-    }
+  while (*p && *p != '\n') p++;
+  if (*p == '\n') {
+    p++;
+    pce_put_text_line(p, 2, base_y + 2, 28);
+    while (*p && *p != '\n') p++;
   }
-  line_buf[31] = '|';
-  line_buf[32] = '\0';
-  put_string(line_buf, 0, base_y + 2);
 
   /* Text line 3 */
-  line_buf[0] = '|';
-  if (*p == '\n') p++;
-  for (i = 1; i <= 30; i++) {
-    if (*p && *p != '\n') {
-      line_buf[i] = *p++;
-    } else {
-      line_buf[i] = ' ';
-    }
+  if (*p == '\n') {
+    p++;
+    pce_put_text_line(p, 2, base_y + 3, 28);
   }
-  line_buf[31] = '|';
-  line_buf[32] = '\0';
-  put_string(line_buf, 0, base_y + 3);
-
-  /* Bottom border */
-  line_buf[0] = '+';
-  for (i = 1; i <= 30; i++) line_buf[i] = '-';
-  line_buf[31] = '+';
-  line_buf[32] = '\0';
-  put_string(line_buf, 0, base_y + 4);
 }
 
 void copy_choice_opt(char *dst, const char *src, int max_len) {
@@ -5342,60 +5378,57 @@ void render_choice_dialogue(void) {
   int i;
   int opt_i;
   int base_y;
-  char line_buf[33];
-
-  set_font_pal(15);
-  set_color(241, 0x000);
-  set_color(242, 0x1FF);
+  char line_buf[31];
 
   base_y = (g_cam_y >> 3) + 23;
 
-  /* Top border */
-  line_buf[0] = '+';
-  for (i = 1; i <= 30; i++) line_buf[i] = '-';
-  line_buf[31] = '+';
-  line_buf[32] = '\0';
-  put_string(line_buf, 0, base_y);
+#ifdef HAS_UI_FRAME
+  load_vram(UI_FRAME_VRAM_ADDR, ui_frame_chr, 9 * 16);
+  load_palette(UI_FRAME_PAL, ui_frame_pal, 1);
+#endif
+
+  load_vram(0x0800, dialogue_font_chr, 96 * 16);
+  set_font_pal(15);
+  set_color(241, 0x000); /* Color 1 = Solid Black text */
+  set_color(243, 0x1FF); /* Color 3 = Solid White background */
+
+  /* Draw 9-slice stretched frame across 32 columns x 5 rows */
+  draw_ui_frame(0, base_y, 32, 5);
 
   /* Option 1 */
-  line_buf[0] = '|';
-  line_buf[1] = (g_choice_index == 0) ? '>' : ' ';
-  line_buf[2] = ' ';
-  for (i = 3; i <= 30; i++) {
-    opt_i = i - 3;
+  line_buf[0] = (g_choice_index == 0) ? '>' : ' ';
+  line_buf[1] = ' ';
+  for (i = 2; i < 30; i++) {
+    opt_i = i - 2;
     if (g_choice_opt0[opt_i]) {
       line_buf[i] = g_choice_opt0[opt_i];
     } else {
       line_buf[i] = ' ';
     }
   }
-  line_buf[31] = '|';
-  line_buf[32] = '\0';
-  put_string(line_buf, 0, base_y + 1);
+  line_buf[30] = '\0';
+  put_string(line_buf, 1, base_y + 1);
 
   /* Option 2 */
-  line_buf[0] = '|';
-  line_buf[1] = (g_choice_index == 1) ? '>' : ' ';
-  line_buf[2] = ' ';
-  for (i = 3; i <= 30; i++) {
-    opt_i = i - 3;
+  line_buf[0] = (g_choice_index == 1) ? '>' : ' ';
+  line_buf[1] = ' ';
+  for (i = 2; i < 30; i++) {
+    opt_i = i - 2;
     if (g_choice_opt1[opt_i]) {
       line_buf[i] = g_choice_opt1[opt_i];
     } else {
       line_buf[i] = ' ';
     }
   }
-  line_buf[31] = '|';
-  line_buf[32] = '\0';
-  put_string(line_buf, 0, base_y + 2);
+  line_buf[30] = '\0';
+  put_string(line_buf, 1, base_y + 2);
 
   /* Option 3 or blank */
-  line_buf[0] = '|';
   if (g_choice_count > 2) {
-    line_buf[1] = (g_choice_index == 2) ? '>' : ' ';
-    line_buf[2] = ' ';
-    for (i = 3; i <= 30; i++) {
-      opt_i = i - 3;
+    line_buf[0] = (g_choice_index == 2) ? '>' : ' ';
+    line_buf[1] = ' ';
+    for (i = 2; i < 30; i++) {
+      opt_i = i - 2;
       if (g_choice_opt2[opt_i]) {
         line_buf[i] = g_choice_opt2[opt_i];
       } else {
@@ -5403,18 +5436,10 @@ void render_choice_dialogue(void) {
       }
     }
   } else {
-    for (i = 1; i <= 30; i++) line_buf[i] = ' ';
+    for (i = 0; i < 30; i++) line_buf[i] = ' ';
   }
-  line_buf[31] = '|';
-  line_buf[32] = '\0';
-  put_string(line_buf, 0, base_y + 3);
-
-  /* Bottom border */
-  line_buf[0] = '+';
-  for (i = 1; i <= 30; i++) line_buf[i] = '-';
-  line_buf[31] = '+';
-  line_buf[32] = '\0';
-  put_string(line_buf, 0, base_y + 4);
+  line_buf[30] = '\0';
+  put_string(line_buf, 1, base_y + 3);
 }
 
 void show_choice(int var_id, const char *opt1, const char *opt2) {

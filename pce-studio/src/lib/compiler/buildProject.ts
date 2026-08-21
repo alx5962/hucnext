@@ -501,7 +501,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
   const firstType = (allScenes[0]?.type || "TOPDOWN").toUpperCase();
   const firstTypeNum = SCENE_TYPE_MAP[firstType] ?? SCENE_TYPE_MAP["TOPDOWN"];
-  const sceneTypeDefine = sceneTypeDefineList.join("\n") + `\n#define SCENE_TYPE ${firstTypeNum}\n#define PLAT_WALK_SUBPX ${platWalkSubpx}\n#define PLAT_GRAVITY ${platGravitySubpx}\n#define PLAT_HOLD_GRAVITY ${platHoldGravitySubpx}\n#define PLAT_JUMP_SUBPX ${platJumpVelSubpx}\n#define PLAT_MAX_FALL ${platMaxFallSubpx}\n#define PLAT_JUMP_BTN ${platJumpBtnDefine}\n`;
+  const sceneTypeDefine = sceneTypeDefineList.join("\n") + `\n#define SCENE_TYPE ${firstTypeNum}\n#define PLAT_WALK_SUBPX ${platWalkSubpx}\n#define PLAT_GRAVITY ${platGravitySubpx}\n#define PLAT_HOLD_GRAVITY ${platHoldGravitySubpx}\n#define PLAT_JUMP_SUBPX ${platJumpVelSubpx}\n#define PLAT_MAX_FALL ${platMaxFallSubpx}\n#define PLAT_JUMP_BTN ${platJumpBtnDefine}\n#define HAS_UI_FRAME 1\n`;
 
   // Ensure background PNGs exist in build assets/backgrounds directory
   const destBgDir = pathModule.join(buildDir, "assets", "backgrounds");
@@ -582,6 +582,43 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   });
 
   const bgDirectives = `#asm\n .data\n${bgAsmDirectives} .code\n#endasm\n`;
+
+  // Process UI frame.png
+  const destUiDir = pathModule.join(buildDir, "assets", "ui");
+  await fs.ensureDir(destUiDir);
+
+  const uiDirsToScan = [
+    pathModule.join(projDir, "assets", "ui"),
+    pathModule.join(projDir, "project", "assets", "ui"),
+    pathModule.join(projDir, "ui"),
+    pathModule.join(__dirname, "..", "..", "..", "appData", "templates", "gbhtml", "assets", "ui"),
+    pathModule.join(__dirname, "..", "..", "appData", "templates", "gbhtml", "assets", "ui"),
+    pathModule.join(process.cwd(), "appData", "templates", "gbhtml", "assets", "ui"),
+  ];
+
+  let frameFound = false;
+  const destFramePng = pathModule.join(destUiDir, "frame.png");
+
+  for (const uDir of uiDirsToScan) {
+    const srcFrame = pathModule.join(uDir, "frame.png");
+    if (fs.existsSync(srcFrame)) {
+      try {
+        convertToIndexedPng(srcFrame, destFramePng);
+      } catch (e) {
+        await fs.copy(srcFrame, destFramePng, { overwrite: true });
+      }
+      frameFound = true;
+      break;
+    }
+  }
+
+  if (!frameFound) {
+    try {
+      createBlankIndexedPng(destFramePng, 24, 24);
+    } catch (e) {}
+  }
+
+  const uiFrameDirectives = `#incchr(ui_frame_chr, "assets/ui/frame.png", 0, 0, 3, 3)\n#incpal(ui_frame_pal, "assets/ui/frame.png")\n`;
 
   let collisionIncludes = "";
   const colSymbolMap = new Map<string, string>();
@@ -1884,6 +1921,17 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           const maskHex = `0x${mask.toString(16).toUpperCase().padStart(2, "0")}`;
           stepCases += `      case ${stepIndex}:\n        g_await_input_mask = ${maskHex};\n        return ${stepIndex + 1};\n`;
           stepIndex++;
+        } else if (
+          evt.command === "EVENT_TEXT" ||
+          evt.command === "EVENT_TEXT_DIALOGUE" ||
+          evt.command === "EVENT_SHOW_TEXT"
+        ) {
+          const rawText = Array.isArray(evt.args?.text)
+            ? evt.args.text.join("\n")
+            : (typeof evt.args?.text === "string" ? evt.args.text : "");
+          const cleanText = rawText.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n");
+          stepCases += `      case ${stepIndex}:\n        show_dialogue("${cleanText}");\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
         } else if (evt.command === "EVENT_CHOICE") {
           const varIdx = parseVarIndex(evt.args?.variable);
           const trueText = String(evt.args?.trueText || "Yes").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
@@ -2391,6 +2439,8 @@ ${playerDirectives}
 #define HAS_PLAYER_FRAME_1 1
 
 ${bgDirectives}
+
+${uiFrameDirectives}
 
 ${actorDirectives}
 
