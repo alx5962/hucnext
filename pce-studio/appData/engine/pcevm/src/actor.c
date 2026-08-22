@@ -231,3 +231,11 @@ void actor_hide_all(void) {
         g_actor_hidden[i] = 1;
     }
 }
+
+void actor_show_all(void) {
+    int i;
+    for (i = 0; i < g_actor_count; i++) {
+        g_actor_hidden[i] = 0;
+    }
+}
+

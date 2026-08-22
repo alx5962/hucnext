@@ -1845,13 +1845,23 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           }
           stepCases += `      case ${stepIndex}:\n#ifdef HAS_MUSIC_DATA\n        pce_sound_play(${songSymbol}_Data);\n#endif\n        return ${stepIndex + 1};\n`;
           stepIndex++;
-        } else if (evt.command === "EVENT_ACTOR_SHOW") {
-          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
-          stepCases += `      case ${stepIndex}:\n        actor_show(${targetNum});\n        return ${stepIndex + 1};\n`;
+        } else if (
+          evt.command === "EVENT_ACTOR_SHOW" ||
+          evt.command === "EVENT_ACTOR_ACTIVATE" ||
+          evt.command === "EVENT_PLAYER_ACTIVATE" ||
+          evt.command === "EVENT_PLAYER_SHOW"
+        ) {
+          const targetNum = (evt.command === "EVENT_PLAYER_ACTIVATE" || evt.command === "EVENT_PLAYER_SHOW") ? 0 : findTargetNum(evt.args?.actorId, currentActorNum);
+          stepCases += `      case ${stepIndex}:\n        actor_show(${targetNum});\n        actor_activate(${targetNum});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
-        } else if (evt.command === "EVENT_ACTOR_HIDE") {
-          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
-          stepCases += `      case ${stepIndex}:\n        actor_hide(${targetNum});\n        return ${stepIndex + 1};\n`;
+        } else if (
+          evt.command === "EVENT_ACTOR_HIDE" ||
+          evt.command === "EVENT_ACTOR_DEACTIVATE" ||
+          evt.command === "EVENT_PLAYER_DEACTIVATE" ||
+          evt.command === "EVENT_PLAYER_HIDE"
+        ) {
+          const targetNum = (evt.command === "EVENT_PLAYER_DEACTIVATE" || evt.command === "EVENT_PLAYER_HIDE") ? 0 : findTargetNum(evt.args?.actorId, currentActorNum);
+          stepCases += `      case ${stepIndex}:\n        actor_hide(${targetNum});\n        actor_deactivate(${targetNum});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_COLLISIONS_DISABLE") {
           const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
@@ -2030,8 +2040,11 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         } else if (evt.command === "EVENT_DIALOGUE_CLOSE_NONMODAL") {
           stepCases += `      case ${stepIndex}:\n        hide_dialogue();\n        return ${stepIndex + 1};\n`;
           stepIndex++;
-        } else if (evt.command === "EVENT_HIDE_SPRITES") {
+        } else if (evt.command === "EVENT_HIDE_SPRITES" || evt.command === "EVENT_SPRITES_HIDE") {
           stepCases += `      case ${stepIndex}:\n        actor_hide_all();\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_SHOW_SPRITES" || evt.command === "EVENT_SPRITES_SHOW") {
+          stepCases += `      case ${stepIndex}:\n        actor_show_all();\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_MUSIC_STOP") {
           stepCases += `      case ${stepIndex}:\n        pce_sound_stop();\n        return ${stepIndex + 1};\n`;

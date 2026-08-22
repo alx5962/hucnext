@@ -62,5 +62,6 @@ void actor_emote(int id, int emote_id);
 void actor_push(int id, int dir, int slide);
 void actor_effects(int id, int effect_id);
 void actor_hide_all(void);
+void actor_show_all(void);
 
 #endif
