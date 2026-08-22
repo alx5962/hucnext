@@ -152,12 +152,18 @@ export const animationMapBySpriteType = <T, U>(
 ): U[] => {
   return Array.from(Array(8)).map((_item, index) => {
     if (type === "fixed") {
-      // All animations map to 0
+      if (flipLeft && (index === ANIM_IDLE_LEFT || index === ANIM_MOVE_LEFT)) {
+        return fn(items[0], true);
+      }
       return fn(items[0], false);
     }
     if (type === "fixed_movement") {
-      // Idle maps to 0, Moving maps to 4
-      return fn(index < 4 ? items[0] : items[4], false);
+      const isMoving = index >= ANIM_MOVE_RIGHT;
+      const isLeft = index === ANIM_IDLE_LEFT || index === ANIM_MOVE_LEFT;
+      if (flipLeft && isLeft) {
+        return fn(isMoving ? items[ANIM_MOVE_RIGHT] : items[ANIM_IDLE_RIGHT], true);
+      }
+      return fn(isMoving ? items[ANIM_MOVE_RIGHT] : items[ANIM_IDLE_RIGHT], false);
     }
     if (type === "multi" && !flipLeft) {
       // Idle and moving map to first 4
