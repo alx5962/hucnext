@@ -5,10 +5,10 @@
   "type": "TOPDOWN",
   "name": "ui/menu/Menu Page 1",
   "symbol": "scene_menu_page_1",
-  "x": 144,
-  "y": 304,
-  "width": 20,
-  "height": 18,
+  "x": 440,
+  "y": 408,
+  "width": 32,
+  "height": 32,
   "backgroundId": "93d8839f-c19c-4eb2-a386-b0bb77068521",
   "tilesetId": "",
   "colorModeOverride": "none",
@@ -68,5 +68,5 @@
   "playerHit1Script": [],
   "playerHit2Script": [],
   "playerHit3Script": [],
-  "collisions": ""
+  "collisions": "00400+"
 }

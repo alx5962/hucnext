@@ -5,10 +5,10 @@
   "type": "PLATFORM",
   "name": "path/Parallax Example",
   "symbol": "scene_parallax_example",
-  "x": 336,
-  "y": 536,
+  "x": 792,
+  "y": 760,
   "width": 80,
-  "height": 18,
+  "height": 28,
   "backgroundId": "b48f4eda-5654-4760-b8a9-4fd3f7e7ed5e",
   "tilesetId": "",
   "colorModeOverride": "none",
@@ -108,5 +108,5 @@
   "playerHit1Script": [],
   "playerHit2Script": [],
   "playerHit3Script": [],
-  "collisions": "00460+0f50+00f0+"
+  "collisions": "00460+0f50+00410+"
 }

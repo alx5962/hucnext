@@ -5,10 +5,10 @@
   "type": "SHMUP",
   "name": "space/Space Battle",
   "symbol": "scene_space_battle",
-  "x": 144,
-  "y": 736,
+  "x": 1128,
+  "y": 1120,
   "width": 255,
-  "height": 18,
+  "height": 28,
   "backgroundId": "28a8b376-b6c5-4e6d-8d7d-2a409d73cd1b",
   "tilesetId": "",
   "colorModeOverride": "none",
@@ -179,5 +179,5 @@
       }
     }
   ],
-  "collisions": "0011ee+"
+  "collisions": "001be4+"
 }

@@ -1,13 +1,12 @@
 {
   "_resourceType": "background",
-  "id": "93d8839f-c19c-4eb2-a386-b0bb77068521",
+  "id": "ac68fad5-3395-4960-956c-b50a886119d3",
   "name": "menu_page1",
   "symbol": "bg_menu_page1",
   "tileColors": "",
   "filename": "menu_page1.png",
-  "width": 32,
+  "width": 31,
   "height": 28,
-  "imageWidth": 256,
+  "imageWidth": 254,
   "imageHeight": 224
-  "autoColor": false
 }

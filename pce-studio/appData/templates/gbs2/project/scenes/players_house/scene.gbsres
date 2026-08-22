@@ -5,10 +5,10 @@
   "type": "POINTNCLICK",
   "name": "Player's House",
   "symbol": "scene_player_s_house",
-  "x": 144,
-  "y": 536,
-  "width": 20,
-  "height": 18,
+  "x": 136,
+  "y": 728,
+  "width": 32,
+  "height": 32,
   "backgroundId": "0af9ba31-7864-4664-9603-b211dc0f3793",
   "tilesetId": "",
   "colorModeOverride": "none",
@@ -83,5 +83,5 @@
   "playerHit1Script": [],
   "playerHit2Script": [],
   "playerHit3Script": [],
-  "collisions": ""
+  "collisions": "00400+"
 }
