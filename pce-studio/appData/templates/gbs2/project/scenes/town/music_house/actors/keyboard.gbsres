@@ -6,7 +6,7 @@
   "prefabId": "",
   "name": "Keyboard",
   "coordinateType": "tiles",
-  "x": 5,
+  "x": 6,
   "y": 10,
   "frame": 0,
   "animate": false,

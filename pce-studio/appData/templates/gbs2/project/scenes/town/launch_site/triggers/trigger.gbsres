@@ -5,8 +5,8 @@
   "symbol": "trigger_37",
   "prefabId": "",
   "name": "",
-  "x": 6,
-  "y": 17,
+  "x": 12,
+  "y": 27,
   "width": 8,
   "height": 1,
   "prefabScriptOverrides": {},
@@ -22,7 +22,7 @@
         },
         "y": {
           "type": "number",
-          "value": 1
+          "value": 2
         },
         "direction": "down",
         "fadeSpeed": "2"

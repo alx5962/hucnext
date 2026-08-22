@@ -5316,6 +5316,7 @@ void pce_put_text_line(const char *str, int x, int y, int max_w) {
 }
 
 void show_dialogue(const char *msg) {
+  int base_x;
   int base_y;
   const char *p;
 
@@ -5337,28 +5338,29 @@ void show_dialogue(const char *msg) {
   set_color(241, 0x000); /* Color 1 = Solid Black text */
   set_color(243, 0x1FF); /* Color 3 = Solid White background */
 
-  /* Calculate bottom 5 rows relative to camera scroll position */
+  /* Calculate bottom 5 rows and left columns relative to camera scroll position */
+  base_x = (g_cam_x >> 3);
   base_y = (g_cam_y >> 3) + 23;
 
   /* Draw 9-slice stretched frame across 32 columns x 5 rows */
-  draw_ui_frame(0, base_y, 32, 5);
+  draw_ui_frame(base_x, base_y, 32, 5);
 
   /* Text line 1 */
   p = msg;
-  pce_put_text_line(p, 2, base_y + 1, 28);
+  pce_put_text_line(p, base_x + 2, base_y + 1, 28);
 
   /* Text line 2 */
   while (*p && *p != '\n') p++;
   if (*p == '\n') {
     p++;
-    pce_put_text_line(p, 2, base_y + 2, 28);
+    pce_put_text_line(p, base_x + 2, base_y + 2, 28);
     while (*p && *p != '\n') p++;
   }
 
   /* Text line 3 */
   if (*p == '\n') {
     p++;
-    pce_put_text_line(p, 2, base_y + 3, 28);
+    pce_put_text_line(p, base_x + 2, base_y + 3, 28);
   }
 }
 
@@ -5377,9 +5379,11 @@ void copy_choice_opt(char *dst, const char *src, int max_len) {
 void render_choice_dialogue(void) {
   int i;
   int opt_i;
+  int base_x;
   int base_y;
   char line_buf[31];
 
+  base_x = (g_cam_x >> 3);
   base_y = (g_cam_y >> 3) + 23;
 
 #ifdef HAS_UI_FRAME
@@ -5393,7 +5397,7 @@ void render_choice_dialogue(void) {
   set_color(243, 0x1FF); /* Color 3 = Solid White background */
 
   /* Draw 9-slice stretched frame across 32 columns x 5 rows */
-  draw_ui_frame(0, base_y, 32, 5);
+  draw_ui_frame(base_x, base_y, 32, 5);
 
   /* Option 1 */
   line_buf[0] = (g_choice_index == 0) ? '>' : ' ';
@@ -5407,7 +5411,7 @@ void render_choice_dialogue(void) {
     }
   }
   line_buf[30] = '\0';
-  put_string(line_buf, 1, base_y + 1);
+  put_string(line_buf, base_x + 1, base_y + 1);
 
   /* Option 2 */
   line_buf[0] = (g_choice_index == 1) ? '>' : ' ';
@@ -5421,7 +5425,7 @@ void render_choice_dialogue(void) {
     }
   }
   line_buf[30] = '\0';
-  put_string(line_buf, 1, base_y + 2);
+  put_string(line_buf, base_x + 1, base_y + 2);
 
   /* Option 3 or blank */
   if (g_choice_count > 2) {
@@ -5439,7 +5443,7 @@ void render_choice_dialogue(void) {
     for (i = 0; i < 30; i++) line_buf[i] = ' ';
   }
   line_buf[30] = '\0';
-  put_string(line_buf, 1, base_y + 3);
+  put_string(line_buf, base_x + 1, base_y + 3);
 }
 
 void show_choice(int var_id, const char *opt1, const char *opt2) {
