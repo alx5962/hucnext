@@ -2068,8 +2068,45 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         } else if (evt.command === "EVENT_LOOP_BREAK" || evt.command === "EVENT_BREAK") {
           stepCases += `      case ${stepIndex}:\n        return -1;\n`;
           stepIndex++;
+        } else if (evt.command === "EVENT_SAVE_DATA" || evt.command === "EVENT_DATA_SAVE") {
+          const slot = Number(evt.args?.saveSlot || 0);
+          const saveStep = stepIndex;
+          stepCases += `      case ${saveStep}:\n        save_game(${slot});\n        return ${saveStep + 1};\n`;
+          stepIndex++;
+          const trueList = (evt.true && Array.isArray(evt.true)) ? evt.true : (evt.children?.true && Array.isArray(evt.children.true) ? evt.children.true : []);
+          if (trueList.length > 0) {
+            processEventList(trueList, isStartupContext);
+          }
+          continue;
+        } else if (evt.command === "EVENT_LOAD_DATA" || evt.command === "EVENT_DATA_LOAD") {
+          const slot = Number(evt.args?.saveSlot || 0);
+          stepCases += `      case ${stepIndex}:\n        load_game(${slot});\n        return -1;\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_CLEAR_DATA" || evt.command === "EVENT_DATA_CLEAR") {
+          const slot = Number(evt.args?.saveSlot || 0);
+          stepCases += `      case ${stepIndex}:\n        clear_game_data(${slot});\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_IF_SAVED_DATA" || evt.command === "EVENT_IF_DATA_SAVED") {
+          const slot = Number(evt.args?.saveSlot || 0);
+          const trueList = (evt.true && Array.isArray(evt.true)) ? evt.true : (evt.children?.true && Array.isArray(evt.children.true) ? evt.children.true : []);
+          const falseList = (evt.false && Array.isArray(evt.false)) ? evt.false : (evt.children?.false && Array.isArray(evt.children.false) ? evt.children.false : []);
+
+          const branchStep = stepIndex;
+          stepIndex++;
+
+          const trueStart = stepIndex;
+          processEventList(trueList, isStartupContext);
+          const trueEndJumpStep = stepIndex;
+          stepIndex++;
+
+          const falseStart = stepIndex;
+          processEventList(falseList, isStartupContext);
+          const afterStep = stepIndex;
+
+          stepCases += `      case ${branchStep}:\n        if (has_saved_data(${slot})) return ${trueStart};\n        else return ${falseStart};\n`;
+          stepCases += `      case ${trueEndJumpStep}:\n        return ${afterStep};\n`;
+          continue;
         } else if (
-          evt.command === "EVENT_LOAD_DATA" ||
           evt.command === "EVENT_LOAD_PROJECTILE_SLOT" ||
           evt.command === "EVENT_MATH_DIV" ||
           evt.command === "EVENT_MATH_DIV_VALUE" ||
@@ -2102,7 +2139,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           evt.command === "EVENT_IF_FLAGS_COMPARE" ||
           evt.command === "EVENT_IF_FLAGS_COMPARE" ||
           evt.command === "EVENT_IF_INPUT" ||
-          evt.command === "EVENT_IF_SAVED_DATA" ||
           evt.command === "EVENT_LAUNCH_PROJECTILE" ||
           evt.command === "EVENT_LAUNCH_PROJECTILE_SLOT" ||
           evt.command === "EVENT_ACTOR_EFFECTS" ||

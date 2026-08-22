@@ -27,7 +27,7 @@
       "args": {
         "variable": "11",
         "trueText": "Save Game",
-        "falseText": "Cancel"
+        "falseText": "Cancel   "
       }
     },
     {

@@ -5999,6 +5999,112 @@ void engine_render(void) {
   pce_sys_vsync();
 }
 
+#define SAVE_HEADER_MAGIC 0x5043
+#define SAVE_PAYLOAD_WORDS (5 + VM_MAX_VARS)
+#define SAVE_PAYLOAD_BYTES (SAVE_PAYLOAD_WORDS * 2)
+
+int g_save_buffer[SAVE_PAYLOAD_WORDS];
+
+const char g_bram_slot0[13] = { 0, 0, 80, 67, 69, 83, 84, 85, 95, 83, 48, 32, 0 };
+const char g_bram_slot1[13] = { 0, 0, 80, 67, 69, 83, 84, 85, 95, 83, 49, 32, 0 };
+const char g_bram_slot2[13] = { 0, 0, 80, 67, 69, 83, 84, 85, 95, 83, 50, 32, 0 };
+
+const char *get_bram_slot_name(int slot) {
+  if (slot == 1) return g_bram_slot1;
+  if (slot == 2) return g_bram_slot2;
+  return g_bram_slot0;
+}
+
+int bram_is_ready(void) {
+  if (bm_check()) {
+    bm_format();
+    return 1;
+  }
+  return 0;
+}
+
+int save_game(int slot) {
+  int i;
+  const char *name;
+  if (slot < 0 || slot > 2) slot = 0;
+  if (!bram_is_ready()) return 0;
+  name = get_bram_slot_name(slot);
+
+  g_save_buffer[0] = SAVE_HEADER_MAGIC;
+  g_save_buffer[1] = g_current_scene;
+  g_save_buffer[2] = g_actor_x[0];
+  g_save_buffer[3] = g_actor_y[0];
+  g_save_buffer[4] = g_actor_dir[0];
+  for (i = 0; i < VM_MAX_VARS; i++) {
+    g_save_buffer[5 + i] = g_vm_vars[i];
+  }
+
+  if (!bm_exist(name)) {
+    if (bm_create(name, SAVE_PAYLOAD_BYTES) != BM_OK) {
+      return 0;
+    }
+  }
+  if (bm_write((char *)g_save_buffer, name, 0, SAVE_PAYLOAD_BYTES) > 0) {
+    return 1;
+  }
+  return 0;
+}
+
+int load_game(int slot) {
+  int i;
+  const char *name;
+  int scene_num;
+  int target_x;
+  int target_y;
+  int target_dir;
+
+  if (slot < 0 || slot > 2) slot = 0;
+  if (!bram_is_ready()) return 0;
+  name = get_bram_slot_name(slot);
+
+  if (!bm_exist(name)) return 0;
+
+  if (bm_read((char *)g_save_buffer, name, 0, SAVE_PAYLOAD_BYTES) <= 0) {
+    return 0;
+  }
+
+  if (g_save_buffer[0] != SAVE_HEADER_MAGIC) {
+    return 0;
+  }
+
+  scene_num  = g_save_buffer[1];
+  target_x   = g_save_buffer[2];
+  target_y   = g_save_buffer[3];
+  target_dir = g_save_buffer[4];
+
+  for (i = 0; i < VM_MAX_VARS; i++) {
+    g_vm_vars[i] = g_save_buffer[5 + i];
+  }
+
+  load_scene(scene_num, target_x, target_y);
+  g_actor_dir[0] = target_dir;
+  actor_set_dir(0, target_dir);
+
+  return 1;
+}
+
+int has_saved_data(int slot) {
+  if (slot < 0 || slot > 2) slot = 0;
+  if (!bram_is_ready()) return 0;
+  return bm_exist(get_bram_slot_name(slot));
+}
+
+int clear_game_data(int slot) {
+  const char *name;
+  if (slot < 0 || slot > 2) slot = 0;
+  if (!bram_is_ready()) return 0;
+  name = get_bram_slot_name(slot);
+  if (bm_exist(name)) {
+    return (bm_delete(name) == BM_OK);
+  }
+  return 1;
+}
+
 void engine_run(void) {
   engine_init();
   for (;;) {
