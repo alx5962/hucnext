@@ -8,8 +8,8 @@
   "x": 776,
   "y": 88,
   "width": 32,
-  "height": 32,
-  "backgroundId": "b340b9a2-2865-4e05-91c0-148846a693c8",
+  "height": 28,
+  "backgroundId": "5cf32c10-151e-49b0-ace1-9fa38f0de723",
   "tilesetId": "",
   "colorModeOverride": "none",
   "paletteIds": [],
@@ -78,5 +78,5 @@
   "playerHit1Script": [],
   "playerHit2Script": [],
   "playerHit3Script": [],
-  "collisions": "0061+0f12+00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f!0010+0f!00e+0f8+002+0f8+0015+0f!002+0f!001c+0f4+001d4+"
+  "collisions": "00380+"
 }

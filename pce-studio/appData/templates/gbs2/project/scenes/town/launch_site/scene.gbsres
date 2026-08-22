@@ -8,8 +8,8 @@
   "x": 1760,
   "y": 88,
   "width": 32,
-  "height": 32,
-  "backgroundId": "00e9b250-b602-4e5d-998c-fe0c8f23c91d",
+  "height": 28,
+  "backgroundId": "66741c75-048c-4450-9303-7a23cf8b282b",
   "tilesetId": "",
   "colorModeOverride": "none",
   "paletteIds": [
@@ -89,5 +89,5 @@
   "playerHit1Script": [],
   "playerHit2Script": [],
   "playerHit3Script": [],
-  "collisions": "0f4+002+0f!006+0f!002+0f4+00c+0f3+003+0f!006+0f!003+0f3+00c+0f2+004+0f!006+0f!004+0f2+00c+0f!005+0f!006+0f!005+0f!00c+0f2+003+0f2+006+0f2+003+0f2+00c+0f2+003+0f2+006+0f2+003+0f2+00c+0f2+004+0f!006+0f!004+0f2+00c+0f!005+0f!006+0f5+00!0f!00c+0f2+004+0f!006+0f2+002+0f3+00c+0f2+004+0f9+002+0f3+00c+0f2+0010+0f2+00c+0f!0012+0f!00c+0f2+0010+0f2+00c+0f2+0010+0f2+00c+0f2+0010+0f2+00c+0f!0012+0f!00c+0f5+00a+0f5+00c+0f6+008+0f6+001cc+"
+  "collisions": "00380+"
 }

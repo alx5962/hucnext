@@ -7,9 +7,9 @@
   "symbol": "scene_menu_page_1",
   "x": 440,
   "y": 408,
-  "width": 32,
-  "height": 32,
-  "backgroundId": "93d8839f-c19c-4eb2-a386-b0bb77068521",
+  "width": 31,
+  "height": 28,
+  "backgroundId": "ac68fad5-3395-4960-956c-b50a886119d3",
   "tilesetId": "",
   "colorModeOverride": "none",
   "paletteIds": [
@@ -68,5 +68,5 @@
   "playerHit1Script": [],
   "playerHit2Script": [],
   "playerHit3Script": [],
-  "collisions": "00400+"
+  "collisions": "00364+"
 }

@@ -346,9 +346,9 @@ typedef struct {
 
 /* constant array struct */
 
-#define MAX_CONST        1024
-#define MAX_CONST_VALUE  8192
-#define MAX_CONST_DATA  65536
+#define MAX_CONST        2048
+#define MAX_CONST_VALUE  65536
+#define MAX_CONST_DATA  262144
 
 struct const_array {
 	SYMBOL *sym;
