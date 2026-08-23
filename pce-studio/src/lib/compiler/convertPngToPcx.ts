@@ -18,9 +18,8 @@ export interface SharedSpritePalette {
   colorMap: Map<string, number>;
 }
 
-export function buildPngPalette(pngPath: string): SharedSpritePalette {
-  const data = fs.readFileSync(pngPath);
-  const srcPng = PNG.sync.read(data);
+export function buildPngPalette(pngInput: string | PNG): SharedSpritePalette {
+  const srcPng = typeof pngInput === "string" ? PNG.sync.read(fs.readFileSync(pngInput)) : pngInput;
 
   const palette = new Uint8Array(768);
   const colorMap = new Map<string, number>();
@@ -59,9 +58,86 @@ export function buildPngPalette(pngPath: string): SharedSpritePalette {
   return { palette, colorMap };
 }
 
-export function convertPngToPcx(pngPath: string, pcxPath: string, cropOpts?: CropOptions) {
-  const data = fs.readFileSync(pngPath);
-  const srcPng = PNG.sync.read(data);
+export function compositeMetaspriteFrame(
+  srcPngInput: string | PNG,
+  frame: any,
+  canvasW: number,
+  canvasH: number,
+  padWidthTo?: number,
+  padHeightTo?: number,
+  flipX?: boolean,
+  spriteMode?: string
+): PNG {
+  const srcPng = typeof srcPngInput === "string" ? PNG.sync.read(fs.readFileSync(srcPngInput)) : srcPngInput;
+  const dstW = padWidthTo || canvasW;
+  const dstH = padHeightTo || canvasH;
+  const dstPng = new PNG({ width: dstW, height: dstH });
+  for (let i = 0; i < dstPng.data.length; i += 4) {
+    dstPng.data[i] = 0;
+    dstPng.data[i + 1] = 0;
+    dstPng.data[i + 2] = 0;
+    dstPng.data[i + 3] = 0;
+  }
+
+  const tiles = frame?.tiles || [];
+  const is8x8 = (spriteMode === "8x8") || (!spriteMode && tiles.some((t: any) => (t.sliceY % 16 !== 0) || ((t.y || 0) % 16 !== 0)));
+  const tileW = 8;
+  const tileH = is8x8 ? 8 : 16;
+
+  const originX = Math.max(0, Math.floor(canvasW / 2 - tileW));
+  const originY = canvasH - tileH;
+
+  for (const t of tiles) {
+    if (typeof t.sliceX !== "number" || typeof t.sliceY !== "number") continue;
+    const isTileFlipX = !!t.flipX;
+    const isTileFlipY = !!t.flipY;
+
+    let drawX = originX + (t.x || 0);
+    if (flipX) {
+      drawX = canvasW - (originX + (t.x || 0) + tileW);
+    }
+    const drawY = originY - (t.y || 0);
+
+    const effectiveFlipX = flipX ? !isTileFlipX : isTileFlipX;
+    const effectiveFlipY = isTileFlipY;
+
+    for (let ty = 0; ty < tileH; ty++) {
+      for (let tx = 0; tx < tileW; tx++) {
+        const sx = t.sliceX + (effectiveFlipX ? (tileW - 1 - tx) : tx);
+        const sy = t.sliceY + (effectiveFlipY ? (tileH - 1 - ty) : ty);
+        const dx = drawX + tx;
+        const dy = drawY + ty;
+
+        if (
+          sx >= 0 && sx < srcPng.width &&
+          sy >= 0 && sy < srcPng.height &&
+          dx >= 0 && dx < dstW &&
+          dy >= 0 && dy < dstH
+        ) {
+          const sIdx = (sy * srcPng.width + sx) * 4;
+          const dIdx = (dy * dstW + dx) * 4;
+          const a = srcPng.data[sIdx + 3];
+          const r = srcPng.data[sIdx];
+          const g = srcPng.data[sIdx + 1];
+          const b = srcPng.data[sIdx + 2];
+          const isLimeGreen = g > 240 && r < 180 && b < 50;
+          const isMagenta = r > 200 && b > 200 && g < 50;
+
+          if (a >= 128 && !isLimeGreen && !isMagenta) {
+            dstPng.data[dIdx] = r;
+            dstPng.data[dIdx + 1] = g;
+            dstPng.data[dIdx + 2] = b;
+            dstPng.data[dIdx + 3] = 255;
+          }
+        }
+      }
+    }
+  }
+  return dstPng;
+}
+
+export function convertPngToPcx(pngInput: string | PNG, pcxPath: string, cropOpts?: CropOptions) {
+  const srcPng = typeof pngInput === "string" ? PNG.sync.read(fs.readFileSync(pngInput)) : pngInput;
 
   let cropX = cropOpts?.cropX ?? 0;
   let cropY = cropOpts?.cropY ?? 0;

@@ -1,6 +1,6 @@
 import fs from "fs-extra";
 import Path from "path";
-import { convertPngToPcx, buildPngPalette } from "./convertPngToPcx";
+import { convertPngToPcx, buildPngPalette, compositeMetaspriteFrame } from "./convertPngToPcx";
 import { animationMapBySpriteType } from "shared/lib/sprites/helpers";
 import convertToIndexedPngDefault, { convertToIndexedPng as convertToIndexedPngFn, createBlankIndexedPng } from "./indexedPngWriter";
 
@@ -135,6 +135,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       settingsGbsData = fs.readJsonSync(settingsGbsPath);
     } catch (e) { }
   }
+  const defaultSpriteMode = settingsGbsData?.spriteMode || projectData?.settings?.spriteMode || (typeof projectDirPath === "object" ? projectDirPath?.settings?.spriteMode : undefined) || "8x16";
 
   // Load gbsres files if present
   const assetsDir = pathModule.join(projDir, "assets");
@@ -185,18 +186,36 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const projectSpritesArr = toEntityArray(projectData.sprites);
   const allSprites = [...spritesFromGbsres, ...projectSpritesArr];
 
-  // Parse scene and actor gbsres files
+  // Parse scene and actor gbsres files recursively
   let scenesFromGbsres: any[] = [];
   const scenesDir = pathModule.join(projDir, "project", "scenes");
   if (fs.existsSync(scenesDir)) {
-    const sceneDirs = fs.readdirSync(scenesDir);
-    for (const sd of sceneDirs) {
-      const sceneGbs = pathModule.join(scenesDir, String(sd), "scene.gbsres");
+    const findSceneDirs = (dir: string): string[] => {
+      let results: string[] = [];
+      if (!fs.existsSync(dir)) return results;
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = pathModule.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          const sceneGbs = pathModule.join(fullPath, "scene.gbsres");
+          if (fs.existsSync(sceneGbs)) {
+            results.push(fullPath);
+          } else {
+            results = results.concat(findSceneDirs(fullPath));
+          }
+        }
+      }
+      return results;
+    };
+
+    const sceneFolders = findSceneDirs(scenesDir);
+    for (const scFolder of sceneFolders) {
+      const sceneGbs = pathModule.join(scFolder, "scene.gbsres");
       if (fs.existsSync(sceneGbs)) {
         try {
           const json = fs.readJsonSync(sceneGbs);
           if (json) {
-            const actorsDir = pathModule.join(scenesDir, String(sd), "actors");
+            const actorsDir = pathModule.join(scFolder, "actors");
             if (fs.existsSync(actorsDir)) {
               const actorFiles = fs.readdirSync(actorsDir).filter(f => typeof f === "string" && f.endsWith(".gbsres"));
               const sceneActors: any[] = [];
@@ -208,7 +227,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
               }
               json.actors = sceneActors;
             }
-            const triggersDir = pathModule.join(scenesDir, String(sd), "triggers");
+            const triggersDir = pathModule.join(scFolder, "triggers");
             if (fs.existsSync(triggersDir)) {
               const trigFiles = fs.readdirSync(triggersDir).filter(f => typeof f === "string" && f.endsWith(".gbsres"));
               const sceneTriggers: any[] = [];
@@ -558,6 +577,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     } catch (e) { }
   }
 
+  let currentAssetBank = 3;
   let bgAsmDirectives = "";
   const bgSymbolMap = new Map<string, string>();
   let bgUniqueIndex = 0;
@@ -570,8 +590,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     if (!bgSymbolMap.has(key)) {
       const symPrefix = `bg_file_${bgUniqueIndex++}`;
       bgSymbolMap.set(key, symPrefix);
+      bgAsmDirectives += `\n .bank ${currentAssetBank++}\n`;
       bgAsmDirectives += `_${symPrefix}_chr .incchr "assets/backgrounds/${bgFile}",0,0,${dim.width},${dim.height},1\n`;
       bgAsmDirectives += `_${symPrefix}_pal .incpal "assets/backgrounds/${bgFile}"\n`;
+      bgAsmDirectives += `\n .bank ${currentAssetBank++}\n`;
       bgAsmDirectives += `_${symPrefix}_bat .incbat "assets/backgrounds/${bgFile}",$1000,0,0,${dim.width},${dim.height},_${symPrefix}_chr\n`;
     }
 
@@ -618,7 +640,17 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     } catch (e) { }
   }
 
-  const uiFrameDirectives = `#incchr(ui_frame_chr, "assets/ui/frame.png", 0, 0, 3, 3)\n#incpal(ui_frame_pal, "assets/ui/frame.png")\n`;
+  const uiFrameDirectives = `
+#asm
+ .data
+ .bank ${currentAssetBank++}
+#endasm
+#incchr(ui_frame_chr, "assets/ui/frame.png", 0, 0, 3, 3)
+#incpal(ui_frame_pal, "assets/ui/frame.png")
+#asm
+ .code
+#endasm
+`;
 
   let collisionIncludes = "";
   const colSymbolMap = new Map<string, string>();
@@ -808,6 +840,14 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   };
 
   registerPlayerSprite(defaultPlayerSpriteSheetId);
+  // Also register all default player sprites per scene type from settings (PLATFORM, TOPDOWN, etc.)
+  const defSpritesMap = projectData?.settings?.defaultPlayerSprites || settingsGbsData?.defaultPlayerSprites || projectDirPath?.settings?.defaultPlayerSprites;
+  if (defSpritesMap && typeof defSpritesMap === "object") {
+    Object.values(defSpritesMap).forEach((sId: any) => {
+      if (typeof sId === "string" && sId) registerPlayerSprite(sId);
+    });
+  }
+
   // Also register topdown and platform fallback sprites
   const defaultTopdownSpr = allSprites.find((s: any) =>
     s.states?.[0]?.animationType === "multi_movement" ||
@@ -817,6 +857,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
   allScenes.forEach((scene: any) => {
     let sheetId = scene.playerSpriteSheetId;
+    if (!sheetId && defSpritesMap && typeof defSpritesMap === "object" && scene.type && defSpritesMap[scene.type]) {
+      sheetId = defSpritesMap[scene.type];
+    }
     if (!sheetId && (scene.type === "TOPDOWN" || scene.type === "ADVENTURE") && defaultTopdownSpr) {
       sheetId = defaultTopdownSpr.id;
     }
@@ -913,29 +956,28 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
       const getFramesFromMapped = (mapped: { anim: any; flip: boolean } | undefined) => {
         if (!mapped || !mapped.anim || !Array.isArray(mapped.anim.frames)) return [];
-        const res: { cropX: number; cropY: number; flipX: boolean }[] = [];
+        const res: { frame: any; cropX: number; cropY: number; flipX: boolean }[] = [];
         for (const f of mapped.anim.frames) {
           const info = extractFrameInfo(f);
-          if (info) {
-            res.push({
-              cropX: info.cropX,
-              cropY: info.cropY,
-              flipX: mapped.flip ? !info.flipX : info.flipX,
-            });
-          }
+          res.push({
+            frame: f,
+            cropX: info ? info.cropX : 0,
+            cropY: info ? info.cropY : 0,
+            flipX: mapped.flip ? (info ? !info.flipX : true) : (info ? info.flipX : false),
+          });
         }
         return res;
       };
 
-      const resolveDirectionFrames = (dirIdx: number, fallback?: { cropX: number; cropY: number; flipX: boolean }) => {
+      const resolveDirectionFrames = (dirIdx: number, fallback?: { frame?: any; cropX: number; cropY: number; flipX: boolean }) => {
         const idleMapped = mappedAnims[dirIdx];
         const moveMapped = mappedAnims[dirIdx + 4];
 
         const idleFrames = getFramesFromMapped(idleMapped);
         const moveFrames = getFramesFromMapped(moveMapped);
 
-        let f0: { cropX: number; cropY: number; flipX: boolean } | null = null;
-        let f1: { cropX: number; cropY: number; flipX: boolean } | null = null;
+        let f0: { frame?: any; cropX: number; cropY: number; flipX: boolean } | null = null;
+        let f1: { frame?: any; cropX: number; cropY: number; flipX: boolean } | null = null;
 
         const isSameAnim = idleMapped?.anim && moveMapped?.anim && idleMapped.anim.id === moveMapped.anim.id;
 
@@ -969,7 +1011,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           f1 = idleFrames[0];
         }
 
-        const defFallback = fallback || { cropX: 0, cropY: 0, flipX: false };
+        const defFallback = fallback || { frame: null, cropX: 0, cropY: 0, flipX: false };
         return {
           f0: f0 || defFallback,
           f1: f1 || f0 || defFallback,
@@ -980,7 +1022,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       const infoR0 = rightFrames.f0;
       const infoR1 = rightFrames.f1;
 
-      const leftFrames = resolveDirectionFrames(1, { cropX: infoR0.cropX, cropY: infoR0.cropY, flipX: !infoR0.flipX });
+      const leftFrames = resolveDirectionFrames(1, { frame: infoR0.frame, cropX: infoR0.cropX, cropY: infoR0.cropY, flipX: !infoR0.flipX });
       const infoL0 = leftFrames.f0;
       const infoL1 = leftFrames.f1;
 
@@ -994,14 +1036,23 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
       const sharedPal = buildPngPalette(srcPng);
 
-      const d_r0 = convertPngToPcx(srcPng, destPcxR0, { cropX: infoR0.cropX, cropY: infoR0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoR0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      const d_r1 = convertPngToPcx(srcPng, destPcxR1, { cropX: infoR1.cropX, cropY: infoR1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoR1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      const d_l0 = convertPngToPcx(srcPng, destPcxL0, { cropX: infoL0.cropX, cropY: infoL0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoL0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      const d_l1 = convertPngToPcx(srcPng, destPcxL1, { cropX: infoL1.cropX, cropY: infoL1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoL1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      const d_u0 = convertPngToPcx(srcPng, destPcxU0, { cropX: infoU0.cropX, cropY: infoU0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoU0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      const d_u1 = convertPngToPcx(srcPng, destPcxU1, { cropX: infoU1.cropX, cropY: infoU1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoU1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      const d_d0 = convertPngToPcx(srcPng, destPcxD0, { cropX: infoD0.cropX, cropY: infoD0.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoD0.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-      const d_d1 = convertPngToPcx(srcPng, destPcxD1, { cropX: infoD1.cropX, cropY: infoD1.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: infoD1.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+      const renderPlayerFramePcx = (info: any, destPcx: string) => {
+        if (info?.frame?.tiles && Array.isArray(info.frame.tiles) && info.frame.tiles.length > 0) {
+          const compPng = compositeMetaspriteFrame(srcPng, info.frame, origCropW, origCropH, padWidthTo, cropH, info.flipX, sprObj?.spriteMode || defaultSpriteMode);
+          return convertPngToPcx(compPng, destPcx, { cropW: padWidthTo, cropH: cropH, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+        } else {
+          return convertPngToPcx(srcPng, destPcx, { cropX: info.cropX, cropY: info.cropY, cropW: cropW, cropH: cropH, padWidthTo: padWidthTo, flipX: info.flipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+        }
+      };
+
+      const d_r0 = renderPlayerFramePcx(infoR0, destPcxR0);
+      const d_r1 = renderPlayerFramePcx(infoR1, destPcxR1);
+      const d_l0 = renderPlayerFramePcx(infoL0, destPcxL0);
+      const d_l1 = renderPlayerFramePcx(infoL1, destPcxL1);
+      const d_u0 = renderPlayerFramePcx(infoU0, destPcxU0);
+      const d_u1 = renderPlayerFramePcx(infoU1, destPcxU1);
+      const d_d0 = renderPlayerFramePcx(infoD0, destPcxD0);
+      const d_d1 = renderPlayerFramePcx(infoD1, destPcxD1);
 
       const allFrames = [d_r0, d_r1, d_l0, d_l1, d_u0, d_u1, d_d0, d_d1];
       let maxBottom = -1;
@@ -1039,6 +1090,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       const relD1 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxD1).replace(/\\/g, "/")}`;
 
       playerDirectives += `
+#asm
+ .data
+ .bank ${currentAssetBank++}
+#endasm
 #incspr(${symPrefix}_r0, "${relR0}", 0, 0, ${vramWidth16}, ${height16})
 #incpal(${palName}, "${relR0}")
 #incspr(${symPrefix}_r1, "${relR1}", 0, 0, ${vramWidth16}, ${height16})
@@ -1048,6 +1103,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 #incspr(${symPrefix}_u1, "${relU1}", 0, 0, ${vramWidth16}, ${height16})
 #incspr(${symPrefix}_d0, "${relD0}", 0, 0, ${vramWidth16}, ${height16})
 #incspr(${symPrefix}_d1, "${relD1}", 0, 0, ${vramWidth16}, ${height16})
+#asm
+ .code
+#endasm
 `;
       let vramSizeHex = "0x40";
       let sizeConst = "SZ_16x16";
@@ -1116,6 +1174,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   allScenes.forEach((scene: any, sceneIdx: number) => {
     const scNum = sceneIdx + 1;
     let sheetId = scene.playerSpriteSheetId;
+    if (!sheetId && defSpritesMap && typeof defSpritesMap === "object" && scene.type && defSpritesMap[scene.type]) {
+      sheetId = defSpritesMap[scene.type];
+    }
     if (!sheetId && (scene.type === "TOPDOWN" || scene.type === "ADVENTURE") && defaultTopdownSpr) {
       sheetId = defaultTopdownSpr.id;
     }
@@ -1370,7 +1431,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
           const destPcxF = pathModule.join(destSpritesDir, sprFilename.replace(/\.png$/i, `_sc${sceneNum}_${actorNum}_f${fIdx}.pcx`));
           const finalFlipX = actorFlipX ? !tileFlipX : tileFlipX;
-          convertPngToPcx(srcPng, destPcxF, { cropX: fCropX, cropY: fCropY, cropW, cropH, padWidthTo, flipX: finalFlipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+          const isMetasprite = actorAnimFrames[fIdx]?.tiles && Array.isArray(actorAnimFrames[fIdx].tiles) && actorAnimFrames[fIdx].tiles.length > 0;
+          if (isMetasprite) {
+            const compPng = compositeMetaspriteFrame(srcPng, actorAnimFrames[fIdx], canvasW, canvasH, padWidthTo, cropH, finalFlipX, sprObj?.spriteMode || defaultSpriteMode);
+            convertPngToPcx(compPng, destPcxF, { cropW: padWidthTo, cropH, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+          } else {
+            convertPngToPcx(srcPng, destPcxF, { cropX: fCropX, cropY: fCropY, cropW, cropH, padWidthTo, flipX: finalFlipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+          }
 
           const relPcxF = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxF).replace(/\\/g, "/")}`;
           actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_f${fIdx}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n`;
@@ -2482,24 +2549,19 @@ ${sceneActorCases}    default:
 }
 `;
 
-  let playerSprVramSizeHex = "0x40";
-  let playerSprSizeConst = "SZ_16x16";
-  if (playerSprWidth16 === 1 && playerSprHeight16 === 2) {
-    playerSprVramSizeHex = "0x100";
-    playerSprSizeConst = "SZ_16x32";
-  } else if (playerSprWidth16 === 2 && playerSprHeight16 === 1) {
-    playerSprVramSizeHex = "0x80";
-    playerSprSizeConst = "SZ_32x16";
-  } else if (playerSprWidth16 === 2 && playerSprHeight16 === 2) {
-    playerSprVramSizeHex = "0x100";
-    playerSprSizeConst = "SZ_32x32";
-  } else if (playerSprWidth16 === 2 && playerSprHeight16 === 4) {
-    playerSprVramSizeHex = "0x200";
-    playerSprSizeConst = "SZ_32x64";
-  } else if (playerSprWidth16 === 1 && playerSprHeight16 === 4) {
-    playerSprVramSizeHex = "0x100";
-    playerSprSizeConst = "SZ_16x64";
+  const startSceneObj = (startSceneNum > 0 && startSceneNum <= allScenes.length) ? allScenes[startSceneNum - 1] : allScenes[0];
+  let startSheetId = startSceneObj?.playerSpriteSheetId;
+  if (!startSheetId && defSpritesMap && typeof defSpritesMap === "object" && startSceneObj?.type && defSpritesMap[startSceneObj.type]) {
+    startSheetId = defSpritesMap[startSceneObj.type];
   }
+  if (!startSheetId && (startSceneObj?.type === "TOPDOWN" || startSceneObj?.type === "ADVENTURE") && defaultTopdownSpr) {
+    startSheetId = defaultTopdownSpr.id;
+  }
+  startSheetId = startSheetId || defaultPlayerSpriteSheetId;
+  const startSceneCompiled = compiledPlayerSprites.get(String(startSheetId)) || firstCompiled;
+
+  let playerSprVramSizeHex = startSceneCompiled?.vramSizeHex || "0x40";
+  let playerSprSizeConst = startSceneCompiled?.sizeConst || "SZ_16x16";
 
   const mainCContent = `
 #include <huc.h>
@@ -2508,13 +2570,13 @@ ${sceneActorCases}    default:
 ${sceneTypeDefine}
 #include "include/engine.h"
 
-${playerDirectives}
-#define HAS_PLAYER_4DIR 1
-#define HAS_PLAYER_FRAME_1 1
-
 ${bgDirectives}
 
 ${uiFrameDirectives}
+
+${playerDirectives}
+#define HAS_PLAYER_4DIR 1
+#define HAS_PLAYER_FRAME_1 1
 
 ${actorDirectives}
 
@@ -2531,7 +2593,14 @@ ${triggerDefines}
 ${collisionIncludes}
 #include "src/pce_system.c"
 #include "src/pce_sound.c"
+#asm
+ .data
+ .bank ${currentAssetBank++}
+#endasm
 ${musicIncludes}
+#asm
+ .code
+#endasm
 #include "src/actor.c"
 #include "src/camera.c"
 #include "src/collision.c"
