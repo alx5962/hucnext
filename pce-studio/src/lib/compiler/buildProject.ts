@@ -1830,13 +1830,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         } else if (evt.command === "EVENT_MUSIC_PLAY" || evt.command === "EVENT_PLAY_MUSIC") {
           const musicId = evt.args?.musicId || evt.args?.music;
           let songSymbol = "";
-          if (musicId && musicIdMap[musicId]) {
+          if (musicId && musicIdMap[musicId] && compiledTrackSymbols.includes(musicIdMap[musicId].symbol)) {
             songSymbol = musicIdMap[musicId].symbol;
-          } else if (musicId && musicByFilenameMap[musicId]) {
+          } else if (musicId && musicByFilenameMap[musicId] && compiledTrackSymbols.includes(musicByFilenameMap[musicId].symbol)) {
             songSymbol = musicByFilenameMap[musicId].symbol;
-          } else if (musicId && musicBySymbolMap[musicId]) {
+          } else if (musicId && musicBySymbolMap[musicId] && compiledTrackSymbols.includes(musicId)) {
             songSymbol = musicId;
-          } else if (scene.musicId && musicIdMap[scene.musicId]) {
+          } else if (scene.musicId && musicIdMap[scene.musicId] && compiledTrackSymbols.includes(musicIdMap[scene.musicId].symbol)) {
             songSymbol = musicIdMap[scene.musicId].symbol;
           } else if (compiledTrackSymbols.length > 0) {
             songSymbol = compiledTrackSymbols[0];
