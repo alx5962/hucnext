@@ -17,13 +17,13 @@ export type MakeOptions = {
   warnings?: (msg: string) => void;
 };
 
-export const cancelBuildCommandsInProgress = () => {};
+export const cancelBuildCommandsInProgress = () => { };
 
 export const makeBuild = async ({
   buildRoot,
   romFilename,
-  progress = () => {},
-  warnings = () => {},
+  progress = () => { },
+  warnings = () => { },
 }: MakeOptions) => {
   progress("Preparing PC Engine compilation with HuC toolchain...");
 
@@ -65,16 +65,23 @@ export const makeBuild = async ({
   progress("Running HuC compiler (C -> 6502 Assembly -> .PCE ROM)...");
 
   const cmd = `"${hucExe}" main.c`;
-  const { stdout, stderr } = await execAsync(cmd, {
-    cwd: buildRoot,
-    env,
-  });
+  try {
+    const { stdout, stderr } = await execAsync(cmd, {
+      cwd: buildRoot,
+      env,
+    });
 
-  if (stderr && stderr.trim().length > 0) {
-    warnings(stderr);
+    if (stderr && stderr.trim().length > 0) {
+      warnings(stderr);
+    }
+
+    progress(`HuC compilation output:\n${stdout}`);
+  } catch (err: any) {
+    const errText = (err.stdout ? String(err.stdout) : "") + "\n" + (err.stderr ? String(err.stderr) : "");
+    const cleanErr = errText.trim() || err.message || "HuC compilation failed";
+    warnings(cleanErr);
+    throw new Error(cleanErr);
   }
-
-  progress(`HuC compilation output:\n${stdout}`);
 
   // Create target rom directory (build/rom)
   const romDir = Path.basename(buildRoot) === "build"

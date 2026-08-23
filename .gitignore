@@ -51,3 +51,4 @@ pce-studio/node_modules
 pce-studio/out
 pce-studio/.webpack
 pce-studio/build_tmp/
+pce-studio/geargfx_*

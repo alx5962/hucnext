@@ -37,9 +37,7 @@ int interact_actor(int scene_num, int actor_num) {
 #endif
 
 #ifndef HAS_SCENE_BACKGROUND
-void load_scene_background(int scene_num) {
-  (void)scene_num;
-}
+void load_scene_background(int scene_num) { (void)scene_num; }
 #endif
 
 #ifndef HAS_SCENE_MUSIC
@@ -50,9 +48,7 @@ void load_scene_music(int scene_num) {
 #endif
 
 #ifndef HAS_SCENE_PLAYER_SPRITE
-void load_scene_player_sprite(int scene_num) {
-  (void)scene_num;
-}
+void load_scene_player_sprite(int scene_num) { (void)scene_num; }
 #endif
 
 #ifndef PLAYER_START_X
@@ -716,7 +712,6 @@ void load_scene_part1(int scene_num) {
 #endif
   }
 #endif
-
 }
 
 void load_scene_part2(int scene_num) {
@@ -1344,7 +1339,6 @@ void load_scene_part2(int scene_num) {
 #endif
   }
 #endif
-
 }
 
 void load_scene_part3(int scene_num) {
@@ -1972,7 +1966,6 @@ void load_scene_part3(int scene_num) {
 #endif
   }
 #endif
-
 }
 
 void load_scene_part4(int scene_num) {
@@ -2600,7 +2593,6 @@ void load_scene_part4(int scene_num) {
 #endif
   }
 #endif
-
 }
 
 void load_scene_part5(int scene_num) {
@@ -3228,7 +3220,6 @@ void load_scene_part5(int scene_num) {
 #endif
   }
 #endif
-
 }
 
 void load_scene_part6(int scene_num) {
@@ -3856,7 +3847,6 @@ void load_scene_part6(int scene_num) {
 #endif
   }
 #endif
-
 }
 
 void load_scene_part7(int scene_num) {
@@ -4484,7 +4474,6 @@ void load_scene_part7(int scene_num) {
 #endif
   }
 #endif
-
 }
 
 void load_scene_part8(int scene_num) {
@@ -5112,7 +5101,6 @@ void load_scene_part8(int scene_num) {
 #endif
   }
 #endif
-
 }
 
 void load_scene(int scene_num, int player_x, int player_y) {
@@ -5256,49 +5244,55 @@ void draw_ui_frame(int x, int y, int w, int h) {
   int bot_mid;
   int bot_right;
 
-  top_left  = 0xE0F0;
-  top_mid   = 0xE0F1;
+  top_left = 0xE0F0;
+  top_mid = 0xE0F1;
   top_right = 0xE0F2;
-  mid_left  = 0xE0F3;
-  mid_fill  = 0xE0F4;
+  mid_left = 0xE0F3;
+  mid_fill = 0xE0F4;
   mid_right = 0xE0F5;
-  bot_left  = 0xE0F6;
-  bot_mid   = 0xE0F7;
+  bot_left = 0xE0F6;
+  bot_mid = 0xE0F7;
   bot_right = 0xE0F8;
 
   /* Top border */
   put_raw(top_left, x, y);
-  for (ix = x + 1; ix < x + w - 1; ix++) put_raw(top_mid, ix, y);
+  for (ix = x + 1; ix < x + w - 1; ix++)
+    put_raw(top_mid, ix, y);
   put_raw(top_right, x + w - 1, y);
 
   /* Middle fill and borders */
   for (iy = y + 1; iy < y + h - 1; iy++) {
     put_raw(mid_left, x, iy);
-    for (ix = x + 1; ix < x + w - 1; ix++) put_raw(mid_fill, ix, iy);
+    for (ix = x + 1; ix < x + w - 1; ix++)
+      put_raw(mid_fill, ix, iy);
     put_raw(mid_right, x + w - 1, iy);
   }
 
   /* Bottom border */
   put_raw(bot_left, x, y + h - 1);
-  for (ix = x + 1; ix < x + w - 1; ix++) put_raw(bot_mid, ix, y + h - 1);
+  for (ix = x + 1; ix < x + w - 1; ix++)
+    put_raw(bot_mid, ix, y + h - 1);
   put_raw(bot_right, x + w - 1, y + h - 1);
 #else
   int i;
   char line_buf[33];
   line_buf[0] = '+';
-  for (i = 1; i <= w - 2; i++) line_buf[i] = '-';
+  for (i = 1; i <= w - 2; i++)
+    line_buf[i] = '-';
   line_buf[w - 1] = '+';
   line_buf[w] = '\0';
   put_string(line_buf, x, y);
   for (iy = y + 1; iy < y + h - 1; iy++) {
     line_buf[0] = '|';
-    for (i = 1; i <= w - 2; i++) line_buf[i] = ' ';
+    for (i = 1; i <= w - 2; i++)
+      line_buf[i] = ' ';
     line_buf[w - 1] = '|';
     line_buf[w] = '\0';
     put_string(line_buf, x, iy);
   }
   line_buf[0] = '+';
-  for (i = 1; i <= w - 2; i++) line_buf[i] = '-';
+  for (i = 1; i <= w - 2; i++)
+    line_buf[i] = '-';
   line_buf[w - 1] = '+';
   line_buf[w] = '\0';
   put_string(line_buf, x, y + h - 1);
@@ -5324,7 +5318,8 @@ void show_dialogue(const char *msg) {
     return;
 
   g_dialogue_active = 1;
-  g_dialogue_timer = 300; /* Auto-close dialogue after 5 seconds (300 frames at 60Hz) */
+  g_dialogue_timer =
+      300; /* Auto-close dialogue after 5 seconds (300 frames at 60Hz) */
   actor_update_all();
   satb_update();
 
@@ -5350,11 +5345,13 @@ void show_dialogue(const char *msg) {
   pce_put_text_line(p, base_x + 2, base_y + 1, 28);
 
   /* Text line 2 */
-  while (*p && *p != '\n') p++;
+  while (*p && *p != '\n')
+    p++;
   if (*p == '\n') {
     p++;
     pce_put_text_line(p, base_x + 2, base_y + 2, 28);
-    while (*p && *p != '\n') p++;
+    while (*p && *p != '\n')
+      p++;
   }
 
   /* Text line 3 */
@@ -5440,7 +5437,8 @@ void render_choice_dialogue(void) {
       }
     }
   } else {
-    for (i = 0; i < 30; i++) line_buf[i] = ' ';
+    for (i = 0; i < 30; i++)
+      line_buf[i] = ' ';
   }
   line_buf[30] = '\0';
   put_string(line_buf, base_x + 1, base_y + 3);
@@ -5464,7 +5462,8 @@ void show_choice(int var_id, const char *opt1, const char *opt2) {
   render_choice_dialogue();
 }
 
-void show_menu(int var_id, int count, const char *opt1, const char *opt2, const char *opt3, const char *opt4, int cancel_b) {
+void show_menu(int var_id, int count, const char *opt1, const char *opt2,
+               const char *opt3, const char *opt4, int cancel_b) {
   g_dialogue_active = 1;
   g_dialogue_timer = 0;
   g_choice_active = 1;
@@ -5555,140 +5554,140 @@ void check_actor_interaction(unsigned int input) {
             return;
           }
           if (g_current_scene == 1) {
-              if (i == 1) {
+            if (i == 1) {
 #ifdef ACTOR_SCENE_1_1_TEXT
-                show_dialogue(ACTOR_SCENE_1_1_TEXT);
+              show_dialogue(ACTOR_SCENE_1_1_TEXT);
 #else
 #ifdef ACTOR_SCENE_1_TEXT
-                show_dialogue(ACTOR_SCENE_1_TEXT);
+              show_dialogue(ACTOR_SCENE_1_TEXT);
 #endif
 #endif
 
 #ifdef ACTOR_SCENE_1_1_SHOW_ACTOR_0
-                actor_show(0);
+              actor_show(0);
 #endif
 #ifdef ACTOR_SCENE_1_1_SHOW_ACTOR_1
-                actor_show(1);
+              actor_show(1);
 #endif
 #ifdef ACTOR_SCENE_1_1_SHOW_ACTOR_2
-                actor_show(2);
+              actor_show(2);
 #endif
 #ifdef ACTOR_SCENE_1_1_SHOW_ACTOR_3
-                actor_show(3);
+              actor_show(3);
 #endif
 
 #ifdef ACTOR_SCENE_1_1_HIDE_ACTOR_0
-                actor_hide(0);
+              actor_hide(0);
 #endif
 #ifdef ACTOR_SCENE_1_1_HIDE_ACTOR_1
-                actor_hide(1);
+              actor_hide(1);
 #endif
 #ifdef ACTOR_SCENE_1_1_HIDE_ACTOR_2
-                actor_hide(2);
+              actor_hide(2);
 #endif
 #ifdef ACTOR_SCENE_1_1_HIDE_ACTOR_3
-                actor_hide(3);
+              actor_hide(3);
 #endif
-              } else if (i == 2) {
+            } else if (i == 2) {
 #ifdef ACTOR_SCENE_1_2_TEXT
-                show_dialogue(ACTOR_SCENE_1_2_TEXT);
+              show_dialogue(ACTOR_SCENE_1_2_TEXT);
 #endif
 
 #ifdef ACTOR_SCENE_1_2_SHOW_ACTOR_0
-                actor_show(0);
+              actor_show(0);
 #endif
 #ifdef ACTOR_SCENE_1_2_SHOW_ACTOR_1
-                actor_show(1);
+              actor_show(1);
 #endif
 #ifdef ACTOR_SCENE_1_2_SHOW_ACTOR_2
-                actor_show(2);
+              actor_show(2);
 #endif
 #ifdef ACTOR_SCENE_1_2_SHOW_ACTOR_3
-                actor_show(3);
+              actor_show(3);
 #endif
 
 #ifdef ACTOR_SCENE_1_2_HIDE_ACTOR_0
-                actor_hide(0);
+              actor_hide(0);
 #endif
 #ifdef ACTOR_SCENE_1_2_HIDE_ACTOR_1
-                actor_hide(1);
+              actor_hide(1);
 #endif
 #ifdef ACTOR_SCENE_1_2_HIDE_ACTOR_2
-                actor_hide(2);
+              actor_hide(2);
 #endif
 #ifdef ACTOR_SCENE_1_2_HIDE_ACTOR_3
-                actor_hide(3);
+              actor_hide(3);
 #endif
-              }
             }
+          }
 #ifdef HAS_SCENE_2
-            else if (g_current_scene == 2) {
-              if (i == 1) {
+          else if (g_current_scene == 2) {
+            if (i == 1) {
 #ifdef ACTOR_SCENE_2_1_TEXT
-                show_dialogue(ACTOR_SCENE_2_1_TEXT);
+              show_dialogue(ACTOR_SCENE_2_1_TEXT);
 #else
 #ifdef ACTOR_SCENE_2_TEXT
-                show_dialogue(ACTOR_SCENE_2_TEXT);
+              show_dialogue(ACTOR_SCENE_2_TEXT);
 #endif
 #endif
 
 #ifdef ACTOR_SCENE_2_1_SHOW_ACTOR_0
-                actor_show(0);
+              actor_show(0);
 #endif
 #ifdef ACTOR_SCENE_2_1_SHOW_ACTOR_1
-                actor_show(1);
+              actor_show(1);
 #endif
 #ifdef ACTOR_SCENE_2_1_SHOW_ACTOR_2
-                actor_show(2);
+              actor_show(2);
 #endif
 #ifdef ACTOR_SCENE_2_1_SHOW_ACTOR_3
-                actor_show(3);
+              actor_show(3);
 #endif
 
 #ifdef ACTOR_SCENE_2_1_HIDE_ACTOR_0
-                actor_hide(0);
+              actor_hide(0);
 #endif
 #ifdef ACTOR_SCENE_2_1_HIDE_ACTOR_1
-                actor_hide(1);
+              actor_hide(1);
 #endif
 #ifdef ACTOR_SCENE_2_1_HIDE_ACTOR_2
-                actor_hide(2);
+              actor_hide(2);
 #endif
 #ifdef ACTOR_SCENE_2_1_HIDE_ACTOR_3
-                actor_hide(3);
+              actor_hide(3);
 #endif
-              } else if (i == 2) {
+            } else if (i == 2) {
 #ifdef ACTOR_SCENE_2_2_TEXT
-                show_dialogue(ACTOR_SCENE_2_2_TEXT);
+              show_dialogue(ACTOR_SCENE_2_2_TEXT);
 #endif
 
 #ifdef ACTOR_SCENE_2_2_SHOW_ACTOR_0
-                actor_show(0);
+              actor_show(0);
 #endif
 #ifdef ACTOR_SCENE_2_2_SHOW_ACTOR_1
-                actor_show(1);
+              actor_show(1);
 #endif
 #ifdef ACTOR_SCENE_2_2_SHOW_ACTOR_2
-                actor_show(2);
+              actor_show(2);
 #endif
 #ifdef ACTOR_SCENE_2_2_SHOW_ACTOR_3
-                actor_show(3);
+              actor_show(3);
 #endif
 
 #ifdef ACTOR_SCENE_2_2_HIDE_ACTOR_0
-                actor_hide(0);
+              actor_hide(0);
 #endif
 #ifdef ACTOR_SCENE_2_2_HIDE_ACTOR_1
-                actor_hide(1);
+              actor_hide(1);
 #endif
 #ifdef ACTOR_SCENE_2_2_HIDE_ACTOR_2
-                actor_hide(2);
+              actor_hide(2);
 #endif
 #ifdef ACTOR_SCENE_2_2_HIDE_ACTOR_3
-                actor_hide(3);
+              actor_hide(3);
 #endif
-              }
             }
+          }
 #endif
           break;
         }
@@ -5716,7 +5715,8 @@ void update_player_anim(int is_moving) {
 
   /* dir: 0=Right, 1=Left, 2=Up, 3=Down */
   if (dir >= 0 && dir <= 3) {
-    g_actor_tile_id[0] = 0x5000 + (dir * 2 + g_player_anim_frame) * g_player_spr_vram_size;
+    g_actor_tile_id[0] =
+        0x5000 + (dir * 2 + g_player_anim_frame) * g_player_spr_vram_size;
   } else {
     g_actor_tile_id[0] = 0x5000 + g_player_anim_frame * g_player_spr_vram_size;
   }
@@ -6009,13 +6009,15 @@ void engine_render(void) {
 
 int g_save_buffer[SAVE_PAYLOAD_WORDS];
 
-const char g_bram_slot0[13] = { 0, 0, 80, 67, 69, 83, 84, 85, 95, 83, 48, 32, 0 };
-const char g_bram_slot1[13] = { 0, 0, 80, 67, 69, 83, 84, 85, 95, 83, 49, 32, 0 };
-const char g_bram_slot2[13] = { 0, 0, 80, 67, 69, 83, 84, 85, 95, 83, 50, 32, 0 };
+const char g_bram_slot0[13] = {0, 0, 80, 67, 69, 83, 84, 85, 95, 83, 48, 32, 0};
+const char g_bram_slot1[13] = {0, 0, 80, 67, 69, 83, 84, 85, 95, 83, 49, 32, 0};
+const char g_bram_slot2[13] = {0, 0, 80, 67, 69, 83, 84, 85, 95, 83, 50, 32, 0};
 
 const char *get_bram_slot_name(int slot) {
-  if (slot == 1) return g_bram_slot1;
-  if (slot == 2) return g_bram_slot2;
+  if (slot == 1)
+    return g_bram_slot1;
+  if (slot == 2)
+    return g_bram_slot2;
   return g_bram_slot0;
 }
 
@@ -6030,8 +6032,10 @@ int bram_is_ready(void) {
 int save_game(int slot) {
   int i;
   const char *name;
-  if (slot < 0 || slot > 2) slot = 0;
-  if (!bram_is_ready()) return 0;
+  if (slot < 0 || slot > 2)
+    slot = 0;
+  if (!bram_is_ready())
+    return 0;
   name = get_bram_slot_name(slot);
 
   g_save_buffer[0] = SAVE_HEADER_MAGIC;
@@ -6062,11 +6066,14 @@ int load_game(int slot) {
   int target_y;
   int target_dir;
 
-  if (slot < 0 || slot > 2) slot = 0;
-  if (!bram_is_ready()) return 0;
+  if (slot < 0 || slot > 2)
+    slot = 0;
+  if (!bram_is_ready())
+    return 0;
   name = get_bram_slot_name(slot);
 
-  if (!bm_exist(name)) return 0;
+  if (!bm_exist(name))
+    return 0;
 
   if (bm_read((char *)g_save_buffer, name, 0, SAVE_PAYLOAD_BYTES) <= 0) {
     return 0;
@@ -6076,9 +6083,9 @@ int load_game(int slot) {
     return 0;
   }
 
-  scene_num  = g_save_buffer[1];
-  target_x   = g_save_buffer[2];
-  target_y   = g_save_buffer[3];
+  scene_num = g_save_buffer[1];
+  target_x = g_save_buffer[2];
+  target_y = g_save_buffer[3];
   target_dir = g_save_buffer[4];
 
   for (i = 0; i < VM_MAX_VARS; i++) {
@@ -6093,15 +6100,19 @@ int load_game(int slot) {
 }
 
 int has_saved_data(int slot) {
-  if (slot < 0 || slot > 2) slot = 0;
-  if (!bram_is_ready()) return 0;
+  if (slot < 0 || slot > 2)
+    slot = 0;
+  if (!bram_is_ready())
+    return 0;
   return bm_exist(get_bram_slot_name(slot));
 }
 
 int clear_game_data(int slot) {
   const char *name;
-  if (slot < 0 || slot > 2) slot = 0;
-  if (!bram_is_ready()) return 0;
+  if (slot < 0 || slot > 2)
+    slot = 0;
+  if (!bram_is_ready())
+    return 0;
   name = get_bram_slot_name(slot);
   if (bm_exist(name)) {
     return (bm_delete(name) == BM_OK);

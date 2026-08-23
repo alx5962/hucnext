@@ -476,7 +476,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             if (pngW > 0) scWidth = pngW;
             if (pngH > 0) scHeight = pngH;
           }
-        } catch (e) {}
+        } catch (e) { }
         break;
       }
     }
@@ -545,7 +545,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         } else {
           try {
             createBlankIndexedPng(destPng, 256, 224);
-          } catch (e) {}
+          } catch (e) { }
         }
       }
     }
@@ -555,7 +555,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   if (!fs.existsSync(defaultScenePng)) {
     try {
       createBlankIndexedPng(defaultScenePng, 256, 224);
-    } catch (e) {}
+    } catch (e) { }
   }
 
   let bgAsmDirectives = "";
@@ -615,7 +615,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   if (!frameFound) {
     try {
       createBlankIndexedPng(destFramePng, 24, 24);
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const uiFrameDirectives = `#incchr(ui_frame_chr, "assets/ui/frame.png", 0, 0, 3, 3)\n#incpal(ui_frame_pal, "assets/ui/frame.png")\n`;
@@ -1778,9 +1778,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         if (
           isStartupContext &&
           (evt.command === "EVENT_SET_INPUT_SCRIPT" ||
-           evt.command === "EVENT_INPUT_SCRIPT_SET" ||
-           evt.command === "EVENT_ATTACH_SCRIPT" ||
-           evt.command === "EVENT_INPUT_ATTACH_SCRIPT")
+            evt.command === "EVENT_INPUT_SCRIPT_SET" ||
+            evt.command === "EVENT_ATTACH_SCRIPT" ||
+            evt.command === "EVENT_INPUT_ATTACH_SCRIPT")
         ) {
           continue;
         }
@@ -2069,10 +2069,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           const loopBody = (evt.children?.true && Array.isArray(evt.children.true))
             ? evt.children.true
             : (evt.true && Array.isArray(evt.true))
-            ? evt.true
-            : (evt.children && typeof evt.children === "object")
-            ? Object.values(evt.children).flatMap((x: any) => Array.isArray(x) ? x : [])
-            : [];
+              ? evt.true
+              : (evt.children && typeof evt.children === "object")
+                ? Object.values(evt.children).flatMap((x: any) => Array.isArray(x) ? x : [])
+                : [];
           processEventList(loopBody, isStartupContext);
           const loopEnd = stepIndex;
           stepCases += `      case ${loopEnd}:\n        return ${loopStart};\n`;
@@ -2221,10 +2221,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       const childEvents = (inputEvt.true && Array.isArray(inputEvt.true))
         ? inputEvt.true
         : (inputEvt.children?.true && Array.isArray(inputEvt.children.true))
-        ? inputEvt.children.true
-        : (inputEvt.children?.press && Array.isArray(inputEvt.children.press))
-        ? inputEvt.children.press
-        : [];
+          ? inputEvt.children.true
+          : (inputEvt.children?.press && Array.isArray(inputEvt.children.press))
+            ? inputEvt.children.press
+            : [];
 
       const startStep = stepIndex;
       processEventList(childEvents, false, 0);
@@ -2532,14 +2532,23 @@ main() {
     ? outputBuildDir.romFilename
     : (projectData.settings?.romFilename ? `${projectData.settings.romFilename}.pce` : `${defaultRomName || "game"}.pce`);
 
+  const progress = (typeof outputBuildDir === "object" && outputBuildDir?.progress) ? outputBuildDir.progress : (() => {});
+  const warnings = (typeof outputBuildDir === "object" && outputBuildDir?.warnings) ? outputBuildDir.warnings : (() => {});
+
   if (typeof makeBuildFn === "function") {
     try {
       await makeBuildFn({
         buildRoot: buildDir,
         romFilename,
+        progress,
+        warnings,
       });
-    } catch (e) {
+    } catch (e: any) {
+      if (warnings) {
+        warnings(e.message || String(e));
+      }
       console.error("Error executing makeBuild in buildProject:", e);
+      throw e;
     }
   }
 
