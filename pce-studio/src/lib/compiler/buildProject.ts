@@ -1074,9 +1074,45 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
   });
 
-  // Build per-scene player sprite loader cases
+  // Build one small helper function per unique compiled player sprite, then
+  // make the dispatcher's cases each just call the right helper. This keeps
+  // every generated .PROC block well under the 8192-byte HuC assembler limit
+  // regardless of how many scenes the project has.
+  let playerSpriteHelpers = "";
+  const emittedSpriteHelpers = new Set<string>();
   let scenePlayerSpriteCases = "";
   const firstCompiled = Array.from(compiledPlayerSprites.values())[0];
+
+  // First pass: emit one helper per unique sprite
+  compiledPlayerSprites.forEach((compiled: any) => {
+    const helperName = `load_player_sprite_${compiled.symPrefix.replace(/^player_spr_/, "")}`;
+    if (emittedSpriteHelpers.has(helperName)) return;
+    emittedSpriteHelpers.add(helperName);
+    playerSpriteHelpers += `void ${helperName}() {\n`;
+    playerSpriteHelpers += `  g_player_spr_vram_size = ${compiled.vramSizeHex};\n`;
+    playerSpriteHelpers += `  g_player_spr_size = ${compiled.sizeConst};\n`;
+    playerSpriteHelpers += `  g_actor_size[0] = ${compiled.sizeConst};\n`;
+    playerSpriteHelpers += `  g_player_bbox_left = ${compiled.bboxLeft};\n`;
+    playerSpriteHelpers += `  g_player_bbox_right = ${compiled.bboxRight};\n`;
+    playerSpriteHelpers += `  g_player_bbox_top = ${compiled.bboxTop};\n`;
+    playerSpriteHelpers += `  g_player_bbox_bottom = ${compiled.bboxBottom};\n`;
+    playerSpriteHelpers += `  g_actor_bbox_left[0] = ${compiled.bboxLeft};\n`;
+    playerSpriteHelpers += `  g_actor_bbox_right[0] = ${compiled.bboxRight};\n`;
+    playerSpriteHelpers += `  g_actor_bbox_top[0] = ${compiled.bboxTop};\n`;
+    playerSpriteHelpers += `  g_actor_bbox_bottom[0] = ${compiled.bboxBottom};\n`;
+    playerSpriteHelpers += `  load_vram(0x5000 + 0 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r0, ${compiled.vramSizeHex});\n`;
+    playerSpriteHelpers += `  load_vram(0x5000 + 1 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r1, ${compiled.vramSizeHex});\n`;
+    playerSpriteHelpers += `  load_vram(0x5000 + 2 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_l0, ${compiled.vramSizeHex});\n`;
+    playerSpriteHelpers += `  load_vram(0x5000 + 3 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_l1, ${compiled.vramSizeHex});\n`;
+    playerSpriteHelpers += `  load_vram(0x5000 + 4 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_u0, ${compiled.vramSizeHex});\n`;
+    playerSpriteHelpers += `  load_vram(0x5000 + 5 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_u1, ${compiled.vramSizeHex});\n`;
+    playerSpriteHelpers += `  load_vram(0x5000 + 6 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_d0, ${compiled.vramSizeHex});\n`;
+    playerSpriteHelpers += `  load_vram(0x5000 + 7 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_d1, ${compiled.vramSizeHex});\n`;
+    playerSpriteHelpers += `  load_palette(16, ${compiled.palName}, 1);\n`;
+    playerSpriteHelpers += `}\n\n`;
+  });
+
+  // Second pass: build the dispatcher — each case is now a single helper call
   allScenes.forEach((scene: any, sceneIdx: number) => {
     const scNum = sceneIdx + 1;
     let sheetId = scene.playerSpriteSheetId;
@@ -1086,28 +1122,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     sheetId = sheetId || defaultPlayerSpriteSheetId;
     const compiled = compiledPlayerSprites.get(String(sheetId)) || firstCompiled;
     if (compiled) {
-      scenePlayerSpriteCases += `    case ${scNum}:
-      g_player_spr_vram_size = ${compiled.vramSizeHex};
-      g_player_spr_size = ${compiled.sizeConst};
-      g_actor_size[0] = ${compiled.sizeConst};
-      g_player_bbox_left = ${compiled.bboxLeft};
-      g_player_bbox_right = ${compiled.bboxRight};
-      g_player_bbox_top = ${compiled.bboxTop};
-      g_player_bbox_bottom = ${compiled.bboxBottom};
-      g_actor_bbox_left[0] = ${compiled.bboxLeft};
-      g_actor_bbox_right[0] = ${compiled.bboxRight};
-      g_actor_bbox_top[0] = ${compiled.bboxTop};
-      g_actor_bbox_bottom[0] = ${compiled.bboxBottom};
-      load_vram(0x5000 + 0 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r0, ${compiled.vramSizeHex});
-      load_vram(0x5000 + 1 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r1, ${compiled.vramSizeHex});
-      load_vram(0x5000 + 2 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_l0, ${compiled.vramSizeHex});
-      load_vram(0x5000 + 3 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_l1, ${compiled.vramSizeHex});
-      load_vram(0x5000 + 4 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_u0, ${compiled.vramSizeHex});
-      load_vram(0x5000 + 5 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_u1, ${compiled.vramSizeHex});
-      load_vram(0x5000 + 6 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_d0, ${compiled.vramSizeHex});
-      load_vram(0x5000 + 7 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_d1, ${compiled.vramSizeHex});
-      load_palette(16, ${compiled.palName}, 1);
-      break;\n`;
+      const helperName = `load_player_sprite_${compiled.symPrefix.replace(/^player_spr_/, "")}`;
+      scenePlayerSpriteCases += `    case ${scNum}:\n      ${helperName}();\n      break;\n`;
     }
   });
 
@@ -2296,15 +2312,21 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     sceneBackgroundCases += `    case ${scNum}:\n      g_current_scene_type = SCENE_${scNum}_TYPE;\n      g_collision_width = SCENE_${scNum}_WIDTH;\n      g_collision_height = SCENE_${scNum}_HEIGHT;\n      set_screen_size(SCENE_${scNum}_SCR_SIZE);\n      camera_set_bounds(SCENE_${scNum}_WIDTH, SCENE_${scNum}_HEIGHT);\n      load_background(bg_scene${scNum}_chr, bg_scene${scNum}_pal, bg_scene${scNum}_bat, ${dim.width}, ${dim.height});\n      set_map_data(scene_${scNum}_collisions, ${dim.width}, ${dim.height});\n      break;\n`;
   });
 
+  // Build one helper per scene for actor loading, then a tiny dispatcher.
+  // This prevents load_scene_actors from exceeding the 8192-byte .PROC limit
+  // as the project grows with more scenes and actors.
+  let sceneActorHelpers = "";
   let sceneActorCases = "";
   allScenes.forEach((scene: any, idx: number) => {
     const scNum = idx + 1;
     const sceneActors = scene.actors || [];
-    let actCaseCode = `    case ${scNum}:\n`;
-    actCaseCode += `      g_actor_count = ${1 + sceneActors.length};\n`;
-    actCaseCode += `      #ifdef ACTOR_SCENE_${scNum}_PLAYER_HIDDEN\n`;
-    actCaseCode += `      actor_hide(0);\n`;
-    actCaseCode += `      #endif\n`;
+    const helperName = `load_scene_actors_${scNum}`;
+
+    let helperCode = `void ${helperName}() {\n`;
+    helperCode += `  g_actor_count = ${1 + sceneActors.length};\n`;
+    helperCode += `  #ifdef ACTOR_SCENE_${scNum}_PLAYER_HIDDEN\n`;
+    helperCode += `  actor_hide(0);\n`;
+    helperCode += `  #endif\n`;
 
     let currentVram = 0x5800;
     sceneActors.forEach((scActor: any, aIdx: number) => {
@@ -2356,38 +2378,41 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
       const numFrames = Math.max(1, Math.min(maxAllowedFrames, actorAnimFrames.length > 0 ? actorAnimFrames.length : 1));
 
-      actCaseCode += `      #ifdef HAS_ACTOR_SCENE_${scNum}_${actorNum}\n`;
-      actCaseCode += `      load_vram(${vramHex}, actor_sc${scNum}_${actorNum}_f0_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+      helperCode += `  #ifdef HAS_ACTOR_SCENE_${scNum}_${actorNum}\n`;
+      helperCode += `  load_vram(${vramHex}, actor_sc${scNum}_${actorNum}_f0_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
       if (numFrames >= 2) {
-        actCaseCode += `      load_vram(${vramHex} + ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE, actor_sc${scNum}_${actorNum}_f1_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+        helperCode += `  load_vram(${vramHex} + ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE, actor_sc${scNum}_${actorNum}_f1_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
       }
       if (numFrames >= 3) {
-        actCaseCode += `      load_vram(${vramHex} + 2 * ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE, actor_sc${scNum}_${actorNum}_f2_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+        helperCode += `  load_vram(${vramHex} + 2 * ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE, actor_sc${scNum}_${actorNum}_f2_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
       }
       if (numFrames >= 4) {
-        actCaseCode += `      load_vram(${vramHex} + 3 * ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE, actor_sc${scNum}_${actorNum}_f3_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+        helperCode += `  load_vram(${vramHex} + 3 * ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE, actor_sc${scNum}_${actorNum}_f3_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
       }
-      actCaseCode += `      load_palette(${16 + palIdx}, actor_sc${scNum}_${actorNum}_pal, 1);\n`;
-      actCaseCode += `      g_actor_active[${actorNum}] = 1;\n`;
-      actCaseCode += `      g_actor_tile_id[${actorNum}] = ${vramHex};\n`;
-      actCaseCode += `      g_actor_base_tile_id[${actorNum}] = ${vramHex};\n`;
-      actCaseCode += `      g_actor_frame_vram_size[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE;\n`;
-      actCaseCode += `      g_actor_num_frames[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_NUM_FRAMES;\n`;
-      actCaseCode += `      g_actor_anim_speed[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_ANIM_SPEED;\n`;
-      actCaseCode += `      g_actor_anim_frame[${actorNum}] = 0;\n`;
-      actCaseCode += `      g_actor_anim_timer[${actorNum}] = 0;\n`;
-      actCaseCode += `      g_actor_palette[${actorNum}] = ${palIdx};\n`;
-      actCaseCode += `      g_actor_size[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_SPRITE_SIZE;\n      g_actor_bbox_left[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_LEFT;\n      g_actor_bbox_right[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_RIGHT;\n      g_actor_bbox_top[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_TOP;\n      g_actor_bbox_bottom[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_BOTTOM;\n      actor_set_pos(${actorNum}, ACTOR_SCENE_${scNum}_${actorNum}_X, ACTOR_SCENE_${scNum}_${actorNum}_Y);\n`;
-      actCaseCode += `      #ifdef ACTOR_SCENE_${scNum}_${actorNum}_HIDDEN\n`;
-      actCaseCode += `      actor_hide(${actorNum});\n`;
-      actCaseCode += `      #endif\n`;
-      actCaseCode += `      #endif\n`;
+      helperCode += `  load_palette(${16 + palIdx}, actor_sc${scNum}_${actorNum}_pal, 1);\n`;
+      helperCode += `  g_actor_active[${actorNum}] = 1;\n`;
+      helperCode += `  g_actor_tile_id[${actorNum}] = ${vramHex};\n`;
+      helperCode += `  g_actor_base_tile_id[${actorNum}] = ${vramHex};\n`;
+      helperCode += `  g_actor_frame_vram_size[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE;\n`;
+      helperCode += `  g_actor_num_frames[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_NUM_FRAMES;\n`;
+      helperCode += `  g_actor_anim_speed[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_ANIM_SPEED;\n`;
+      helperCode += `  g_actor_anim_frame[${actorNum}] = 0;\n`;
+      helperCode += `  g_actor_anim_timer[${actorNum}] = 0;\n`;
+      helperCode += `  g_actor_palette[${actorNum}] = ${palIdx};\n`;
+      helperCode += `  g_actor_size[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_SPRITE_SIZE;\n  g_actor_bbox_left[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_LEFT;\n  g_actor_bbox_right[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_RIGHT;\n  g_actor_bbox_top[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_TOP;\n  g_actor_bbox_bottom[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_BOTTOM;\n  actor_set_pos(${actorNum}, ACTOR_SCENE_${scNum}_${actorNum}_X, ACTOR_SCENE_${scNum}_${actorNum}_Y);\n`;
+      helperCode += `  #ifdef ACTOR_SCENE_${scNum}_${actorNum}_HIDDEN\n`;
+      helperCode += `  actor_hide(${actorNum});\n`;
+      helperCode += `  #endif\n`;
+      helperCode += `  #endif\n`;
 
       currentVram += 0x200;
     });
 
-    actCaseCode += `      break;\n`;
-    sceneActorCases += actCaseCode;
+    helperCode += `}\n\n`;
+    sceneActorHelpers += helperCode;
+
+    // Dispatcher: just one call per scene
+    sceneActorCases += `    case ${scNum}:\n      ${helperName}();\n      break;\n`;
   });
 
   const sceneInitFunctionC = `#define HAS_SCENE_STEP_EVENTS 1
@@ -2434,7 +2459,7 @@ ${sceneMusicCases}    default:
   }
 }
 
-void load_scene_player_sprite(int scene_num) {
+${playerSpriteHelpers}void load_scene_player_sprite(int scene_num) {
   switch (scene_num) {
 ${scenePlayerSpriteCases}    default:
       break;
@@ -2448,7 +2473,7 @@ ${sceneBackgroundCases}    default:
   }
 }
 
-void load_scene_actors(int scene_num) {
+${sceneActorHelpers}void load_scene_actors(int scene_num) {
   switch (scene_num) {
 ${sceneActorCases}    default:
       g_actor_count = 1;
