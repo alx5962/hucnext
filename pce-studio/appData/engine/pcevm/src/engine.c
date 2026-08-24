@@ -5333,7 +5333,8 @@ void show_dialogue(const char *msg) {
   set_color(241, 0x000); /* Color 1 = Solid Black text */
   set_color(243, 0x1FF); /* Color 3 = Solid White background */
 
-  /* Calculate bottom 5 rows and left columns relative to camera scroll position */
+  /* Calculate bottom 5 rows and left columns relative to camera scroll position
+   */
   base_x = (g_cam_x >> 3);
   base_y = (g_cam_y >> 3) + 23;
 

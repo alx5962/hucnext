@@ -500,10 +500,11 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       }
     }
 
-    scWidth = Math.min(128, scWidth);
     scHeight = Math.min(64, scHeight);
-    if (scWidth * scHeight > 2048) {
-      scWidth = Math.min(scWidth, Math.floor(2048 / scHeight));
+    if (scHeight <= 32) {
+      scWidth = Math.min(128, scWidth);
+    } else {
+      scWidth = Math.min(64, scWidth);
     }
 
     const scrSize = getPceScreenSize(scWidth, scHeight);
@@ -742,9 +743,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
   const sceneIdToNum: Record<string, number> = {};
   allScenes.forEach((scene: any, idx: number) => {
-    if (scene.id) {
-      sceneIdToNum[scene.id] = idx + 1;
-    }
+    if (scene.id) sceneIdToNum[scene.id] = idx + 1;
+    if (scene.name) sceneIdToNum[scene.name] = idx + 1;
+    if (scene.symbol) sceneIdToNum[scene.symbol] = idx + 1;
   });
 
   const startSceneId = (typeof projectDirPath === "object" && projectDirPath?.settings?.startSceneId !== undefined)
@@ -1499,9 +1500,32 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
   // Resolve Triggers
   const triggerRows: string[] = [];
+  const findSwitchCmd = (events: any[]): any => {
+    if (!Array.isArray(events)) return null;
+    for (const evt of events) {
+      if (!evt) continue;
+      if (evt.command === "EVENT_SWITCH_SCENE") return evt;
+      if (evt.children) {
+        for (const key of Object.keys(evt.children)) {
+          if (Array.isArray(evt.children[key])) {
+            const found = findSwitchCmd(evt.children[key]);
+            if (found) return found;
+          }
+        }
+      }
+    }
+    return null;
+  };
+
   allScenes.forEach((scene: any, sceneIdx: number) => {
     const sceneNum = sceneIdx + 1;
-    const sceneTriggers = scene.triggers || [];
+    const sceneTriggers = (scene.triggers || []).map((tr: any) => {
+      if (typeof tr === "string") {
+        if (projectData?.triggers?.entities?.[tr]) return projectData.triggers.entities[tr];
+        if (projectData?.triggers?.[tr]) return projectData.triggers[tr];
+      }
+      return tr;
+    }).filter(Boolean);
 
     sceneTriggers.forEach((tr: any) => {
       let targetScene = sceneNum === 1 ? 2 : 1;
@@ -1509,7 +1533,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       let targetY = (16 * 8) - (playerSprHeight16 * 16) + 8;
 
       if (tr.script && tr.script.length > 0) {
-        const switchCmd = tr.script.find((c: any) => c.command === "EVENT_SWITCH_SCENE");
+        const switchCmd = findSwitchCmd(tr.script);
         if (switchCmd && switchCmd.args) {
           if (switchCmd.args.sceneId && sceneIdToNum[switchCmd.args.sceneId]) {
             targetScene = sceneIdToNum[switchCmd.args.sceneId];
@@ -1517,7 +1541,19 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           const rawX = parseCoord(switchCmd.args.x, 16) / 8;
           const rawY = parseCoord(switchCmd.args.y, 16) / 8;
           targetX = rawX * 8;
-          targetY = (rawY * 8) - (playerSprHeight16 * 16) + 8;
+
+          const targetSceneObj = (targetScene > 0 && targetScene <= allScenes.length) ? allScenes[targetScene - 1] : null;
+          let targetSheetId = targetSceneObj?.playerSpriteSheetId;
+          if (!targetSheetId && defSpritesMap && typeof defSpritesMap === "object" && targetSceneObj?.type && defSpritesMap[targetSceneObj.type]) {
+            targetSheetId = defSpritesMap[targetSceneObj.type];
+          }
+          if (!targetSheetId && (targetSceneObj?.type === "TOPDOWN" || targetSceneObj?.type === "ADVENTURE") && defaultTopdownSpr) {
+            targetSheetId = defaultTopdownSpr.id;
+          }
+          targetSheetId = targetSheetId || defaultPlayerSpriteSheetId;
+          const targetCompiled = compiledPlayerSprites.get(String(targetSheetId)) || firstCompiled;
+          const targetSprHeight16 = targetCompiled?.height16 || 1;
+          targetY = (rawY * 8) - (targetSprHeight16 * 16) + 8;
         }
       }
 
@@ -2626,8 +2662,8 @@ main() {
     ? outputBuildDir.romFilename
     : (projectData.settings?.romFilename ? `${projectData.settings.romFilename}.pce` : `${defaultRomName || "game"}.pce`);
 
-  const progress = (typeof outputBuildDir === "object" && outputBuildDir?.progress) ? outputBuildDir.progress : (() => {});
-  const warnings = (typeof outputBuildDir === "object" && outputBuildDir?.warnings) ? outputBuildDir.warnings : (() => {});
+  const progress = (typeof outputBuildDir === "object" && outputBuildDir?.progress) ? outputBuildDir.progress : (() => { });
+  const warnings = (typeof outputBuildDir === "object" && outputBuildDir?.warnings) ? outputBuildDir.warnings : (() => { });
 
   if (typeof makeBuildFn === "function") {
     try {
