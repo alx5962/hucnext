@@ -5,6 +5,7 @@
 
 static unsigned char g_trigger_cooldown = 0;
 void load_scene(int scene_num, int player_x, int player_y);
+int interact_trigger(int scene_num, int trigger_num);
 
 void trigger_init(void) {
   g_trigger_count = 0;
@@ -70,6 +71,9 @@ void trigger_check(int px, int py) {
         g_trigger_cooldown = 20;
         actor_set_pos(0, g_triggers[i].target_x, g_triggers[i].target_y);
         break;
+      } else if (interact_trigger(g_current_scene, i)) {
+        g_trigger_cooldown = 20;
+        break;
       }
       if (g_triggers[i].script) {
         g_trigger_cooldown = 20;
@@ -79,3 +83,25 @@ void trigger_check(int px, int py) {
     }
   }
 }
+
+int trigger_find_at(int px, int py) {
+  int i, tx1, ty1, tx2, ty2;
+  int cx, cy;
+  cx = px + 4;
+  cy = py + 4;
+  for (i = 0; i < g_trigger_count; i++) {
+    if (g_triggers[i].scene_id != g_current_scene) {
+      continue;
+    }
+    tx1 = g_triggers[i].x;
+    ty1 = g_triggers[i].y;
+    tx2 = tx1 + g_triggers[i].w;
+    ty2 = ty1 + g_triggers[i].h;
+
+    if (cx >= tx1 && cx < tx2 && cy >= ty1 && cy < ty2) {
+      return i;
+    }
+  }
+  return -1;
+}
+

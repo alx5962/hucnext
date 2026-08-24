@@ -36,6 +36,14 @@ int interact_actor(int scene_num, int actor_num) {
 }
 #endif
 
+#ifndef HAS_INTERACT_TRIGGER
+int interact_trigger(int scene_num, int trigger_num) {
+  (void)scene_num;
+  (void)trigger_num;
+  return 0;
+}
+#endif
+
 #ifndef HAS_SCENE_BACKGROUND
 void load_scene_background(int scene_num) { (void)scene_num; }
 #endif
@@ -5939,9 +5947,125 @@ void update_shmup(void) {
 }
 
 void update_pointnclick(void) {
-  unsigned int input;
+  unsigned int input, pressed;
+  int dx, dy, new_x, new_y, max_x, max_y;
+  int hit_trigger, hit_actor, is_hover, i, adx, ady;
+
   input = pce_sys_read_joy(0);
-  check_actor_interaction(input);
+  pressed = input & ~g_last_input;
+  g_last_input = input;
+
+  if (g_choice_active) {
+    if (pressed & (JOY_UP | JOY_LEFT)) {
+      if (g_choice_index > 0) {
+        g_choice_index--;
+        render_choice_dialogue();
+      }
+    } else if (pressed & (JOY_DOWN | JOY_RIGHT)) {
+      if (g_choice_index < g_choice_count - 1) {
+        g_choice_index++;
+        render_choice_dialogue();
+      }
+    } else if (pressed & (JOY_I | JOY_A | JOY_STRT)) {
+      if (g_choice_count == 2) {
+        vm_set_var(g_choice_var, (g_choice_index == 0) ? 1 : 0);
+      } else {
+        vm_set_var(g_choice_var, g_choice_index + 1);
+      }
+      hide_dialogue();
+    } else if ((pressed & (JOY_II | JOY_B | JOY_SEL)) && g_choice_cancel_b) {
+      vm_set_var(g_choice_var, 0);
+      hide_dialogue();
+    }
+    return;
+  }
+
+  if (g_dialogue_active) {
+    if (pressed) {
+      hide_dialogue();
+    }
+    return;
+  }
+
+  if (pressed) {
+    if (check_scene_input(g_current_scene, pressed)) {
+      return;
+    }
+  }
+
+  /* Move cursor freely (no collision checks against background tiles) */
+  if (g_actor_count > 0 && g_actor_active[0]) {
+    dx = 0;
+    dy = 0;
+    if (input & JOY_LEFT) {
+      dx -= TOPDOWN_SPEED;
+    }
+    if (input & JOY_RIGHT) {
+      dx += TOPDOWN_SPEED;
+    }
+    if (input & JOY_UP) {
+      dy -= TOPDOWN_SPEED;
+    }
+    if (input & JOY_DOWN) {
+      dy += TOPDOWN_SPEED;
+    }
+
+    max_x = g_collision_width * 8 - 16;
+    max_y = g_collision_height * 8 - 16;
+    if (max_x < 0) max_x = 0;
+    if (max_y < 0) max_y = 0;
+
+    new_x = g_actor_x[0] + dx;
+    if (new_x < 0) new_x = 0;
+    if (new_x > max_x) new_x = max_x;
+    g_actor_x[0] = new_x;
+
+    new_y = g_actor_y[0] + dy;
+    if (new_y < 0) new_y = 0;
+    if (new_y > max_y) new_y = max_y;
+    g_actor_y[0] = new_y;
+
+    camera_update(g_actor_x[0], g_actor_y[0]);
+
+    /* Check hover over triggers */
+    hit_trigger = trigger_find_at(g_actor_x[0], g_actor_y[0]);
+
+    /* Check hover over actors */
+    hit_actor = 0;
+    for (i = 1; i < g_actor_count; i++) {
+      if (g_actor_active[i]) {
+        adx = g_actor_x[0] - g_actor_x[i];
+        ady = g_actor_y[0] - g_actor_y[i];
+        if (adx < 0) adx = -adx;
+        if (ady < 0) ady = -ady;
+        if (adx <= 16 && ady <= 16) {
+          hit_actor = i;
+          break;
+        }
+      }
+    }
+
+    is_hover = (hit_trigger >= 0 || hit_actor > 0) ? 1 : 0;
+    g_player_anim_frame = is_hover;
+    g_actor_tile_id[0] = 0x5000 + g_player_anim_frame * g_player_spr_vram_size;
+
+    /* Handle interaction click */
+    if (pressed & (JOY_I | JOY_II | JOY_A | JOY_B)) {
+      if (hit_actor > 0) {
+        interact_actor(g_current_scene, hit_actor);
+      } else if (hit_trigger >= 0) {
+        if (g_triggers[hit_trigger].target_scene > 0) {
+          load_scene(g_triggers[hit_trigger].target_scene,
+                     g_triggers[hit_trigger].target_x,
+                     g_triggers[hit_trigger].target_y);
+        } else if (g_triggers[hit_trigger].target_x >= 0 && g_triggers[hit_trigger].target_y >= 0) {
+          actor_set_pos(0, g_triggers[hit_trigger].target_x, g_triggers[hit_trigger].target_y);
+        } else {
+          interact_trigger(g_current_scene, hit_trigger);
+        }
+      }
+    }
+  }
 }
 
 void update_logo(void) {

@@ -103,6 +103,7 @@ int run_scene_step(int scene_num, int step);
 int check_scene_input(int scene_num, unsigned int pressed);
 int scene_has_startup_script(int scene_num);
 int interact_actor(int scene_num, int actor_num);
+int interact_trigger(int scene_num, int trigger_num);
 
 /* Scene type constants */
 #define SCENE_TYPE_TOPDOWN      0

@@ -733,12 +733,16 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     collisionIncludes += `#define HAS_SCENE_${scNum}_COLLISIONS 1\n`;
   });
 
+  const parseNumber = (val: any, fallback: number) => {
+    if (typeof val === "number" && !isNaN(val)) return Math.floor(val);
+    if (typeof val === "object" && val !== null && typeof val.value === "number" && !isNaN(val.value)) return Math.floor(val.value);
+    if (typeof val === "object" && val !== null && typeof val.x === "number" && !isNaN(val.x)) return Math.floor(val.x);
+    if (typeof val === "string" && !isNaN(Number(val))) return Math.floor(Number(val));
+    return fallback;
+  };
+
   const parseCoord = (val: any, fallback: number) => {
-    if (typeof val === "number" && !isNaN(val)) return Math.floor(val) * 8;
-    if (typeof val === "object" && val !== null && typeof val.value === "number" && !isNaN(val.value)) return Math.floor(val.value) * 8;
-    if (typeof val === "object" && val !== null && typeof val.x === "number" && !isNaN(val.x)) return Math.floor(val.x) * 8;
-    if (typeof val === "string" && !isNaN(Number(val))) return Math.floor(Number(val)) * 8;
-    return fallback * 8;
+    return parseNumber(val, fallback) * 8;
   };
 
   const sceneIdToNum: Record<string, number> = {};
@@ -856,6 +860,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   );
   if (defaultTopdownSpr) registerPlayerSprite(defaultTopdownSpr.id);
 
+  // Also register cursor fallback sprites for POINTNCLICK
+  const defaultCursorSpr = allSprites.find((s: any) =>
+    s.states?.[0]?.animationType === "cursor" ||
+    (s.filename && /cursor|pointer|hand/i.test(s.filename))
+  );
+  if (defaultCursorSpr) registerPlayerSprite(defaultCursorSpr.id);
+
   allScenes.forEach((scene: any) => {
     let sheetId = scene.playerSpriteSheetId;
     if (!sheetId && defSpritesMap && typeof defSpritesMap === "object" && scene.type && defSpritesMap[scene.type]) {
@@ -863,6 +874,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
     if (!sheetId && (scene.type === "TOPDOWN" || scene.type === "ADVENTURE") && defaultTopdownSpr) {
       sheetId = defaultTopdownSpr.id;
+    }
+    if (!sheetId && scene.type === "POINTNCLICK" && defaultCursorSpr) {
+      sheetId = defaultCursorSpr.id;
     }
     registerPlayerSprite(sheetId);
   });
@@ -971,6 +985,16 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       };
 
       const resolveDirectionFrames = (dirIdx: number, fallback?: { frame?: any; cropX: number; cropY: number; flipX: boolean }) => {
+        if (animType === "cursor") {
+          const idleAnim = rawAnims[0];
+          const hoverAnim = rawAnims[1];
+          const idleFrames = (idleAnim?.frames || []).map(extractFrameInfo).filter(Boolean);
+          const hoverFrames = (hoverAnim?.frames || []).map(extractFrameInfo).filter(Boolean);
+          const f0 = idleFrames[0] || (fallback || { frame: null, cropX: 0, cropY: 0, flipX: false });
+          const f1 = hoverFrames[0] || idleFrames[1] || f0;
+          return { f0, f1 };
+        }
+
         const idleMapped = mappedAnims[dirIdx];
         const moveMapped = mappedAnims[dirIdx + 4];
 
@@ -1180,6 +1204,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
     if (!sheetId && (scene.type === "TOPDOWN" || scene.type === "ADVENTURE") && defaultTopdownSpr) {
       sheetId = defaultTopdownSpr.id;
+    }
+    if (!sheetId && scene.type === "POINTNCLICK" && defaultCursorSpr) {
+      sheetId = defaultCursorSpr.id;
     }
     sheetId = sheetId || defaultPlayerSpriteSheetId;
     const compiled = compiledPlayerSprites.get(String(sheetId)) || firstCompiled;
@@ -1500,6 +1527,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
   // Resolve Triggers
   const triggerRows: string[] = [];
+  let globalTriggerCounter = 0;
+  const sceneTriggerIndexMap = new Map<number, { globalIdx: number; trigger: any }[]>();
+
   const findSwitchCmd = (events: any[]): any => {
     if (!Array.isArray(events)) return null;
     for (const evt of events) {
@@ -1527,20 +1557,25 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       return tr;
     }).filter(Boolean);
 
+    const list: { globalIdx: number; trigger: any }[] = [];
+
     sceneTriggers.forEach((tr: any) => {
-      let targetScene = sceneNum === 1 ? 2 : 1;
-      let targetX = 16 * 8;
-      let targetY = (16 * 8) - (playerSprHeight16 * 16) + 8;
+      const globalIdx = globalTriggerCounter++;
+      list.push({ globalIdx, trigger: tr });
+
+      let targetScene = 0;
+      let targetX = -1;
+      let targetY = -1;
 
       if (tr.script && tr.script.length > 0) {
         const switchCmd = findSwitchCmd(tr.script);
         if (switchCmd && switchCmd.args) {
           if (switchCmd.args.sceneId && sceneIdToNum[switchCmd.args.sceneId]) {
             targetScene = sceneIdToNum[switchCmd.args.sceneId];
+          } else {
+            targetScene = sceneNum === 1 ? 2 : 1;
           }
-          const rawX = parseCoord(switchCmd.args.x, 16) / 8;
-          const rawY = parseCoord(switchCmd.args.y, 16) / 8;
-          targetX = rawX * 8;
+          targetX = parseCoord(switchCmd.args.x, 16);
 
           const targetSceneObj = (targetScene > 0 && targetScene <= allScenes.length) ? allScenes[targetScene - 1] : null;
           let targetSheetId = targetSceneObj?.playerSpriteSheetId;
@@ -1550,10 +1585,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           if (!targetSheetId && (targetSceneObj?.type === "TOPDOWN" || targetSceneObj?.type === "ADVENTURE") && defaultTopdownSpr) {
             targetSheetId = defaultTopdownSpr.id;
           }
+          if (!targetSheetId && targetSceneObj?.type === "POINTNCLICK" && defaultCursorSpr) {
+            targetSheetId = defaultCursorSpr.id;
+          }
           targetSheetId = targetSheetId || defaultPlayerSpriteSheetId;
           const targetCompiled = compiledPlayerSprites.get(String(targetSheetId)) || firstCompiled;
           const targetSprHeight16 = targetCompiled?.height16 || 1;
-          targetY = (rawY * 8) - (targetSprHeight16 * 16) + 8;
+          targetY = parseCoord(switchCmd.args.y, 16) - (targetSprHeight16 * 16) + 8;
         }
       }
 
@@ -1564,6 +1602,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
       triggerRows.push(`  ${sceneNum}, ${tx}, ${ty}, ${tw}, ${th}, ${targetScene}, ${targetX}, ${targetY}`);
     });
+
+    sceneTriggerIndexMap.set(sceneNum, list);
   });
 
   let triggerDefines = "";
@@ -1869,6 +1909,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   let sceneStartupCases = "";
   let sceneActorInteractHelpers = "";
   let sceneActorInteractCases = "";
+  let sceneTriggerInteractHelpers = "";
+  let sceneTriggerInteractCases = "";
 
   allScenes.forEach((scene: any, idx: number) => {
     const scNum = idx + 1;
@@ -1992,14 +2034,14 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_MOVE_TO" || evt.command === "EVENT_ACTOR_MOVE_TO_VALUE") {
           const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
-          const px = parseCoord(evt.args?.x, 0) * 8;
-          const py = parseCoord(evt.args?.y, 0) * 8;
+          const px = parseCoord(evt.args?.x, 0);
+          const py = parseCoord(evt.args?.y, 0);
           stepCases += `      case ${stepIndex}:\n        actor_move_to(${targetNum}, ${px}, ${py});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_MOVE_RELATIVE") {
           const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
-          const dx = parseCoord(evt.args?.x, 0) * 8;
-          const dy = parseCoord(evt.args?.y, 0) * 8;
+          const dx = parseCoord(evt.args?.x, 0);
+          const dy = parseCoord(evt.args?.y, 0);
           stepCases += `      case ${stepIndex}:\n        actor_set_pos_rel(${targetNum}, ${dx}, ${dy});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_SET_DIRECTION" || evt.command === "EVENT_ACTOR_SET_DIRECTION_TO_VALUE") {
@@ -2013,22 +2055,22 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_SET_MOVEMENT_SPEED") {
           const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
-          const spd = parseCoord(evt.args?.speed, 1);
+          const spd = parseNumber(evt.args?.speed, 1);
           stepCases += `      case ${stepIndex}:\n        actor_set_move_speed(${targetNum}, ${spd});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_SET_ANIMATION_SPEED") {
           const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
-          const spd = parseCoord(evt.args?.speed, 1);
+          const spd = parseNumber(evt.args?.speed, 1);
           stepCases += `      case ${stepIndex}:\n        actor_set_anim_speed(${targetNum}, ${spd});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_SET_FRAME" || evt.command === "EVENT_ACTOR_SET_FRAME_TO_VALUE") {
           const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
-          const frm = parseCoord(evt.args?.frame, 0);
+          const frm = parseNumber(evt.args?.frame, 0);
           stepCases += `      case ${stepIndex}:\n        actor_set_frame(${targetNum}, ${frm});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_EMOTE") {
           const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
-          const emoteId = parseCoord(evt.args?.emoteId, 0);
+          const emoteId = parseNumber(evt.args?.emoteId, 0);
           stepCases += `      case ${stepIndex}:\n        actor_emote(${targetNum}, ${emoteId});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_PUSH") {
@@ -2037,8 +2079,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           stepCases += `      case ${stepIndex}:\n        actor_push(${targetNum}, g_actor_dir[0], ${slide});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_CAMERA_MOVE_TO" || evt.command === "EVENT_CAMERA_SET_POSITION") {
-          const cx = parseCoord(evt.args?.x, 0) * 8;
-          const cy = parseCoord(evt.args?.y, 0) * 8;
+          const cx = parseCoord(evt.args?.x, 0);
+          const cy = parseCoord(evt.args?.y, 0);
           stepCases += `      case ${stepIndex}:\n        camera_update(${cx}, ${cy});\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (
@@ -2389,6 +2431,23 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       sceneActorInteractCases += `  if (scene_num == ${scNum}) return interact_scene_${scNum}_actor(actor_num);\n`;
     }
 
+    const triggerInteractCases: string[] = [];
+    const scTriggers = sceneTriggerIndexMap.get(scNum) || [];
+    scTriggers.forEach(({ globalIdx, trigger: scTrigger }) => {
+      if (scTrigger.script && Array.isArray(scTrigger.script) && scTrigger.script.length > 0) {
+        const trigStartStep = stepIndex;
+        processEventList(scTrigger.script, false, 0);
+        stepCases += `      case ${stepIndex}:\n        return -1;\n`;
+        stepIndex++;
+        triggerInteractCases.push(`    case ${globalIdx}:\n      g_script_scene = ${scNum};\n      g_script_step = ${trigStartStep};\n      g_script_step = run_scene_step(${scNum}, ${trigStartStep});\n      return 1;\n`);
+      }
+    });
+
+    if (triggerInteractCases.length > 0) {
+      sceneTriggerInteractHelpers += `int interact_scene_${scNum}_trigger(int trigger_num) {\n  switch (trigger_num) {\n${triggerInteractCases.join("")}    default:\n      return 0;\n  }\n}\n\n`;
+      sceneTriggerInteractCases += `  if (scene_num == ${scNum}) return interact_scene_${scNum}_trigger(trigger_num);\n`;
+    }
+
     sceneStartupCases += `  if (scene_num == ${scNum}) return ${startupStepsCount > 0 ? 1 : 0};\n`;
 
     if (stepCases) {
@@ -2522,6 +2581,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 #define HAS_SCENE_INPUT_SCRIPTS 1
 #define HAS_SCENE_STARTUP_SCRIPTS 1
 #define HAS_INTERACT_ACTOR 1
+#define HAS_INTERACT_TRIGGER 1
 #define HAS_SCENE_BACKGROUND 1
 #define HAS_SCENE_MUSIC 1
 #define HAS_SCENE_PLAYER_SPRITE 1
@@ -2530,6 +2590,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 ${sceneStepHelpers}
 ${sceneInputCheckHelpers}
 ${sceneActorInteractHelpers}
+${sceneTriggerInteractHelpers}
 int run_scene_step(int scene_num, int step) {
   int prev_sc;
   int res_step;
@@ -2552,6 +2613,10 @@ ${sceneStartupCases}  return 0;
 
 int interact_actor(int scene_num, int actor_num) {
 ${sceneActorInteractCases}  return 0;
+}
+
+int interact_trigger(int scene_num, int trigger_num) {
+${sceneTriggerInteractCases}  return 0;
 }
 
 void load_scene_music(int scene_num) {
