@@ -5,9 +5,9 @@
   "symbol": "trigger_40",
   "prefabId": "",
   "name": "",
-  "x": 79,
+  "x": 78,
   "y": 6,
-  "width": 1,
+  "width": 2,
   "height": 8,
   "prefabScriptOverrides": {},
   "script": [
