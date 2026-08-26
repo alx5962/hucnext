@@ -68,6 +68,10 @@ int g_cam_x;
 int g_cam_y;
 int g_cam_max_x;
 int g_cam_max_y;
+int g_parallax_count;
+int g_parallax_top[4];
+int g_parallax_bottom[4];
+int g_parallax_speed[4];
 
 /* Global collision state */
 int g_collision_width;

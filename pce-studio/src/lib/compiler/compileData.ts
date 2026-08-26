@@ -1122,7 +1122,7 @@ export const precompileScenes = (
     const hash = SparkMD5.hash(
       projectiles.map((p) => p.hash).join("-") +
         "_" +
-        !scene.parallax +
+        JSON.stringify(scene.parallax) +
         "_" +
         scene.type +
         "_" +

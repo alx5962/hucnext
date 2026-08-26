@@ -2674,7 +2674,27 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   allScenes.forEach((scene: any, idx: number) => {
     const scNum = idx + 1;
     const dim = sceneDimensions[idx] || { width: 32, height: 28 };
-    sceneBackgroundCases += `    case ${scNum}:\n      g_current_scene_type = SCENE_${scNum}_TYPE;\n      g_collision_width = SCENE_${scNum}_WIDTH;\n      g_collision_height = SCENE_${scNum}_HEIGHT;\n      set_screen_size(SCENE_${scNum}_SCR_SIZE);\n      camera_set_bounds(SCENE_${scNum}_WIDTH, SCENE_${scNum}_HEIGHT);\n      load_background(bg_scene${scNum}_chr, bg_scene${scNum}_pal, bg_scene${scNum}_bat, ${dim.width}, ${dim.height});\n      set_map_data(scene_${scNum}_collisions, ${dim.width}, ${dim.height});\n      break;\n`;
+    let parallaxCode = "      camera_reset_parallax();\n";
+    if (scene.parallax && Array.isArray(scene.parallax) && scene.parallax.length > 0) {
+      const pLayers: any[] = scene.parallax;
+      const numLayers = Math.min(4, pLayers.length);
+      let currentTop = 0;
+      let layerLines = `      camera_set_parallax_count(${numLayers});\n`;
+      for (let i = 0; i < numLayers; i++) {
+        const layer = pLayers[i];
+        const hTiles = (typeof layer.height === "number" && layer.height > 0) ? layer.height : 1;
+        const spd = typeof layer.speed === "number" ? layer.speed : 0;
+        let topScanline = currentTop;
+        let bottomScanline = 223;
+        if (i < numLayers - 1) {
+          bottomScanline = Math.min(222, currentTop + hTiles * 8 - 1);
+          currentTop = bottomScanline + 1;
+        }
+        layerLines += `      camera_set_parallax_layer(${i}, ${topScanline}, ${bottomScanline}, ${spd});\n`;
+      }
+      parallaxCode = layerLines;
+    }
+    sceneBackgroundCases += `    case ${scNum}:\n      g_current_scene_type = SCENE_${scNum}_TYPE;\n      g_collision_width = SCENE_${scNum}_WIDTH;\n      g_collision_height = SCENE_${scNum}_HEIGHT;\n      set_screen_size(SCENE_${scNum}_SCR_SIZE);\n      camera_set_bounds(SCENE_${scNum}_WIDTH, SCENE_${scNum}_HEIGHT);\n${parallaxCode}      load_background(bg_scene${scNum}_chr, bg_scene${scNum}_pal, bg_scene${scNum}_bat, ${dim.width}, ${dim.height});\n      set_map_data(scene_${scNum}_collisions, ${dim.width}, ${dim.height});\n      break;\n`;
   });
 
   // Build one helper per scene for actor loading, then a tiny dispatcher.
