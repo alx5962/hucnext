@@ -17,6 +17,7 @@ const SCENE_TYPE_MAP: Record<string, number> = {
   ADVENTURE: 2,
   SHMUP: 3,
   POINTNCLICK: 4,
+  POINTANDCLICK: 4,
   LOGO: 5,
 };
 
@@ -510,7 +511,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     const scrSize = getPceScreenSize(scWidth, scHeight);
     sceneDimensions.push({ width: scWidth, height: scHeight, scrSize });
 
-    const scType: string = (scene.type || "TOPDOWN").toUpperCase();
+    const scType: string = (scene.type || "TOPDOWN").toUpperCase().replace(/[^A-Z]/g, "");
     const scTypeNum = SCENE_TYPE_MAP[scType] ?? SCENE_TYPE_MAP["TOPDOWN"];
     sceneTypeDefineList.push(`#define SCENE_${scNum}_TYPE ${scTypeNum}`);
     sceneTypeDefineList.push(`#define SCENE_${scNum}_WIDTH ${scWidth}`);
@@ -519,7 +520,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     sceneTypeDefineList.push(`#define HAS_SCENE_${scNum} 1`);
   });
 
-  const firstType = (allScenes[0]?.type || "TOPDOWN").toUpperCase();
+  const firstType = (allScenes[0]?.type || "TOPDOWN").toUpperCase().replace(/[^A-Z]/g, "");
   const firstTypeNum = SCENE_TYPE_MAP[firstType] ?? SCENE_TYPE_MAP["TOPDOWN"];
   const sceneTypeDefine = sceneTypeDefineList.join("\n") + `\n#define SCENE_TYPE ${firstTypeNum}\n#define PLAT_WALK_SUBPX ${platWalkSubpx}\n#define PLAT_GRAVITY ${platGravitySubpx}\n#define PLAT_HOLD_GRAVITY ${platHoldGravitySubpx}\n#define PLAT_JUMP_SUBPX ${platJumpVelSubpx}\n#define PLAT_MAX_FALL ${platMaxFallSubpx}\n#define PLAT_JUMP_BTN ${platJumpBtnDefine}\n#define HAS_UI_FRAME 1\n`;
 
@@ -1338,7 +1339,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     const sceneNum = sceneIdx + 1;
     const sceneActors = scene.actors || [];
 
-    const isPlayerHidden = checkActorHiddenState(scene, "player", true);
+    const isPointNClick = (scene.type || "").toUpperCase().replace(/[^A-Z]/g, "") === "POINTNCLICK" || (scene.type || "").toUpperCase().replace(/[^A-Z]/g, "") === "POINTANDCLICK";
+    const isPlayerHidden = !isPointNClick && checkActorHiddenState(scene, "player", true);
     if (isPlayerHidden) {
       actorDefines += `#define ACTOR_SCENE_${sceneNum}_PLAYER_HIDDEN 1\n`;
     }
@@ -1567,8 +1569,11 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       let targetX = -1;
       let targetY = -1;
 
-      if (tr.script && tr.script.length > 0) {
-        const switchCmd = findSwitchCmd(tr.script);
+      const nonCommentEvents = (tr.script || []).filter((e: any) => e && e.command !== "EVENT_COMMENT");
+      const isDirectSwitch = nonCommentEvents.length === 1 && nonCommentEvents[0].command === "EVENT_SWITCH_SCENE";
+
+      if (isDirectSwitch) {
+        const switchCmd = nonCommentEvents[0];
         if (switchCmd && switchCmd.args) {
           if (switchCmd.args.sceneId && sceneIdToNum[switchCmd.args.sceneId]) {
             targetScene = sceneIdToNum[switchCmd.args.sceneId];
@@ -1979,14 +1984,25 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           if (evt.args?.sceneId && sceneIdToNum[evt.args.sceneId]) {
             targetScene = sceneIdToNum[evt.args.sceneId];
           }
-          let rawX = 0;
-          let rawY = 0;
-          if (typeof evt.args?.x === "number") rawX = evt.args.x;
-          else if (typeof evt.args?.x === "object" && evt.args?.x?.value !== undefined) rawX = Number(evt.args.x.value);
-          if (typeof evt.args?.y === "number") rawY = evt.args.y;
-          else if (typeof evt.args?.y === "object" && evt.args?.y?.value !== undefined) rawY = Number(evt.args.y.value);
+          const targetSceneObj = (targetScene > 0 && targetScene <= allScenes.length) ? allScenes[targetScene - 1] : null;
+          let targetSheetId = targetSceneObj?.playerSpriteSheetId;
+          if (!targetSheetId && defSpritesMap && typeof defSpritesMap === "object" && targetSceneObj?.type && defSpritesMap[targetSceneObj.type]) {
+            targetSheetId = defSpritesMap[targetSceneObj.type];
+          }
+          if (!targetSheetId && (targetSceneObj?.type === "TOPDOWN" || targetSceneObj?.type === "ADVENTURE") && defaultTopdownSpr) {
+            targetSheetId = defaultTopdownSpr.id;
+          }
+          if (!targetSheetId && targetSceneObj?.type === "POINTNCLICK" && defaultCursorSpr) {
+            targetSheetId = defaultCursorSpr.id;
+          }
+          targetSheetId = targetSheetId || defaultPlayerSpriteSheetId;
+          const targetCompiled = compiledPlayerSprites.get(String(targetSheetId)) || firstCompiled;
+          const targetSprHeight16 = targetCompiled?.height16 || 1;
 
-          stepCases += `      case ${stepIndex}:\n        load_scene(${targetScene}, ${rawX * 8}, ${(rawY * 8) - (playerSprHeight16 * 16) + 8});\n        return -1;\n`;
+          const targetX = parseCoord(evt.args?.x, 0);
+          const targetY = parseCoord(evt.args?.y, 0) - (targetSprHeight16 * 16) + 8;
+
+          stepCases += `      case ${stepIndex}:\n        load_scene(${targetScene}, ${targetX}, ${targetY});\n        return -1;\n`;
           stepIndex++;
         } else if (evt.command === "EVENT_MUSIC_PLAY" || evt.command === "EVENT_PLAY_MUSIC") {
           const musicId = evt.args?.musicId || evt.args?.music;
@@ -2046,7 +2062,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           stepIndex++;
         } else if (evt.command === "EVENT_ACTOR_SET_DIRECTION" || evt.command === "EVENT_ACTOR_SET_DIRECTION_TO_VALUE") {
           const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
-          const dStr = String(evt.args?.direction || "down").toLowerCase();
+          const dVal = (typeof evt.args?.direction === "object" && evt.args?.direction !== null && evt.args?.direction?.value !== undefined) ? evt.args.direction.value : evt.args?.direction;
+          const dStr = String(dVal || "down").toLowerCase();
           let dNum = 3;
           if (dStr === "right") dNum = 0;
           else if (dStr === "left") dNum = 1;
