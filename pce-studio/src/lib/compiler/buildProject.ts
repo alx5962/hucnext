@@ -1527,6 +1527,81 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     });
   });
 
+  // Compile Projectile Sprites
+  let projDirectives = "";
+  const projectileSpriteIds = new Set<string>();
+  const collectProjSprites = (events: any[]) => {
+    if (!Array.isArray(events)) return;
+    for (const evt of events) {
+      if (!evt || typeof evt !== "object") continue;
+      if (
+        (evt.command === "EVENT_LAUNCH_PROJECTILE" || evt.command === "EVENT_LAUNCH_PROJECTILE_SLOT") &&
+        evt.args?.spriteSheetId
+      ) {
+        projectileSpriteIds.add(String(evt.args.spriteSheetId));
+      }
+      if (evt.children && typeof evt.children === "object") {
+        Object.values(evt.children).forEach((cList: any) => {
+          if (Array.isArray(cList)) collectProjSprites(cList);
+        });
+      }
+      if (evt.true && Array.isArray(evt.true)) collectProjSprites(evt.true);
+      if (evt.false && Array.isArray(evt.false)) collectProjSprites(evt.false);
+    }
+  };
+
+  allScenes.forEach((scene: any) => {
+    collectProjSprites(scene.script);
+    collectProjSprites(scene.startScript);
+    (scene.actors || []).forEach((act: any) => {
+      collectProjSprites(act.script);
+      collectProjSprites(act.startScript);
+      collectProjSprites(act.updateScript);
+      collectProjSprites(act.hit1Script);
+      collectProjSprites(act.hit2Script);
+      collectProjSprites(act.hit3Script);
+    });
+    (scene.triggers || []).forEach((tr: any) => {
+      collectProjSprites(tr.script);
+    });
+  });
+
+  if (projectileSpriteIds.size === 0) {
+    allSprites.filter((s: any) => s.name?.includes("bullet") || s.filename?.includes("bullet")).forEach((s: any) => {
+      if (s.id) projectileSpriteIds.add(s.id);
+    });
+  }
+
+  if (projectileSpriteIds.size > 0) {
+    let projIdx = 0;
+    for (const sprId of Array.from(projectileSpriteIds)) {
+      let sprObj = allSprites.find((s: any) => s.id === sprId);
+      if (!sprObj) continue;
+      let sprFilename = sprObj.filename || `${sprObj.name || "bullet"}.png`;
+      if (!sprFilename.endsWith(".png")) sprFilename += ".png";
+      const srcPng = pathModule.join(projectSpritesDir, sprFilename);
+      if (!fs.existsSync(srcPng)) continue;
+
+      const destPcxF = pathModule.join(destSpritesDir, sprFilename.replace(/\.png$/i, `_proj_${projIdx}.pcx`));
+      const sharedPal = buildPngPalette(srcPng);
+      const canvasW = sprObj.canvasWidth || 16;
+      const canvasH = sprObj.canvasHeight || 16;
+      const w16 = Math.max(1, Math.min(2, Math.ceil(canvasW / 16)));
+      let h16 = Math.max(1, Math.min(4, Math.ceil(canvasH / 16)));
+      if (h16 === 3) h16 = 4;
+      const padWidthTo = (h16 >= 2 ? 2 : w16) * 16;
+
+      convertPngToPcx(srcPng, destPcxF, { cropX: 0, cropY: 0, cropW: canvasW, cropH: h16 * 16, padWidthTo, flipX: false, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+
+      const relPcxF = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxF).replace(/\\/g, "/")}`;
+      projDirectives += `#incspr(proj_spr_${projIdx}, "${relPcxF}", 0, 0, ${w16}, ${h16})\n#incpal(proj_pal_${projIdx}, "${relPcxF}")\n`;
+      if (projIdx === 0) {
+        projDirectives += `#define HAS_PROJECTILES 1\n#incspr(proj_spr_default, "${relPcxF}", 0, 0, ${w16}, ${h16})\n#incpal(proj_pal_default, "${relPcxF}")\n`;
+      }
+      projIdx++;
+    }
+  }
+
   // Resolve Triggers
   const triggerRows: string[] = [];
   let globalTriggerCounter = 0;
@@ -2356,12 +2431,90 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           evt.command === "EVENT_IF_COLOR_SUPPORTED" ||
           evt.command === "EVENT_IF_CURRENT_SCENE_IS" ||
           evt.command === "EVENT_IF_ENGINE_FIELD" ||
-          evt.command === "EVENT_IF_ENGINE_FIELD_COMPARE" ||
-          evt.command === "EVENT_IF_EXPRESSION" ||
-          evt.command === "EVENT_IF_FLAGS_COMPARE" ||
-          evt.command === "EVENT_IF_FLAGS_COMPARE" ||
-          evt.command === "EVENT_LAUNCH_PROJECTILE" ||
-          evt.command === "EVENT_LAUNCH_PROJECTILE_SLOT" ||
+          evt.command === "EVENT_IF_ENGINE_FIELD_COMPARE"
+        ) {
+          stepCases += `      case ${stepIndex}:\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (evt.command === "EVENT_RATE_LIMIT") {
+          let timeVal = 0.5;
+          if (typeof evt.args?.time === "number") timeVal = evt.args.time;
+          else if (typeof evt.args?.time === "object" && evt.args?.time?.value !== undefined) timeVal = Number(evt.args.time.value);
+          else if (typeof evt.args?.frames === "number") timeVal = evt.args.frames / 60;
+          else if (typeof evt.args?.frames === "object" && evt.args?.frames?.value !== undefined) timeVal = Number(evt.args.frames.value) / 60;
+          const cooldownFrames = Math.max(1, Math.round(timeVal * 60));
+
+          const trueList = (evt.true && Array.isArray(evt.true))
+            ? evt.true
+            : (evt.children?.true && Array.isArray(evt.children.true))
+              ? evt.children.true
+              : [];
+
+          const branchStep = stepIndex;
+          stepIndex++;
+
+          const trueStart = stepIndex;
+          processEventList(trueList, isStartupContext, currentActorNum);
+          const afterStep = stepIndex;
+
+          stepCases += `      case ${branchStep}:\n        if (g_proj_rate_timer > 0) return -1;\n        g_proj_rate_timer = ${cooldownFrames};\n        return ${trueStart};\n`;
+          continue;
+        } else if (evt.command === "EVENT_LAUNCH_PROJECTILE" || evt.command === "EVENT_LAUNCH_PROJECTILE_SLOT") {
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
+          const dirVal = (typeof evt.args?.direction === "object" && evt.args?.direction !== null && evt.args?.direction?.value !== undefined)
+            ? evt.args.direction.value
+            : (evt.args?.direction || "right");
+          const dirStr = String(dirVal).toLowerCase();
+          const speed = Math.max(1, Math.min(8, Number(evt.args?.speed) || 2));
+          let vx = speed;
+          let vy = 0;
+          let offX = 12;
+          let offY = 4;
+
+          if (dirStr === "left") {
+            vx = -speed;
+            vy = 0;
+            offX = -8;
+            offY = 4;
+          } else if (dirStr === "up") {
+            vx = 0;
+            vy = -speed;
+            offX = 4;
+            offY = -8;
+          } else if (dirStr === "down") {
+            vx = 0;
+            vy = speed;
+            offX = 4;
+            offY = 16;
+          } else if (dirStr === "up_right" || dirStr === "diagonal_up_right") {
+            vx = speed;
+            vy = -speed;
+            offX = 12;
+            offY = -4;
+          } else if (dirStr === "up_left" || dirStr === "diagonal_up_left") {
+            vx = -speed;
+            vy = -speed;
+            offX = -8;
+            offY = -4;
+          } else if (dirStr === "down_right" || dirStr === "diagonal_down_right") {
+            vx = speed;
+            vy = speed;
+            offX = 12;
+            offY = 12;
+          } else if (dirStr === "down_left" || dirStr === "diagonal_down_left") {
+            vx = -speed;
+            vy = speed;
+            offX = -8;
+            offY = 12;
+          }
+
+          let lifeSec = 1.0;
+          if (typeof evt.args?.lifeTime === "number") lifeSec = evt.args.lifeTime;
+          else if (typeof evt.args?.lifeTime === "object" && evt.args?.lifeTime?.value !== undefined) lifeSec = Number(evt.args.lifeTime.value);
+          const lifeFrames = Math.max(5, Math.round(lifeSec * 60));
+
+          stepCases += `      case ${stepIndex}:\n        projectile_launch(g_actor_x[${targetNum}] + (${offX}), g_actor_y[${targetNum}] + (${offY}), ${vx}, ${vy}, ${lifeFrames}, ${targetNum}, PROJ_VRAM_ADDR, PROJ_PALETTE, SZ_16x16);\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (
           evt.command === "EVENT_ACTOR_EFFECTS" ||
           evt.command === "EVENT_ACTOR_MOVE_CANCEL" ||
           evt.command === "EVENT_ACTOR_GET_DIRECTION" ||
@@ -2538,6 +2691,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     helperCode += `  g_actor_count = ${1 + sceneActors.length};\n`;
     helperCode += `  #ifdef ACTOR_SCENE_${scNum}_PLAYER_HIDDEN\n`;
     helperCode += `  actor_hide(0);\n`;
+    helperCode += `  #endif\n`;
+    helperCode += `  #ifdef HAS_PROJECTILES\n`;
+    helperCode += `  load_vram(0x7000, proj_spr_default, 0x40);\n`;
+    helperCode += `  load_palette(31, proj_pal_default, 1);\n`;
     helperCode += `  #endif\n`;
 
     let currentVram = 0x5800;
@@ -2730,6 +2887,7 @@ ${playerDirectives}
 #define HAS_PLAYER_FRAME_1 1
 
 ${actorDirectives}
+${projDirectives}
 
 #define START_SCENE_NUM ${startSceneNum}
 #define PLAYER_START_X ${playerStartX}
@@ -2757,6 +2915,7 @@ ${musicIncludes}
 #include "src/collision.c"
 #include "src/trigger.c"
 #include "src/vm.c"
+#include "src/projectile.c"
 
 ${sceneInitFunctionC}
 

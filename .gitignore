@@ -52,3 +52,4 @@ pce-studio/out
 pce-studio/.webpack
 pce-studio/build_tmp/
 pce-studio/geargfx_*
+pce-studio/build_gbs2_tmp/

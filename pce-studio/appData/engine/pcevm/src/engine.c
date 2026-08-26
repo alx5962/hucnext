@@ -5129,6 +5129,7 @@ void load_scene(int scene_num, int player_x, int player_y) {
     spr_hide();
   }
   satb_update();
+  projectile_init();
 
   load_scene_player_sprite(scene_num);
 
@@ -5212,6 +5213,7 @@ void engine_init(void) {
   camera_init();
   trigger_init();
   vm_init();
+  projectile_init();
 
   load_vram(FONT_VRAM_ADDR, dialogue_font_chr, 96 * 16);
   set_font_addr(FONT_VRAM_ADDR);
@@ -6124,11 +6126,14 @@ void engine_update(void) {
   } else {
     update_topdown();
   }
+
+  projectile_update_all();
 }
 
 void engine_render(void) {
   camera_apply();
   actor_update_all();
+  projectile_render_all();
   pce_sys_vsync();
 }
 

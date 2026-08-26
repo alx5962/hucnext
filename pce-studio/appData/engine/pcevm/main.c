@@ -20,6 +20,7 @@
 #include "src/collision.c"
 #include "src/trigger.c"
 #include "src/vm.c"
+#include "src/projectile.c"
 #include "src/engine.c"
 #include "game_includes.h"
 

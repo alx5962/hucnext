@@ -9,6 +9,7 @@
 #include "include/collision.h"
 #include "include/trigger.h"
 #include "include/vm.h"
+#include "include/projectile.h"
 
 int g_current_scene = 1;
 int g_current_scene_type = 0;
