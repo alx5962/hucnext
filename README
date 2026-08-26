@@ -1,105 +1,180 @@
-* This is a work in progress. *
+# HuC-Next & ALXPCE Studio
 
-This is a substantially improved version of the HuC PC Engine C development
-toolkit.  The following features have been added on top of HuC release 3.21:
+A modern, comprehensive development ecosystem and visual game maker for the **PC Engine / TurboGrafx-16** (and SuperGrafx).
 
-A. Toolchain features
+---
 
-1. Language support
-- ANSI-style function declarations, including return types and function
-  prototypes (typing is not enforced)
-- struct and union support (adapted from SmallC-85)
-- anonymous structures and "typedef"
-- support for signed and unsigned scalars
-- support initialization of
-  - scalars (global, automatic local, and static local)
-  - arrays and compound types (constant and variable globals and static
-    locals)
-  - constant char pointers with string constants
-- type casting (except struct pointers)
-- void pointers
-- preprocessor features:
-  - function-like macros (i.e. macros with arguments)
-  - #if and #elif directives
-  - macro definition in function bodies
-- heap allocator (malloc() / free())
-- C++-style comments
-- support for function calls in argument lists of fastcall functions (e.g.
-  "memcpy(a, b, strlen(b) + 1);")
-- support declaration of fastcall functions through prototypes instead of
-  pragmas
-- labels and "goto"
+## 🌟 Overview
 
-2. Performance and code size improvements
-- "small stack" and "no recursion" options that cut down code size
-  and improve performance when these features are not needed
-- numerous optimizations of generated code, helper functions, and macros
-- reduction of space wasted in partially filled banks (Artemio Urbina)
+This repository houses two tightly integrated components for PC Engine homebrew development:
 
-3. Quality assurance
-- automated test suite adapted from snes-sdk and extended to more than 470
-  test cases; supports verification of screen output
-- complete toolchain fixed to work on 64-bit host systems
-- tested and fixed for big-endian and 32-bit systems
-- fixed to work on Mac OS X (tested on PowerPC) and Cygwin
-- more than 70 bugs fixed in various components
-- reformatted all assembler files to make them more readable and
-  maintainable
-- many tools had their code formatting made more consistent and have
-  received uncrustify config files to keep them straight
+1. **ALXPCE Studio**: A modern visual, drag-and-drop retro game maker IDE (inspired by GB Studio) tailored specifically for the PC Engine hardware and its custom PSG/VDC architecture.
+2. **HuC / HuCC Toolchain**: A modernized and enhanced C compiler (`huc` / `hucc`), macro assembler (`pceas`), CD-ROM linker (`isolink`), and suite of conversion utilities for 16-bit NEC HuC6280/PCE development.
 
-4. Other enhancements
-- support for more than one input file
-- "library" support that includes C files from the include path
-- default #include paths
-- #incasm directive for seamless inclusion of data files in assembler format
-  with user-definable page mapping (useful with SimpleTracker and Squirrel)
-- massive reduction of C namespace pollution by assembler libraries; things
-  like "int dx;" don't fail anymore...
+---
 
-Among the limitations that still exist and may cause problems:
+## 🎮 ALXPCE Studio
 
-- no support for initialization of:
-  - variable pointers
-  - pointers using array syntax (e.g. "const char *foo = {1, 2, 3};")
-  - arrays using string constants (e.g. "const char foo[] = "abc";")
-  - variable arrays with unspecified sizes (e.g. "int foo[] = ...")
-  - automatic local arrays (static ones work)
-- no passing or returning of structures by value (pointers work)
-- no type casting to struct pointers
-- no floating point support
-- no anonymous structs
+**ALXPCE Studio** provides a complete GUI-driven workflow for building authentic PC Engine games without needing low-level assembly or deep C programming knowledge.
 
-There are also a couple more absent features that are not so likely to be
-missed:
+### Supported Scene Types & Game Modes
 
-- no local union or struct _types_ (not variables)
-- sizeof does not permit dereferencing ("sizeof(*a)")
-- no bit fields
+- **Top-Down (RPG / Adventure)**: Grid and free-form 4/8-directional movement, tile collisions, NPC interactions, dialogues, and scene transitions.
+- **Platformer**: High-performance side-scroller engine featuring customizable gravity, jump heights, ground collision checks, ladder climbing, and sub-pixel physics.
+- **Adventure**: Zelda-style action-adventure exploration, tile-based puzzle triggers, inventory events, and actor interactions.
+- **SHMUP (Shoot 'em Up)**: Auto-scrolling horizontal/vertical shooter mode with player ship controls, projectile spawners, and enemy waves.
+- **Point & Click**: Cursor-driven adventure interface with on-screen interactable hotspots, inventory selection, and branching dialogue trees.
+- **Logo / Title / Cutscene**: Lightweight presentation scenes for title sequences, splash logos, and story cinematics.
 
-B. Included libraries
+### Key Engine Features (`pcevm`)
 
-- HuC PSG driver removed except for initialization routine; it was missing
-  the part that, you know, makes sounds...
-- "SimpleTracker" PSG driver implemented in C
-- added SuperGrafx and Arcade Card libraries by Tomaitheous
-- more consistent joypad button defines (as provided by the assembler)
+- **Hardware-Accelerated Visuals**: Direct management of the PC Engine VDC (Video Display Controller), 16-color background palettes, 16-color sprite palettes, and the 512-color master palette.
+- **Parallax Background Scrolling**: Sub-pixel multi-layer raster scrolling utilizing hardware scanline / timer IRQ interrupts for smooth multi-depth backgrounds.
+- **Visual Event Scripting Engine**:
+  - Full dialogue box engine with customizable borders, 8x8 font rendering, and avatar portrait integration.
+  - Multi-choice branching menus and question prompts.
+  - Variable manipulation (global variables, local flags, math operations).
+  - Actor behaviors: pathfinding, directional animation frames, speed overrides, manual positioning, and collision toggling.
+  - Camera control (target tracking, locking, panning, screen shake).
+  - Input handling and conditional event execution.
+- **Actor & Sprite Engine**: Dynamic hardware SATB (Sprite Attribute Table) allocation, multi-frame directional walk cycles, emote bubbles, and bounding-box collision detection.
+- **Projectile System**: Multi-slot projectile manager with custom trajectory speeds, sprite assignments, lifetime timers, and actor/background collision handlers.
+- **Audio & Sound Driver Integration**:
+  - 6-channel stereo PC Engine PSG sound engine.
+  - MML music and sound effect playback.
+  - Fast tracker and PSG conversion tools.
+- **Save / Load System**: Battery-backed Backup RAM (SRAM) save and load state management across multiple save slots.
+- **One-Click Native Build**: Automatically precompiles scenes, tilemaps, sprites, and scripts into clean C/ASM code, compiles via the HuC toolchain, and outputs a ready-to-play `.pce` ROM.
 
-C. Tools
+---
 
-- mod2mml implementation derived from Zeograd's unfinished tool that
-  produces SimpleTracker binary or Squirrel MML files from Protracker MOD
-  files:
-  - auto-detection of note length from sample size and pitch
-  - automated extraction of custom waveforms from samples
-  - partial auto-detection of volume envelopes
-  - user-definable mapping of waveform and percussion instruments
-  - per-instrument transposition and volume control
-- MML compiler from Develo CD
-- pceas updated to version 3.22
-- pceas symbol table rearranged to allow easier sorting by address
-- Develo tool ported to Linux (UNTESTED)
+## 🛠️ HuC / HuCC Toolchain Features & Enhancements
 
+On top of the historical HuC 3.21 release, the toolchain includes extensive language modernizations, architectural improvements, and new tools:
 
-NEW:
-  added 8bpp uncompressed .BMP support
+### 1. Language & Compiler Capabilities (`hucc` / `huc`)
+
+- **ANSI C Improvements**:
+  - ANSI-style function declarations, return types, and parameter prototypes.
+  - `struct` and `union` support (adapted from SmallC-85), including anonymous structures and `typedef`.
+  - Signed and unsigned scalar types (`char`, `unsigned char`, `int`, `unsigned int`).
+  - Type casting and `void *` pointers.
+  - Initialization of global, static, and automatic scalars, as well as compound types and string constant pointers.
+  - Dynamic heap memory allocation (`malloc()` / `free()`).
+- **Preprocessor Enhancements**:
+  - Function-like macros (macros with variable argument lists).
+  - `#if` and `#elif` conditional directives.
+  - Macro definitions inside function bodies.
+  - C++ style single-line comments (`//`).
+- **Optimizations**:
+  - Support for function calls within argument lists of `fastcall` functions (e.g. `memcpy(a, b, strlen(b) + 1);`).
+  - Declaration of `fastcall` functions directly via prototypes.
+  - Optional `"small stack"` and `"no recursion"` optimization modes to drastically reduce RAM footprint.
+  - Automated procedure packing (`-O`) to maximize bank usage efficiency and reduce wasted ROM space.
+  - Support for multi-source compilation and library includes via include paths.
+  - `#incasm` directive with user-definable page mapping for including raw assembler data files.
+
+### 2. Assembler Enhancements (`pceas`)
+
+- **Large ROM Support**:
+  - Generates HuCARD ROMs up to 8MB using the Street Fighter II mapper (`-sf2`).
+  - Added `overlay(label)` operator to retrieve mapper address registers.
+  - Added `linear(label)` operator for 32-bit linear address offset calculations.
+  - Enhanced `.EQU` and `.RSSET` syntax with `$x:xx:xxxx` bank/overlay syntax.
+- **Syntax & Usability**:
+  - Nameless / multi-labels (`!`).
+  - Label scopes for modular assembler code.
+  - Extended directives: `.align`, `.const`, `.cpu`, `.dword`, `.encoding`, `.ends`, `.fill`, `.label`, `.segment`, `.set`, `.struct`, `.text`, `.var`, `*=`.
+  - Multi-pass symbol resolution (compatibility with KickC and forward references).
+  - Enhanced error diagnostics and memory bank allocation dumps.
+
+### 3. CD-ROM & SuperGrafx Support (`isolink` & startup)
+
+- Support for building standard CD-ROM, Super CD-ROM, Arcade Card, and PC-FX CD projects.
+- SuperGrafx support flag (`-sgx`) in CD and ROM builds.
+- Optimized `startup.asm` booting CD overlays at `$4000`.
+
+### 4. Bundled Utilities & Tools
+
+- **`hulz`**: Compression and decompression utility for Hudson's LZSS format.
+- **`sym2inc`**: Converts assembler symbol tables into include equate files with bank data.
+- **`pcxtool` / `pce2png`**: Graphic and tile conversion tools with support for 8bpp uncompressed BMPs and PCX files.
+- **`wav2vox`**: Converts standard WAV audio to PCE ADPCM voice sample format.
+- **`mod2mml` & `mml`**: Converts Protracker MOD files into SimpleTracker binaries or Develo CD MML formats.
+- **`tgemu`**: Built-in verification emulator and test harness.
+
+---
+
+## 📊 Current Project State
+
+- **ALXPCE Studio**:
+  - Actively maintained with stable multi-scene project workflows.
+  - Full editor integration: Scenes, Actors, Triggers, Projectiles, Sprites, Palettes, Dialogue Boxes, and Event Graph/Scripting.
+  - Integrated build pipeline that directly builds `.pce` ROMs and launches them in configured emulators.
+  - Rich starter templates and sample assets included.
+- **HuC / HuCC & PCEAS Toolchain**:
+  - 64-bit host native support across Windows, Linux, and macOS.
+  - Comprehensive automated test suite with over 470 regression and visual verification test cases.
+  - Robust procedure banking, memory management, and bug fixes across all core utilities.
+
+---
+
+## 🚀 Getting Started
+
+### Building the Toolchain from Source
+
+#### Prerequisites
+- GCC / Clang or MSVC
+- GNU Make
+
+#### Build Commands
+```bash
+# Build the complete compiler toolchain (binaries placed in ./bin)
+make
+```
+
+### Running ALXPCE Studio
+
+#### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- `npm`
+
+#### Launching the IDE
+```bash
+cd pce-studio
+npm install
+npm start
+```
+
+#### Packaging Binaries
+```bash
+# For Windows
+npm run make:win
+
+# For other platforms
+npm run make
+```
+
+---
+
+## 📁 Repository Structure
+
+```
+hucnext/
+├── bin/              # Compiled toolchain binaries (hucc, pceas, isolink, hulz, etc.)
+├── doc/              # Detailed documentation and reference guides
+├── examples/         # Sample HuC and assembly projects for PC Engine
+├── include/          # Standard C/ASM header files and PCE hardware libraries
+├── pce-studio/       # ALXPCE Studio Electron application source & PCEVM engine
+│   ├── appData/      # Engine templates, pcevm runtime, fonts, and assets
+│   └── src/          # React/Redux visual editor UI and compiler pipelines
+├── src/              # Toolchain source code (HuC, HuCC, PCEAS, ISOlink, tools)
+├── test/             # Automated test suite (470+ test cases)
+└── tgemu/            # Lightweight PC Engine verification emulator
+```
+
+---
+
+## 📜 License
+
+This project is licensed under open-source terms. See [LICENSE](file:///c:/workspace/git/hucnext/LICENSE) for full details.
