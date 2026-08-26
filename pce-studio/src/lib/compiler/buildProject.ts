@@ -1782,6 +1782,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     let mask = 0;
     for (const item of list) {
       const s = String(item).toLowerCase().trim();
+      if (s === "any") mask |= 0xFF;
       if (s === "a" || s === "btn_a" || s === "button_a") mask |= 0x01; // JOY_A / JOY_I
       if (s === "b" || s === "btn_b" || s === "button_b") mask |= 0x02; // JOY_B / JOY_II
       if (s === "select" || s === "sel" || s === "slct") mask |= 0x04; // JOY_SEL
@@ -1919,6 +1920,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
   allScenes.forEach((scene: any, idx: number) => {
     const scNum = idx + 1;
+    const scTriggers = sceneTriggerIndexMap.get(scNum) || [];
     const events = [
       ...(Array.isArray(scene.script) ? scene.script : []),
       ...(Array.isArray(scene.startScript) ? scene.startScript : [])
@@ -2204,12 +2206,41 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           stepIndex++;
 
           const trueStart = stepIndex;
-          processEventList(trueList, isStartupContext);
+          processEventList(trueList, isStartupContext, currentActorNum);
           const trueEndJumpStep = stepIndex;
           stepIndex++;
 
           const falseStart = stepIndex;
-          processEventList(falseList, isStartupContext);
+          processEventList(falseList, isStartupContext, currentActorNum);
+          const afterStep = stepIndex;
+
+          stepCases += `      case ${branchStep}:\n        if ${condExpr} return ${trueStart};\n        else return ${falseStart};\n`;
+          stepCases += `      case ${trueEndJumpStep}:\n        return ${afterStep};\n`;
+          continue;
+        } else if (
+          evt.command === "EVENT_IF_INPUT" ||
+          evt.command === "EVENT_IF_INPUT_HELD" ||
+          evt.command === "EVENT_IF_BUTTON_HELD" ||
+          evt.command === "EVENT_IF_BUTTON_PRESSED" ||
+          evt.command === "EVENT_IF_JOYPAD_PRESSED"
+        ) {
+          const mask = parseInputButtonMask(evt.args?.input);
+          const maskHex = `0x${mask.toString(16).toUpperCase().padStart(2, "0")}`;
+          const condExpr = `((pce_sys_read_joy(0) & ${maskHex}) != 0)`;
+
+          const trueList = (evt.true && Array.isArray(evt.true)) ? evt.true : (evt.children?.true && Array.isArray(evt.children.true) ? evt.children.true : []);
+          const falseList = (evt.false && Array.isArray(evt.false)) ? evt.false : (evt.children?.false && Array.isArray(evt.children.false) ? evt.children.false : []);
+
+          const branchStep = stepIndex;
+          stepIndex++;
+
+          const trueStart = stepIndex;
+          processEventList(trueList, isStartupContext, currentActorNum);
+          const trueEndJumpStep = stepIndex;
+          stepIndex++;
+
+          const falseStart = stepIndex;
+          processEventList(falseList, isStartupContext, currentActorNum);
           const afterStep = stepIndex;
 
           stepCases += `      case ${branchStep}:\n        if ${condExpr} return ${trueStart};\n        else return ${falseStart};\n`;
@@ -2286,12 +2317,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           stepIndex++;
 
           const trueStart = stepIndex;
-          processEventList(trueList, isStartupContext);
+          processEventList(trueList, isStartupContext, currentActorNum);
           const trueEndJumpStep = stepIndex;
           stepIndex++;
 
           const falseStart = stepIndex;
-          processEventList(falseList, isStartupContext);
+          processEventList(falseList, isStartupContext, currentActorNum);
           const afterStep = stepIndex;
 
           stepCases += `      case ${branchStep}:\n        if (has_saved_data(${slot})) return ${trueStart};\n        else return ${falseStart};\n`;
@@ -2329,7 +2360,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           evt.command === "EVENT_IF_EXPRESSION" ||
           evt.command === "EVENT_IF_FLAGS_COMPARE" ||
           evt.command === "EVENT_IF_FLAGS_COMPARE" ||
-          evt.command === "EVENT_IF_INPUT" ||
           evt.command === "EVENT_LAUNCH_PROJECTILE" ||
           evt.command === "EVENT_LAUNCH_PROJECTILE_SLOT" ||
           evt.command === "EVENT_ACTOR_EFFECTS" ||
@@ -2390,6 +2420,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       ...(scene.actors || []).flatMap((act: any) => [
         ...findInputScriptEvents(act.script),
         ...findInputScriptEvents(act.startScript)
+      ]),
+      ...scTriggers.flatMap(({ trigger: scTrig }) => [
+        ...findInputScriptEvents(scTrig.script),
+        ...findInputScriptEvents(scTrig.leaveScript)
       ])
     ];
 
@@ -2449,7 +2483,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
 
     const triggerInteractCases: string[] = [];
-    const scTriggers = sceneTriggerIndexMap.get(scNum) || [];
     scTriggers.forEach(({ globalIdx, trigger: scTrigger }) => {
       if (scTrigger.script && Array.isArray(scTrigger.script) && scTrigger.script.length > 0) {
         const trigStartStep = stepIndex;
