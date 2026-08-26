@@ -81,9 +81,16 @@ pce_trigger_t g_triggers[MAX_TRIGGERS];
 int g_trigger_count;
 int g_vm_vars[VM_MAX_VARS];
 
-#define UI_FRAME_VRAM_ADDR 0x0F00
-#define UI_FRAME_TILE_ID   0xF0
+#ifndef FONT_VRAM_ADDR
+#define FONT_VRAM_ADDR     0x4800
+#define FONT_BASE_TILE_ID  0x480
+#endif
+
+#ifndef UI_FRAME_VRAM_ADDR
+#define UI_FRAME_VRAM_ADDR 0x4E00
+#define UI_FRAME_TILE_ID   0x4E0
 #define UI_FRAME_PAL       14
+#endif
 
 void draw_ui_frame(int x, int y, int w, int h);
 void show_dialogue(const char *msg);

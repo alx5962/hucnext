@@ -5213,6 +5213,8 @@ void engine_init(void) {
   trigger_init();
   vm_init();
 
+  load_vram(FONT_VRAM_ADDR, dialogue_font_chr, 96 * 16);
+  set_font_addr(FONT_VRAM_ADDR);
   set_font_pal(15);
   set_color(241, 0x1FF); /* Color 1 = Crisp White text */
 
@@ -5252,15 +5254,15 @@ void draw_ui_frame(int x, int y, int w, int h) {
   int bot_mid;
   int bot_right;
 
-  top_left = 0xE0F0;
-  top_mid = 0xE0F1;
-  top_right = 0xE0F2;
-  mid_left = 0xE0F3;
-  mid_fill = 0xE0F4;
-  mid_right = 0xE0F5;
-  bot_left = 0xE0F6;
-  bot_mid = 0xE0F7;
-  bot_right = 0xE0F8;
+  top_left = (UI_FRAME_PAL << 12) | (UI_FRAME_TILE_ID + 0);
+  top_mid = (UI_FRAME_PAL << 12) | (UI_FRAME_TILE_ID + 1);
+  top_right = (UI_FRAME_PAL << 12) | (UI_FRAME_TILE_ID + 2);
+  mid_left = (UI_FRAME_PAL << 12) | (UI_FRAME_TILE_ID + 3);
+  mid_fill = (UI_FRAME_PAL << 12) | (UI_FRAME_TILE_ID + 4);
+  mid_right = (UI_FRAME_PAL << 12) | (UI_FRAME_TILE_ID + 5);
+  bot_left = (UI_FRAME_PAL << 12) | (UI_FRAME_TILE_ID + 6);
+  bot_mid = (UI_FRAME_PAL << 12) | (UI_FRAME_TILE_ID + 7);
+  bot_right = (UI_FRAME_PAL << 12) | (UI_FRAME_TILE_ID + 8);
 
   /* Top border */
   put_raw(top_left, x, y);
@@ -5336,7 +5338,8 @@ void show_dialogue(const char *msg) {
   load_palette(UI_FRAME_PAL, ui_frame_pal, 1);
 #endif
 
-  load_vram(0x0800, dialogue_font_chr, 96 * 16);
+  load_vram(FONT_VRAM_ADDR, dialogue_font_chr, 96 * 16);
+  set_font_addr(FONT_VRAM_ADDR);
   set_font_pal(15);
   set_color(241, 0x000); /* Color 1 = Solid Black text */
   set_color(243, 0x1FF); /* Color 3 = Solid White background */
@@ -5397,7 +5400,8 @@ void render_choice_dialogue(void) {
   load_palette(UI_FRAME_PAL, ui_frame_pal, 1);
 #endif
 
-  load_vram(0x0800, dialogue_font_chr, 96 * 16);
+  load_vram(FONT_VRAM_ADDR, dialogue_font_chr, 96 * 16);
+  set_font_addr(FONT_VRAM_ADDR);
   set_font_pal(15);
   set_color(241, 0x000); /* Color 1 = Solid Black text */
   set_color(243, 0x1FF); /* Color 3 = Solid White background */
