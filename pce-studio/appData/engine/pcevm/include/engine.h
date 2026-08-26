@@ -61,6 +61,7 @@ int g_actor_bbox_left[PCE_MAX_ACTORS];
 int g_actor_bbox_right[PCE_MAX_ACTORS];
 int g_actor_bbox_top[PCE_MAX_ACTORS];
 int g_actor_bbox_bottom[PCE_MAX_ACTORS];
+int g_actor_parts[PCE_MAX_ACTORS];
 int g_actor_count;
 
 /* Global camera state */

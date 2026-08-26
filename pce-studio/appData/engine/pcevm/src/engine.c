@@ -67,6 +67,7 @@ void load_scene_player_sprite(int scene_num) { (void)scene_num; }
 #define PLAYER_START_Y 112
 #endif
 
+#ifndef HAS_SCENE_ACTORS
 void load_scene_part1(int scene_num) {
   if (scene_num == 1) {
     g_current_scene_type = SCENE_1_TYPE;
@@ -5110,6 +5111,7 @@ void load_scene_part8(int scene_num) {
   }
 #endif
 }
+#endif /* HAS_SCENE_ACTORS */
 
 void load_scene(int scene_num, int player_x, int player_y) {
   int i;

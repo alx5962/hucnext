@@ -1361,14 +1361,16 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         let cropY = 0;
         let cropW = 16;
         let cropH = 16;
-        let origW16 = 1;
-        let origH16 = 1;
 
         const canvasW = sprObj?.canvasWidth || 16;
         const canvasH = sprObj?.canvasHeight || 16;
-        origW16 = Math.max(1, Math.min(2, Math.ceil(canvasW / 16)));
-        origH16 = Math.max(1, Math.min(4, Math.ceil(canvasH / 16)));
+        const totalW16 = Math.max(1, Math.min(4, Math.ceil(canvasW / 16)));
+        let origH16 = Math.max(1, Math.min(4, Math.ceil(canvasH / 16)));
         if (origH16 === 3) origH16 = 4;
+
+        const isMultiPart = totalW16 > 2;
+        const partCount = isMultiPart ? 2 : 1;
+        const origW16 = isMultiPart ? 2 : totalW16;
 
         if (sprObj) {
           cropX = getCropXForActor(scActor, sprObj, canvasW);
@@ -1379,8 +1381,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         let actVramW16 = (origH16 >= 2) ? 2 : origW16;
         cropW = canvasW;
         cropH = origH16 * 16;
-        const padWidthTo = actVramW16 * 16;
-        const w16 = actVramW16;
+        const padWidthTo = isMultiPart ? 64 : (actVramW16 * 16);
+        const w16 = isMultiPart ? 2 : actVramW16;
         const h16 = origH16;
 
         let sprSizeConst = "SZ_16x16";
@@ -1430,9 +1432,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           }
         }
 
-        let maxAllowedFrames = 1;
-        if (vramSizeHex === "0x40") maxAllowedFrames = 4;
-        else if (vramSizeHex === "0x80" || vramSizeHex === "0x100") maxAllowedFrames = 2;
+        let maxAllowedFrames = 4;
+        if (vramSizeHex === "0x40") maxAllowedFrames = 8;
+        else if (vramSizeHex === "0x80" || vramSizeHex === "0x100") maxAllowedFrames = 4;
+        else if (vramSizeHex === "0x200") maxAllowedFrames = 4;
 
         const numFrames = Math.max(1, Math.min(maxAllowedFrames, actorAnimFrames.length > 0 ? actorAnimFrames.length : 1));
 
@@ -1459,22 +1462,51 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             fCropX = cropX + (fIdx * canvasW);
           }
 
-          const destPcxF = pathModule.join(destSpritesDir, sprFilename.replace(/\.png$/i, `_sc${sceneNum}_${actorNum}_f${fIdx}.pcx`));
           const finalFlipX = actorFlipX ? !tileFlipX : tileFlipX;
           const isMetasprite = actorAnimFrames[fIdx]?.tiles && Array.isArray(actorAnimFrames[fIdx].tiles) && actorAnimFrames[fIdx].tiles.length > 0;
-          if (isMetasprite) {
-            const compPng = compositeMetaspriteFrame(srcPng, actorAnimFrames[fIdx], canvasW, canvasH, padWidthTo, cropH, finalFlipX, sprObj?.spriteMode || defaultSpriteMode);
-            convertPngToPcx(compPng, destPcxF, { cropW: padWidthTo, cropH, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-          } else {
-            convertPngToPcx(srcPng, destPcxF, { cropX: fCropX, cropY: fCropY, cropW, cropH, padWidthTo, flipX: finalFlipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
-          }
 
-          const relPcxF = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxF).replace(/\\/g, "/")}`;
-          actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_f${fIdx}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n`;
-          if (fIdx === 0) {
-            actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc${sceneNum}_${actorNum}_pal, "${relPcxF}")\n`;
-            if (aIdx === 0) {
-              actorDirectives += `#incspr(actor_sc${sceneNum}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc${sceneNum}_pal, "${relPcxF}")\n`;
+          if (isMultiPart) {
+            const destPcxF0 = pathModule.join(destSpritesDir, sprFilename.replace(/\.png$/i, `_sc${sceneNum}_${actorNum}_f${fIdx}_p0.pcx`));
+            const destPcxF1 = pathModule.join(destSpritesDir, sprFilename.replace(/\.png$/i, `_sc${sceneNum}_${actorNum}_f${fIdx}_p1.pcx`));
+            let compPng: any;
+            if (isMetasprite) {
+              compPng = compositeMetaspriteFrame(srcPng, actorAnimFrames[fIdx], canvasW, canvasH, 64, cropH, finalFlipX, sprObj?.spriteMode || defaultSpriteMode);
+            } else {
+              compPng = compositeMetaspriteFrame(srcPng, null, canvasW, canvasH, 64, cropH, finalFlipX, sprObj?.spriteMode || defaultSpriteMode);
+            }
+            convertPngToPcx(compPng, destPcxF0, { cropX: 0, cropY: 0, cropW: 32, cropH, padWidthTo: 32, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+            convertPngToPcx(compPng, destPcxF1, { cropX: 32, cropY: 0, cropW: 32, cropH, padWidthTo: 32, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+
+            const relPcxF0 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxF0).replace(/\\/g, "/")}`;
+            const relPcxF1 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxF1).replace(/\\/g, "/")}`;
+            actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_f${fIdx}_p0_spr, "${relPcxF0}", 0, 0, ${w16}, ${h16})\n`;
+            actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_f${fIdx}_p1_spr, "${relPcxF1}", 0, 0, ${w16}, ${h16})\n`;
+            if (fIdx === 0) {
+              actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_p0_spr, "${relPcxF0}", 0, 0, ${w16}, ${h16})\n`;
+              actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_p1_spr, "${relPcxF1}", 0, 0, ${w16}, ${h16})\n`;
+              actorDirectives += `#incpal(actor_sc${sceneNum}_${actorNum}_pal, "${relPcxF0}")\n`;
+              if (aIdx === 0) {
+                actorDirectives += `#incspr(actor_sc${sceneNum}_p0_spr, "${relPcxF0}", 0, 0, ${w16}, ${h16})\n`;
+                actorDirectives += `#incspr(actor_sc${sceneNum}_p1_spr, "${relPcxF1}", 0, 0, ${w16}, ${h16})\n`;
+                actorDirectives += `#incpal(actor_sc${sceneNum}_pal, "${relPcxF0}")\n`;
+              }
+            }
+          } else {
+            const destPcxF = pathModule.join(destSpritesDir, sprFilename.replace(/\.png$/i, `_sc${sceneNum}_${actorNum}_f${fIdx}.pcx`));
+            if (isMetasprite) {
+              const compPng = compositeMetaspriteFrame(srcPng, actorAnimFrames[fIdx], canvasW, canvasH, padWidthTo, cropH, finalFlipX, sprObj?.spriteMode || defaultSpriteMode);
+              convertPngToPcx(compPng, destPcxF, { cropW: padWidthTo, cropH, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+            } else {
+              convertPngToPcx(srcPng, destPcxF, { cropX: fCropX, cropY: fCropY, cropW, cropH, padWidthTo, flipX: finalFlipX, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+            }
+
+            const relPcxF = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxF).replace(/\\/g, "/")}`;
+            actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_f${fIdx}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n`;
+            if (fIdx === 0) {
+              actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc${sceneNum}_${actorNum}_pal, "${relPcxF}")\n`;
+              if (aIdx === 0) {
+                actorDirectives += `#incspr(actor_sc${sceneNum}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc${sceneNum}_pal, "${relPcxF}")\n`;
+              }
             }
           }
         }
@@ -1516,7 +1548,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           actBBoxTop = Math.max(0, actBBoxBottom - sprObj.boundsHeight + 1);
         }
 
-        actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum}_${actorNum} 1\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_SPRITE_SIZE ${sprSizeConst}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_NUM_FRAMES ${numFrames}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_ANIM_SPEED ${animSpeedVal}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_LEFT ${actBBoxLeft}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_RIGHT ${actBBoxRight}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_TOP ${actBBoxTop}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_BOTTOM ${actBBoxBottom}\n${textDef}${hiddenDef}${interactDefs}`;
+        actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum}_${actorNum} 1\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_SPRITE_SIZE ${sprSizeConst}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_PARTS ${partCount}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_NUM_FRAMES ${numFrames}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_ANIM_SPEED ${animSpeedVal}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_LEFT ${actBBoxLeft}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_RIGHT ${actBBoxRight}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_TOP ${actBBoxTop}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_BOTTOM ${actBBoxBottom}\n${textDef}${hiddenDef}${interactDefs}`;
 
         if (aIdx === 0) {
           actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum} 1\n#define ACTOR_SCENE_${sceneNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_SPRITE_SIZE ${sprSizeConst}\n`;
@@ -2751,9 +2783,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       }
       const canvasW = sprObj?.canvasWidth || 16;
       const canvasH = sprObj?.canvasHeight || 16;
-      const origW16 = Math.max(1, Math.min(2, Math.ceil(canvasW / 16)));
+      const totalW16 = Math.max(1, Math.min(4, Math.ceil(canvasW / 16)));
       let origH16 = Math.max(1, Math.min(4, Math.ceil(canvasH / 16)));
       if (origH16 === 3) origH16 = 4;
+      const isMultiPart = totalW16 > 2;
+      const origW16 = isMultiPart ? 2 : totalW16;
+
       let vramSizeHex = "0x40";
       if (origW16 === 1 && origH16 === 2) vramSizeHex = "0x100";
       else if (origW16 === 2 && origH16 === 1) vramSizeHex = "0x80";
@@ -2761,22 +2796,28 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       else if (origW16 === 2 && origH16 === 4) vramSizeHex = "0x200";
       else if (origW16 === 1 && origH16 === 4) vramSizeHex = "0x200";
 
-      let maxAllowedFrames = 1;
-      if (vramSizeHex === "0x40") maxAllowedFrames = 4;
-      else if (vramSizeHex === "0x80" || vramSizeHex === "0x100") maxAllowedFrames = 2;
+      let maxAllowedFrames = 4;
+      if (vramSizeHex === "0x40") maxAllowedFrames = 8;
+      else if (vramSizeHex === "0x80" || vramSizeHex === "0x100") maxAllowedFrames = 4;
+      else if (vramSizeHex === "0x200") maxAllowedFrames = 4;
 
       const numFrames = Math.max(1, Math.min(maxAllowedFrames, actorAnimFrames.length > 0 ? actorAnimFrames.length : 1));
 
       helperCode += `  #ifdef HAS_ACTOR_SCENE_${scNum}_${actorNum}\n`;
-      helperCode += `  load_vram(${vramHex}, actor_sc${scNum}_${actorNum}_f0_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
-      if (numFrames >= 2) {
-        helperCode += `  load_vram(${vramHex} + ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE, actor_sc${scNum}_${actorNum}_f1_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
-      }
-      if (numFrames >= 3) {
-        helperCode += `  load_vram(${vramHex} + 2 * ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE, actor_sc${scNum}_${actorNum}_f2_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
-      }
-      if (numFrames >= 4) {
-        helperCode += `  load_vram(${vramHex} + 3 * ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE, actor_sc${scNum}_${actorNum}_f3_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+      if (isMultiPart) {
+        for (let f = 0; f < numFrames; f++) {
+          const off0 = f === 0 ? "" : ` + ${f * 2} * ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE`;
+          const off1 = ` + ${f * 2 + 1} * ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE`;
+          helperCode += `  load_vram(${vramHex}${off0}, actor_sc${scNum}_${actorNum}_f${f}_p0_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+          helperCode += `  load_vram(${vramHex}${off1}, actor_sc${scNum}_${actorNum}_f${f}_p1_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+        }
+        helperCode += `  g_actor_parts[${actorNum}] = 2;\n`;
+      } else {
+        for (let f = 0; f < numFrames; f++) {
+          const off = f === 0 ? "" : ` + ${f} * ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE`;
+          helperCode += `  load_vram(${vramHex}${off}, actor_sc${scNum}_${actorNum}_f${f}_spr, ACTOR_SCENE_${scNum}_${actorNum}_VRAM_SIZE);\n`;
+        }
+        helperCode += `  g_actor_parts[${actorNum}] = 1;\n`;
       }
       helperCode += `  load_palette(${16 + palIdx}, actor_sc${scNum}_${actorNum}_pal, 1);\n`;
       helperCode += `  g_actor_active[${actorNum}] = 1;\n`;
@@ -2794,7 +2835,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       helperCode += `  #endif\n`;
       helperCode += `  #endif\n`;
 
-      currentVram += 0x200;
+      const vramInc = isMultiPart ? (numFrames * 2 * parseInt(vramSizeHex, 16)) : Math.max(0x200, numFrames * parseInt(vramSizeHex, 16));
+      currentVram += vramInc;
     });
 
     helperCode += `}\n\n`;

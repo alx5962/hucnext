@@ -21,6 +21,7 @@ void actor_init(void) {
     g_actor_tile_id[i] = 0;
     g_actor_palette[i] = 0;
     g_actor_size[i] = SZ_16x16;
+    g_actor_parts[i] = 1;
     g_actor_dir[i] = 0;
     g_actor_anim_frame[i] = 0;
     g_actor_anim_speed[i] = 15;
@@ -51,6 +52,7 @@ int actor_spawn(int x, int y, int tile_id, int palette, int size) {
   g_actor_tile_id[id] = tile_id;
   g_actor_palette[id] = palette;
   g_actor_size[id] = (unsigned char)size;
+  g_actor_parts[id] = 1;
   g_actor_base_tile_id[id] = tile_id;
   g_actor_frame_vram_size[id] = 0x40;
   g_actor_num_frames[id] = 1;
@@ -64,6 +66,7 @@ void actor_update_all(void) {
   int screen_x, screen_y, spr_h;
   int is_dialogue;
   int spd;
+  int frame_step;
   is_dialogue = (g_dialogue_active || g_choice_active);
 
   /* Animate non-player actors that have multiple frames */
@@ -75,9 +78,12 @@ void actor_update_all(void) {
         g_actor_anim_timer[i] = 0;
         g_actor_anim_frame[i] =
             (g_actor_anim_frame[i] + 1) % g_actor_num_frames[i];
+        frame_step = (g_actor_parts[i] > 1)
+                         ? (2 * g_actor_frame_vram_size[i])
+                         : g_actor_frame_vram_size[i];
         g_actor_tile_id[i] =
             g_actor_base_tile_id[i] +
-            (g_actor_anim_frame[i] * g_actor_frame_vram_size[i]);
+            (g_actor_anim_frame[i] * frame_step);
       }
     }
   }
@@ -89,6 +95,12 @@ void actor_update_all(void) {
       spr_x(512);
       spr_y(512);
       spr_hide();
+      if (g_actor_parts[i] > 1) {
+        spr_set(PCE_MAX_ACTORS + i);
+        spr_x(512);
+        spr_y(512);
+        spr_hide();
+      }
       continue;
     }
 
@@ -111,14 +123,56 @@ void actor_update_all(void) {
       spr_x(512);
       spr_y(512);
       spr_hide();
+      if (g_actor_parts[i] > 1) {
+        spr_set(PCE_MAX_ACTORS + i);
+        spr_x(512);
+        spr_y(512);
+        spr_hide();
+      }
     } else {
-      spr_set(i);
-      spr_x(screen_x);
-      spr_y(screen_y);
-      spr_pattern(g_actor_tile_id[i]);
-      spr_pal(g_actor_palette[i]);
-      spr_pri(1);
-      spr_ctrl(FLIP_MAS | SIZE_MAS, g_actor_size[i] | flip);
+      if (g_actor_parts[i] > 1) {
+        if (flip == NO_FLIP) {
+          spr_set(i);
+          spr_x(screen_x);
+          spr_y(screen_y);
+          spr_pattern(g_actor_tile_id[i]);
+          spr_pal(g_actor_palette[i]);
+          spr_pri(1);
+          spr_ctrl(FLIP_MAS | SIZE_MAS, g_actor_size[i]);
+
+          spr_set(PCE_MAX_ACTORS + i);
+          spr_x(screen_x + 32);
+          spr_y(screen_y);
+          spr_pattern(g_actor_tile_id[i] + g_actor_frame_vram_size[i]);
+          spr_pal(g_actor_palette[i]);
+          spr_pri(1);
+          spr_ctrl(FLIP_MAS | SIZE_MAS, g_actor_size[i]);
+        } else {
+          spr_set(i);
+          spr_x(screen_x + 32);
+          spr_y(screen_y);
+          spr_pattern(g_actor_tile_id[i]);
+          spr_pal(g_actor_palette[i]);
+          spr_pri(1);
+          spr_ctrl(FLIP_MAS | SIZE_MAS, g_actor_size[i] | FLIP_X);
+
+          spr_set(PCE_MAX_ACTORS + i);
+          spr_x(screen_x);
+          spr_y(screen_y);
+          spr_pattern(g_actor_tile_id[i] + g_actor_frame_vram_size[i]);
+          spr_pal(g_actor_palette[i]);
+          spr_pri(1);
+          spr_ctrl(FLIP_MAS | SIZE_MAS, g_actor_size[i] | FLIP_X);
+        }
+      } else {
+        spr_set(i);
+        spr_x(screen_x);
+        spr_y(screen_y);
+        spr_pattern(g_actor_tile_id[i]);
+        spr_pal(g_actor_palette[i]);
+        spr_pri(1);
+        spr_ctrl(FLIP_MAS | SIZE_MAS, g_actor_size[i] | flip);
+      }
     }
   }
   satb_update();

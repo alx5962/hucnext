@@ -1,7 +1,7 @@
 {
   "name": "alxpce-studio",
   "productName": "ALXPCE Studio",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Visual retro game maker for PC Engine / TurboGrafx-16",
   "main": ".webpack/main",
   "private": true,

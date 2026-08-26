@@ -48,6 +48,13 @@
   ],
   "script": [
     {
+      "command": "EVENT_ACTOR_COLLISIONS_DISABLE",
+      "args": {
+        "actorId": "183a084a-fe5e-4583-861c-d6f8f04c7eb8"
+      },
+      "id": "9144709c-bfe1-4b16-8446-c3db57c329ce"
+    },
+    {
       "id": "a0f6f228-cf76-4e25-8f8a-f880cdc0d8b8",
       "command": "EVENT_CALL_CUSTOM_EVENT",
       "args": {
