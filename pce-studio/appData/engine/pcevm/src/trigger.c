@@ -10,6 +10,8 @@ int interact_trigger(int scene_num, int trigger_num);
 void trigger_init(void) {
   g_trigger_count = 0;
   g_trigger_cooldown = 0;
+  g_inside_trigger = 0;
+  g_current_trigger_hit = -1;
 }
 
 void trigger_load_all(void) {
@@ -43,10 +45,12 @@ void trigger_add(int scene_id, int x, int y, int w, int h, int target_scene,
 
 void trigger_check(int px, int py) {
   int i, tx1, ty1, tx2, ty2;
+  int hit_trigger;
+
+  hit_trigger = -1;
 
   if (g_trigger_cooldown > 0) {
     g_trigger_cooldown--;
-    return;
   }
 
   for (i = 0; i < g_trigger_count; i++) {
@@ -62,25 +66,48 @@ void trigger_check(int px, int py) {
     if ((px + 12) >= tx1 && (px + 2) < tx2 &&
         (py + (g_actor_size[0] == SZ_16x32 ? 28 : 12)) >= ty1 &&
         (py + 4) < ty2) {
-      if (g_triggers[i].target_scene > 0) {
-        g_trigger_cooldown = 20;
-        load_scene(g_triggers[i].target_scene, g_triggers[i].target_x,
-                   g_triggers[i].target_y);
-        break;
-      } else if (g_triggers[i].target_x >= 0 && g_triggers[i].target_y >= 0) {
-        g_trigger_cooldown = 20;
-        actor_set_pos(0, g_triggers[i].target_x, g_triggers[i].target_y);
-        break;
-      } else if (interact_trigger(g_current_scene, i)) {
-        g_trigger_cooldown = 20;
-        break;
-      }
-      if (g_triggers[i].script) {
-        g_trigger_cooldown = 20;
-        vm_start_script(g_triggers[i].script);
-        break;
+      hit_trigger = i;
+      break;
+    }
+  }
+
+  if (hit_trigger >= 0) {
+    /* Entering or inside trigger: disable input scripts and ensure clean sprite state */
+    if (g_inside_trigger == 0) {
+      if (g_actor_state[0] > 0) {
+        player_set_state(0, 0);
       }
     }
+    g_inside_trigger = 1;
+    g_current_trigger_hit = hit_trigger;
+
+    if (g_trigger_cooldown == 0) {
+      if (g_triggers[hit_trigger].target_scene > 0) {
+        g_trigger_cooldown = 20;
+        g_inside_trigger = 0;
+        g_current_trigger_hit = -1;
+        load_scene(g_triggers[hit_trigger].target_scene,
+                   g_triggers[hit_trigger].target_x,
+                   g_triggers[hit_trigger].target_y);
+        return;
+      } else if (g_triggers[hit_trigger].target_x >= 0 && g_triggers[hit_trigger].target_y >= 0) {
+        g_trigger_cooldown = 20;
+        actor_set_pos(0, g_triggers[hit_trigger].target_x, g_triggers[hit_trigger].target_y);
+        return;
+      } else if (interact_trigger(g_current_scene, hit_trigger)) {
+        g_trigger_cooldown = 20;
+        return;
+      }
+      if (g_triggers[hit_trigger].script) {
+        g_trigger_cooldown = 20;
+        vm_start_script(g_triggers[hit_trigger].script);
+        return;
+      }
+    }
+  } else {
+    /* Outside trigger: reactivate input scripts */
+    g_inside_trigger = 0;
+    g_current_trigger_hit = -1;
   }
 }
 

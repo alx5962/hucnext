@@ -91,6 +91,8 @@ int g_player_bbox_bottom;
 /* Global trigger & VM state */
 pce_trigger_t g_triggers[MAX_TRIGGERS];
 int g_trigger_count;
+int g_inside_trigger;
+int g_current_trigger_hit;
 int g_vm_vars[VM_MAX_VARS];
 
 #ifndef FONT_VRAM_ADDR

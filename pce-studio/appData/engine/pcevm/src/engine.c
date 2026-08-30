@@ -5196,6 +5196,8 @@ void load_scene(int scene_num, int player_x, int player_y) {
   g_dialogue_timer = 0;
   g_actor_state[0] = 0;
   g_input_script_disabled_mask = 0;
+  g_inside_trigger = 0;
+  g_current_trigger_hit = -1;
 
   set_font_pal(15);
   set_font_color(1, 2);
