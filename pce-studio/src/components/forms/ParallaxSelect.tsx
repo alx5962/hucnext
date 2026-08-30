@@ -88,11 +88,12 @@ export const defaultValues: SceneParallaxLayer[] = [
   },
 ];
 
-const MAX_PARALLAX_HEIGHT = 17;
+const DEFAULT_MAX_PARALLAX_HEIGHT = 27;
 
 const sliceLayers = (
   value: SceneParallaxLayer[] | undefined,
   length: number,
+  maxHeight: number = DEFAULT_MAX_PARALLAX_HEIGHT,
 ) => {
   const slicedDefaults = defaultValues.slice(-length);
   if (!value) {
@@ -106,11 +107,11 @@ const sliceLayers = (
     if (prev) {
       newLayer = prev;
     }
-    // Make sure total height isn't > MAX_PARALLAX_HEIGHT
-    if (heightTotal + newLayer.height > MAX_PARALLAX_HEIGHT) {
+    // Make sure total height isn't > maxHeight
+    if (heightTotal + newLayer.height > maxHeight) {
       newLayer = {
         ...newLayer,
-        height: Math.max(1, MAX_PARALLAX_HEIGHT - heightTotal),
+        height: Math.max(1, maxHeight - heightTotal),
       };
     }
     heightTotal += newLayer.height;
@@ -122,8 +123,8 @@ const updateParallaxHeight = (
   value: SceneParallaxLayer[],
   layerIndex: number,
   height: number,
+  maxHeight: number = DEFAULT_MAX_PARALLAX_HEIGHT,
 ) => {
-  const maxHeight = MAX_PARALLAX_HEIGHT;
   const maxLayerHeight = maxHeight - Math.max(0, value.length - 2);
 
   const newValue = value.map((v, i) => {
@@ -220,6 +221,8 @@ const ParallaxSelect = ({
     return memo - value.height;
   }, sceneHeight);
 
+  const maxParallaxHeight = Math.max(17, sceneHeight - 1);
+
   return (
     <div>
       <Select
@@ -229,7 +232,7 @@ const ParallaxSelect = ({
         onChange={(newValue: SingleValue<ParallaxOption>) => {
           if (newValue) {
             if (newValue.value > 0) {
-              onChange?.(sliceLayers(value, newValue.value));
+              onChange?.(sliceLayers(value, newValue.value, maxParallaxHeight));
             } else {
               onChange?.(undefined);
               setHoverLayer(undefined);
@@ -256,7 +259,14 @@ const ParallaxSelect = ({
                   disabled={layerIndex === value.length - 1}
                   onChange={(e) => {
                     const height = Number(e.currentTarget.value);
-                    onChange?.(updateParallaxHeight(value, layerIndex, height));
+                    onChange?.(
+                      updateParallaxHeight(
+                        value,
+                        layerIndex,
+                        height,
+                        maxParallaxHeight,
+                      ),
+                    );
                   }}
                 />
                 <FormField name={`layer_${layerIndex}_speed`}>

@@ -60,7 +60,7 @@ export const SceneParallaxOverlay = ({
             (scene.height -
               scene.parallax.reduce(
                 (memo, layer, layerIndex, layers) =>
-                  memo + layerIndex < layers.length - 1 ? layer.height || 1 : 0,
+                  memo + (layerIndex < layers.length - 1 ? layer.height || 1 : 0),
                 0,
               )),
           boxSizing: "border-box",
