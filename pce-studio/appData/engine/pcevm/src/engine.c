@@ -5555,6 +5555,10 @@ void check_actor_interaction(unsigned int input) {
     return;
   }
 
+  if (g_script_step >= 0) {
+    return;
+  }
+
   if (pressed) {
     if (check_scene_input(g_current_scene, pressed)) {
       return;

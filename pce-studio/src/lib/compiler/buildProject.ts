@@ -2974,7 +2974,7 @@ ${sceneInitCases}
 }
 
 int check_scene_input(int scene_num, unsigned int pressed) {
-  if (g_inside_trigger) return 0;
+  if (g_inside_trigger || g_script_step >= 0) return 0;
   pressed &= ~g_input_script_disabled_mask;
   if (!pressed) return 0;
 ${sceneInputCheckCases}  return 0;
