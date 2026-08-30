@@ -89,8 +89,8 @@ export const MIN_WORLD_ENTITY_X = 60;
 export const MIN_WORLD_ENTITY_Y = 30;
 
 // Background Limits
-export const MAX_BACKGROUND_TILES = 16 * 12;
-export const MAX_BACKGROUND_TILES_CGB = 16 * 12 * 2;
+export const MAX_BACKGROUND_TILES = 1024;
+export const MAX_BACKGROUND_TILES_CGB = 1024;
 
 // Screen
 export const SCREEN_WIDTH = 20;
@@ -103,8 +103,8 @@ export const SCREEN_HEIGHT_PX = SCREEN_HEIGHT * TILE_SIZE;
 export const SCENE_MAX_SIZE_PX = 2040;
 
 // Background tile allocation
-export const TILE_FIRST_CHUNK_SIZE = 128;
-export const TILE_BANK_SIZE = 192;
+export const TILE_FIRST_CHUNK_SIZE = 1024;
+export const TILE_BANK_SIZE = 1024;
 
 // Scripts
 export const MAX_NESTED_SCRIPT_DEPTH = 5;
