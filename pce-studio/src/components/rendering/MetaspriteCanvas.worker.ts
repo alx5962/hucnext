@@ -95,32 +95,19 @@ workerCtx.onmessage = async (evt) => {
         ctx.putImageData(imageDataCopy, 0, 0);
         tilesCanvases[objPalette] = canvas;
       });
-    } else if (palettes) {
-      [0, 1, 2, 3, 4, 5, 6, 7].forEach((i) => {
-        if (!palettes[i]) {
-          tilesCanvases[i] = tilesCanvas;
-          return;
-        }
-        tilesCanvases[i] = new OffscreenCanvas(img.width, img.height);
-        const colors = palettes[i] || DMG_PALETTE.colors;
-        const canvas = tilesCanvases[i];
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          return;
-        }
-        const imageDataCopy = new ImageData(
-          new Uint8ClampedArray(tileImageData.data),
-          tileImageData.width,
-          tileImageData.height,
-        );
-        colorizeSpriteData(
-          imageDataCopy.data,
-          [0, 1, 3],
-          colors,
-          colorCorrection,
-        );
-        ctx.putImageData(imageDataCopy, 0, 0);
-      });
+    } else {
+      tilesCanvases = {
+        OBP0: tilesCanvas,
+        OBP1: tilesCanvas,
+        0: tilesCanvas,
+        1: tilesCanvas,
+        2: tilesCanvas,
+        3: tilesCanvas,
+        4: tilesCanvas,
+        5: tilesCanvas,
+        6: tilesCanvas,
+        7: tilesCanvas,
+      };
     }
 
     cache[key] = {

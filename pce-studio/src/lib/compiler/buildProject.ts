@@ -372,7 +372,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const platMaxFallSubpx = Math.max(4, Math.round(rawMaxFall / 512));
   const platJumpVelSubpx = Math.max(8, Math.round(rawJumpVel / 512));
 
-  let platJumpBtnDefine = "(JOY_I | JOY_A | JOY_II | JOY_B)";
+  let platJumpBtnDefine = "(JOY_I | JOY_A)";
   const jumpBtnVal = String(engineFieldValuesMap["plat_jump_btn"] || engineFieldValuesMap["jump_btn"] || "").toUpperCase();
   if (jumpBtnVal.includes("UP")) {
     platJumpBtnDefine = "JOY_UP";
@@ -1152,7 +1152,61 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         sizeConst = "SZ_16x64";
       }
 
-      compiledPlayerSprites.set(key, { symPrefix, palName, width16, height16, filename, vramSizeHex, sizeConst, bboxLeft, bboxRight, bboxTop, bboxBottom });
+      const extraStates = (sprObj?.states || []).slice(1);
+      const compiledStates: { name: string; symPrefix: string; vramSizeHex: string; numFrames: number }[] = [];
+      extraStates.forEach((st: any, sIdx: number) => {
+        const stateName = (st.name || `state_${sIdx + 1}`).toLowerCase().replace(/[^a-z0-9_]/g, "");
+        const stAnimType = st.animationType || "fixed";
+        const stFlipLeft = st.flipLeft ?? true;
+        const stRawAnims = st.animations || [];
+        const stMapped = animationMapBySpriteType(
+          stRawAnims,
+          stAnimType,
+          stFlipLeft,
+          (anim, flip) => ({ anim, flip })
+        );
+        const chosen = stMapped[0] || { anim: stRawAnims[0], flip: false };
+        let stateFrames: any[] = [];
+        let stateFlip = chosen.flip;
+        if (chosen.anim && Array.isArray(chosen.anim.frames) && chosen.anim.frames.length > 0) {
+          stateFrames = chosen.anim.frames;
+        }
+        if (stateFrames.length === 0) return;
+
+        const validFrames = stateFrames.filter((f: any) => f.tiles && f.tiles.length > 0);
+        const framesToCompile = validFrames.length > 0 ? validFrames.slice(0, 8) : [stateFrames[0]];
+
+        const stateSymPrefix = `${symPrefix}_${stateName}`;
+        framesToCompile.forEach((frameObj: any, fIdx: number) => {
+          const destPcxR = pathModule.join(destSpritesDir, `${filename.replace(/\.png$/i, "")}_${stateName}_r${fIdx}.pcx`);
+          const destPcxL = pathModule.join(destSpritesDir, `${filename.replace(/\.png$/i, "")}_${stateName}_l${fIdx}.pcx`);
+
+          const compR = compositeMetaspriteFrame(srcPng, frameObj, origCropW, origCropH, padWidthTo, cropH, stateFlip, sprObj?.spriteMode || defaultSpriteMode);
+          const compL = compositeMetaspriteFrame(srcPng, frameObj, origCropW, origCropH, padWidthTo, cropH, !stateFlip, sprObj?.spriteMode || defaultSpriteMode);
+
+          convertPngToPcx(compR, destPcxR, { cropW: padWidthTo, cropH, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+          convertPngToPcx(compL, destPcxL, { cropW: padWidthTo, cropH, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+
+          const relPcxR = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxR).replace(/\\/g, "/")}`;
+          const relPcxL = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxL).replace(/\\/g, "/")}`;
+
+          playerDirectives += `
+#asm
+ .data
+ .bank ${currentAssetBank++}
+#endasm
+#incspr(${stateSymPrefix}_r${fIdx}, "${relPcxR}", 0, 0, ${vramWidth16}, ${height16})
+#incspr(${stateSymPrefix}_l${fIdx}, "${relPcxL}", 0, 0, ${vramWidth16}, ${height16})
+#asm
+ .code
+#endasm
+`;
+        });
+
+        compiledStates.push({ name: stateName, symPrefix: stateSymPrefix, vramSizeHex, numFrames: framesToCompile.length });
+      });
+
+      compiledPlayerSprites.set(key, { symPrefix, palName, width16, height16, filename, vramSizeHex, sizeConst, bboxLeft, bboxRight, bboxTop, bboxBottom, compiledStates });
     } catch (e) {
       console.error("Error converting player sprite frames to PCX:", e);
     }
@@ -1165,35 +1219,58 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   let playerSpriteHelpers = "";
   const emittedSpriteHelpers = new Set<string>();
   let scenePlayerSpriteCases = "";
+  let scenePlayerSpriteStateCases = "";
   const firstCompiled = Array.from(compiledPlayerSprites.values())[0];
 
   // First pass: emit one helper per unique sprite
   compiledPlayerSprites.forEach((compiled: any) => {
     const helperName = `load_player_sprite_${compiled.symPrefix.replace(/^player_spr_/, "")}`;
-    if (emittedSpriteHelpers.has(helperName)) return;
-    emittedSpriteHelpers.add(helperName);
-    playerSpriteHelpers += `void ${helperName}() {\n`;
-    playerSpriteHelpers += `  g_player_spr_vram_size = ${compiled.vramSizeHex};\n`;
-    playerSpriteHelpers += `  g_player_spr_size = ${compiled.sizeConst};\n`;
-    playerSpriteHelpers += `  g_actor_size[0] = ${compiled.sizeConst};\n`;
-    playerSpriteHelpers += `  g_player_bbox_left = ${compiled.bboxLeft};\n`;
-    playerSpriteHelpers += `  g_player_bbox_right = ${compiled.bboxRight};\n`;
-    playerSpriteHelpers += `  g_player_bbox_top = ${compiled.bboxTop};\n`;
-    playerSpriteHelpers += `  g_player_bbox_bottom = ${compiled.bboxBottom};\n`;
-    playerSpriteHelpers += `  g_actor_bbox_left[0] = ${compiled.bboxLeft};\n`;
-    playerSpriteHelpers += `  g_actor_bbox_right[0] = ${compiled.bboxRight};\n`;
-    playerSpriteHelpers += `  g_actor_bbox_top[0] = ${compiled.bboxTop};\n`;
-    playerSpriteHelpers += `  g_actor_bbox_bottom[0] = ${compiled.bboxBottom};\n`;
-    playerSpriteHelpers += `  load_vram(0x5000 + 0 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r0, ${compiled.vramSizeHex});\n`;
-    playerSpriteHelpers += `  load_vram(0x5000 + 1 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r1, ${compiled.vramSizeHex});\n`;
-    playerSpriteHelpers += `  load_vram(0x5000 + 2 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_l0, ${compiled.vramSizeHex});\n`;
-    playerSpriteHelpers += `  load_vram(0x5000 + 3 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_l1, ${compiled.vramSizeHex});\n`;
-    playerSpriteHelpers += `  load_vram(0x5000 + 4 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_u0, ${compiled.vramSizeHex});\n`;
-    playerSpriteHelpers += `  load_vram(0x5000 + 5 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_u1, ${compiled.vramSizeHex});\n`;
-    playerSpriteHelpers += `  load_vram(0x5000 + 6 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_d0, ${compiled.vramSizeHex});\n`;
-    playerSpriteHelpers += `  load_vram(0x5000 + 7 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_d1, ${compiled.vramSizeHex});\n`;
-    playerSpriteHelpers += `  load_palette(16, ${compiled.palName}, 1);\n`;
-    playerSpriteHelpers += `}\n\n`;
+    if (!emittedSpriteHelpers.has(helperName)) {
+      emittedSpriteHelpers.add(helperName);
+      playerSpriteHelpers += `void ${helperName}() {\n`;
+      playerSpriteHelpers += `  g_player_spr_vram_size = ${compiled.vramSizeHex};\n`;
+      playerSpriteHelpers += `  g_player_spr_size = ${compiled.sizeConst};\n`;
+      playerSpriteHelpers += `  g_actor_size[0] = ${compiled.sizeConst};\n`;
+      playerSpriteHelpers += `  g_player_bbox_left = ${compiled.bboxLeft};\n`;
+      playerSpriteHelpers += `  g_player_bbox_right = ${compiled.bboxRight};\n`;
+      playerSpriteHelpers += `  g_player_bbox_top = ${compiled.bboxTop};\n`;
+      playerSpriteHelpers += `  g_player_bbox_bottom = ${compiled.bboxBottom};\n`;
+      playerSpriteHelpers += `  g_actor_bbox_left[0] = ${compiled.bboxLeft};\n`;
+      playerSpriteHelpers += `  g_actor_bbox_right[0] = ${compiled.bboxRight};\n`;
+      playerSpriteHelpers += `  g_actor_bbox_top[0] = ${compiled.bboxTop};\n`;
+      playerSpriteHelpers += `  g_actor_bbox_bottom[0] = ${compiled.bboxBottom};\n`;
+      playerSpriteHelpers += `  load_vram(0x5000 + 0 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r0, ${compiled.vramSizeHex});\n`;
+      playerSpriteHelpers += `  load_vram(0x5000 + 1 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_r1, ${compiled.vramSizeHex});\n`;
+      playerSpriteHelpers += `  load_vram(0x5000 + 2 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_l0, ${compiled.vramSizeHex});\n`;
+      playerSpriteHelpers += `  load_vram(0x5000 + 3 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_l1, ${compiled.vramSizeHex});\n`;
+      playerSpriteHelpers += `  load_vram(0x5000 + 4 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_u0, ${compiled.vramSizeHex});\n`;
+      playerSpriteHelpers += `  load_vram(0x5000 + 5 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_u1, ${compiled.vramSizeHex});\n`;
+      playerSpriteHelpers += `  load_vram(0x5000 + 6 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_d0, ${compiled.vramSizeHex});\n`;
+      playerSpriteHelpers += `  load_vram(0x5000 + 7 * ${compiled.vramSizeHex}, ${compiled.symPrefix}_d1, ${compiled.vramSizeHex});\n`;
+      playerSpriteHelpers += `  load_palette(16, ${compiled.palName}, 1);\n`;
+      playerSpriteHelpers += `}\n\n`;
+    }
+
+    const stateHelperName = `load_player_sprite_${compiled.symPrefix.replace(/^player_spr_/, "")}_state`;
+    if (!emittedSpriteHelpers.has(stateHelperName)) {
+      emittedSpriteHelpers.add(stateHelperName);
+      let stateLoadCode = "";
+      if (compiled.compiledStates && compiled.compiledStates.length > 0) {
+        compiled.compiledStates.forEach((st: any) => {
+          stateLoadCode += `  g_actor_num_frames[0] = ${st.numFrames};\n`;
+          stateLoadCode += `  if (dir == 1) {\n`;
+          for (let f = 0; f < st.numFrames; f++) {
+            stateLoadCode += `    load_vram(0x5000 + ${f} * ${st.vramSizeHex}, ${st.symPrefix}_l${f}, ${st.vramSizeHex});\n`;
+          }
+          stateLoadCode += `  } else {\n`;
+          for (let f = 0; f < st.numFrames; f++) {
+            stateLoadCode += `    load_vram(0x5000 + ${f} * ${st.vramSizeHex}, ${st.symPrefix}_r${f}, ${st.vramSizeHex});\n`;
+          }
+          stateLoadCode += `  }\n`;
+        });
+      }
+      playerSpriteHelpers += `void ${stateHelperName}(int state, int dir) {\n${stateLoadCode}}\n\n`;
+    }
   });
 
   // Second pass: build the dispatcher — each case is now a single helper call
@@ -1214,6 +1291,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     if (compiled) {
       const helperName = `load_player_sprite_${compiled.symPrefix.replace(/^player_spr_/, "")}`;
       scenePlayerSpriteCases += `    case ${scNum}:\n      ${helperName}();\n      break;\n`;
+
+      const stateHelperName = `load_player_sprite_${compiled.symPrefix.replace(/^player_spr_/, "")}_state`;
+      scenePlayerSpriteStateCases += `    case ${scNum}:\n      ${stateHelperName}(state, dir);\n      break;\n`;
     }
   });
 
@@ -2547,13 +2627,34 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           stepCases += `      case ${stepIndex}:\n        projectile_launch(g_actor_x[${targetNum}] + (${offX}), g_actor_y[${targetNum}] + (${offY}), ${vx}, ${vy}, ${lifeFrames}, ${targetNum}, PROJ_VRAM_ADDR, PROJ_PALETTE, SZ_16x16);\n        return ${stepIndex + 1};\n`;
           stepIndex++;
         } else if (
+          evt.command === "EVENT_ACTOR_SET_STATE" ||
+          evt.command === "EVENT_ACTOR_SET_ANIMATION_STATE" ||
+          evt.command === "EVENT_ACTOR_STATE_SET"
+        ) {
+          const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
+          const stateName = String(evt.args?.spriteStateId || "").trim();
+          if (stateName && stateName.toLowerCase() !== "default") {
+            stepCases += `      case ${stepIndex}:\n        player_set_state(${targetNum}, 1);\n        return ${stepIndex + 1};\n`;
+          } else {
+            stepCases += `      case ${stepIndex}:\n        player_set_state(${targetNum}, 0);\n        return ${stepIndex + 1};\n`;
+          }
+          stepIndex++;
+        } else if (
+          evt.command === "EVENT_REMOVE_INPUT_SCRIPT" ||
+          evt.command === "EVENT_INPUT_SCRIPT_REMOVE" ||
+          evt.command === "EVENT_DETACH_SCRIPT"
+        ) {
+          const mask = parseInputButtonMask(evt.args?.input);
+          const maskHex = `0x${mask.toString(16).toUpperCase().padStart(2, "0")}`;
+          stepCases += `      case ${stepIndex}:\n        g_input_script_disabled_mask |= ${maskHex};\n        return ${stepIndex + 1};\n`;
+          stepIndex++;
+        } else if (
           evt.command === "EVENT_ACTOR_EFFECTS" ||
           evt.command === "EVENT_ACTOR_MOVE_CANCEL" ||
           evt.command === "EVENT_ACTOR_GET_DIRECTION" ||
           evt.command === "EVENT_ACTOR_GET_POSITION" ||
           evt.command === "EVENT_ACTOR_SET_ANIMATE" ||
           evt.command === "EVENT_ACTOR_SET_SPRITE" ||
-          evt.command === "EVENT_ACTOR_SET_STATE" ||
           evt.command === "EVENT_ACTOR_SET_COLLISION_BOX" ||
           evt.command === "EVENT_ACTOR_INVOKE" ||
           evt.command === "EVENT_ACTOR_START_UPDATE" ||
@@ -2873,6 +2974,8 @@ ${sceneInitCases}
 }
 
 int check_scene_input(int scene_num, unsigned int pressed) {
+  pressed &= ~g_input_script_disabled_mask;
+  if (!pressed) return 0;
 ${sceneInputCheckCases}  return 0;
 }
 
@@ -2900,6 +3003,34 @@ ${playerSpriteHelpers}void load_scene_player_sprite(int scene_num) {
   switch (scene_num) {
 ${scenePlayerSpriteCases}    default:
       break;
+  }
+}
+
+void load_scene_player_sprite_state(int scene_num, int state, int dir) {
+  switch (scene_num) {
+${scenePlayerSpriteStateCases}    default:
+      break;
+  }
+}
+
+void player_set_state(int actor_num, int state) {
+  if (actor_num == 0) {
+    if (state > 0) {
+      g_actor_state[0] = state;
+      g_player_anim_timer = 0;
+      g_player_anim_frame = 0;
+      load_scene_player_sprite_state(g_current_scene, state, g_actor_dir[0]);
+      g_actor_tile_id[0] = 0x5000;
+    } else {
+      g_actor_state[0] = 0;
+      g_actor_num_frames[0] = 2;
+      g_player_anim_timer = 0;
+      g_player_anim_frame = 0;
+      load_scene_player_sprite(g_current_scene);
+      update_player_anim(0);
+    }
+  } else if (actor_num > 0 && actor_num < g_actor_count) {
+    g_actor_state[actor_num] = state;
   }
 }
 

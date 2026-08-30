@@ -62,7 +62,13 @@ int g_actor_bbox_right[PCE_MAX_ACTORS];
 int g_actor_bbox_top[PCE_MAX_ACTORS];
 int g_actor_bbox_bottom[PCE_MAX_ACTORS];
 int g_actor_parts[PCE_MAX_ACTORS];
+int g_actor_state[PCE_MAX_ACTORS];
+unsigned int g_input_script_disabled_mask;
+int g_player_anim_timer;
+int g_player_anim_frame;
 int g_actor_count;
+
+void player_set_state(int actor_num, int state);
 
 /* Global camera state */
 int g_cam_x;
@@ -153,7 +159,7 @@ int interact_trigger(int scene_num, int trigger_num);
 #define PLAT_MAX_FALL   39
 #endif
 #ifndef PLAT_JUMP_BTN
-#define PLAT_JUMP_BTN   (JOY_I | JOY_A | JOY_II | JOY_B)
+#define PLAT_JUMP_BTN   (JOY_I | JOY_A)
 #endif
 
 /* Adventure / Top-down speeds */

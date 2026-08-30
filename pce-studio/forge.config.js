@@ -38,6 +38,7 @@ module.exports = {
     {
       name: "@electron-forge/plugin-webpack",
       config: {
+        loggerPort: 9100,
         devContentSecurityPolicy:
           "default-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-eval' 'unsafe-inline' data:; worker-src 'self' blob:;",
         devServer: { liveReload: false },

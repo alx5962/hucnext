@@ -65,7 +65,7 @@ workerCtx.onmessage = async (evt) => {
 
   // Colorize or ChromaKey
   const imageData = ctx.getImageData(0, 0, width, height);
-  if (palette && palette.length > 0) {
+  if (palette && palette.length > 0 && evt.data.previewAsMono) {
     colorizeSpriteData(imageData.data, objPalette, palette, colorCorrection);
   } else {
     chromaKeyData(imageData.data);

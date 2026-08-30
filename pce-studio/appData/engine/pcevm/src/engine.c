@@ -5194,6 +5194,8 @@ void load_scene(int scene_num, int player_x, int player_y) {
   g_dialogue_active = 0;
   g_choice_active = 0;
   g_dialogue_timer = 0;
+  g_actor_state[0] = 0;
+  g_input_script_disabled_mask = 0;
 
   set_font_pal(15);
   set_font_color(1, 2);
@@ -5557,7 +5559,7 @@ void check_actor_interaction(unsigned int input) {
     }
   }
 
-  if (pressed & (JOY_I | JOY_II | JOY_A | JOY_B)) {
+  if (pressed & (JOY_I | JOY_A)) {
     for (i = 1; i < g_actor_count; i++) {
       if (g_actor_active[i]) {
         dx = g_actor_x[0] - g_actor_x[i];
@@ -5713,11 +5715,24 @@ void check_actor_interaction(unsigned int input) {
   }
 }
 
-int g_player_anim_timer = 0;
-int g_player_anim_frame = 0;
-
 void update_player_anim(int is_moving) {
   int dir;
+  int num_st_frames;
+  if (g_actor_state[0] > 0) {
+    num_st_frames = g_actor_num_frames[0];
+    if (num_st_frames <= 0) num_st_frames = 1;
+    g_player_anim_timer++;
+    if (g_player_anim_timer >= 6) {
+      g_player_anim_timer = 0;
+      g_player_anim_frame++;
+      if (g_player_anim_frame >= num_st_frames) {
+        g_player_anim_frame = num_st_frames - 1;
+      }
+    }
+    g_actor_tile_id[0] =
+        0x5000 + g_player_anim_frame * g_player_spr_vram_size;
+    return;
+  }
   dir = g_actor_dir[0];
   if (is_moving) {
     g_player_anim_timer++;
@@ -6058,7 +6073,7 @@ void update_pointnclick(void) {
     g_actor_tile_id[0] = 0x5000 + g_player_anim_frame * g_player_spr_vram_size;
 
     /* Handle interaction click */
-    if (pressed & (JOY_I | JOY_II | JOY_A | JOY_B)) {
+    if (pressed & (JOY_I | JOY_A)) {
       if (hit_actor > 0) {
         interact_actor(g_current_scene, hit_actor);
       } else if (hit_trigger >= 0) {
