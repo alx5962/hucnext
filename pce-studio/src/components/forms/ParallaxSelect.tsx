@@ -76,6 +76,10 @@ const LayerRow = styled.div`
 export const defaultValues: SceneParallaxLayer[] = [
   {
     height: 3,
+    speed: 3,
+  },
+  {
+    height: 3,
     speed: 2,
   },
   {
@@ -194,6 +198,7 @@ const ParallaxSelect = ({
       { value: 1, label: `1 ${l10n("FIELD_LAYER")}` },
       { value: 2, label: `2 ${l10n("FIELD_LAYERS")}` },
       { value: 3, label: `3 ${l10n("FIELD_LAYERS")}` },
+      { value: 4, label: `4 ${l10n("FIELD_LAYERS")}` },
     ],
     [],
   );
@@ -270,23 +275,15 @@ const ParallaxSelect = ({
                   }}
                 />
                 <FormField name={`layer_${layerIndex}_speed`}>
-                  {layerIndex === 2 && value.length === 3 ? (
-                    <ParallaxSpeedSelect
-                      name={`layer_${layerIndex}_speed`}
-                      value={0}
-                      disabled
-                    />
-                  ) : (
-                    <ParallaxSpeedSelect
-                      name={`layer_${layerIndex}_speed`}
-                      value={layer.speed}
-                      onChange={(speed) => {
-                        onChange?.(
-                          updateParallaxSpeed(value, layerIndex, speed),
-                        );
-                      }}
-                    />
-                  )}
+                  <ParallaxSpeedSelect
+                    name={`layer_${layerIndex}_speed`}
+                    value={layer.speed}
+                    onChange={(speed) => {
+                      onChange?.(
+                        updateParallaxSpeed(value, layerIndex, speed),
+                      );
+                    }}
+                  />
                 </FormField>
               </LayerRow>
             </LayerWrapper>
