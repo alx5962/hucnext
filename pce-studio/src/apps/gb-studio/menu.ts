@@ -1,6 +1,7 @@
-import openAboutWindow from "about-window";
+import fs from "fs";
 import {
   app,
+  BrowserWindow,
   Menu,
   MenuItem,
   MenuItemConstructorOptions,
@@ -24,6 +25,15 @@ declare const COMMITHASH: string;
 const isDevMode = process.execPath.match(/[\\/]electron/);
 
 let menu: Menu;
+let aboutWindow: BrowserWindow | null = null;
+
+const escapeHtml = (str: string) =>
+  str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 
 const listeners: Record<MenuListenerKey, MenuListenerFn[]> = {
   new: [],
@@ -77,16 +87,189 @@ const off = (event: MenuListenerKey, fn: MenuListenerFn) => {
 };
 
 const openAbout = () => {
-  return openAboutWindow({
-    icon_path: `${assetsRoot}/app/icon/app_icon.png`,
-    bug_link_text: `${l10n("FIELD_REPORT_BUG")} (git: ${COMMITHASH})`,
-    // eslint-disable-next-line camelcase
-    win_options: {
-      title: l10n("MENU_ABOUT"),
+  if (aboutWindow && !aboutWindow.isDestroyed()) {
+    aboutWindow.focus();
+    return aboutWindow;
+  }
+
+  const appName = app.name || "ALXPCE Studio";
+  const version = app.getVersion();
+  const description = l10n("GBSTUDIO_DESCRIPTION");
+  const copyright = l10n("GBSTUDIO_COPYRIGHT");
+  const commit = typeof COMMITHASH !== "undefined" ? COMMITHASH : "";
+  const reportBugText = `${l10n("FIELD_REPORT_BUG")}${commit ? ` (git: ${commit})` : ""}`;
+  const reportBugUrl = "https://github.com/alx5962/hucnext/issues";
+  const title = l10n("MENU_ABOUT");
+
+  let iconDataUrl = "";
+  try {
+    const iconPath = `${assetsRoot}/app/icon/app_icon.png`;
+    if (fs.existsSync(iconPath)) {
+      const iconBuffer = fs.readFileSync(iconPath);
+      iconDataUrl = `data:image/png;base64,${iconBuffer.toString("base64")}`;
+    }
+  } catch (e) {
+    // fallback if file read fails
+  }
+
+  aboutWindow = new BrowserWindow({
+    title,
+    width: 440,
+    height: 530,
+    useContentSize: true,
+    resizable: false,
+    maximizable: false,
+    minimizable: false,
+    fullscreenable: false,
+    autoHideMenuBar: true,
+    show: false,
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
     },
-    description: l10n("GBSTUDIO_DESCRIPTION"),
-    copyright: l10n("GBSTUDIO_COPYRIGHT"),
   });
+
+  aboutWindow.setMenu(null);
+
+  const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(title)}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #1e1e24;
+      color: #e0e0e0;
+      padding: 28px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      user-select: none;
+    }
+    .icon-container {
+      margin-bottom: 14px;
+    }
+    .app-icon {
+      width: 96px;
+      height: 96px;
+      border-radius: 20px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+    }
+    .app-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 3px;
+    }
+    .app-version {
+      font-size: 13px;
+      color: #9e9e9e;
+      margin-bottom: 12px;
+    }
+    .app-description {
+      font-size: 13px;
+      line-height: 1.4;
+      color: #c8c8d0;
+      margin-bottom: 10px;
+      max-width: 360px;
+    }
+    .app-copyright {
+      font-size: 12px;
+      color: #787888;
+      margin-bottom: 16px;
+    }
+    .versions-table {
+      width: 100%;
+      max-width: 340px;
+      background: #282832;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 12px;
+      margin-bottom: 16px;
+      border-collapse: collapse;
+      border: 1px solid #363644;
+    }
+    .versions-table td {
+      padding: 3px 8px;
+    }
+    .versions-table td:first-child {
+      text-align: left;
+      color: #9090a8;
+    }
+    .versions-table td:last-child {
+      text-align: right;
+      color: #c0c0d8;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    }
+    .bug-link {
+      display: inline-block;
+      font-size: 12px;
+      color: #58a6ff;
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: rgba(88, 166, 255, 0.1);
+      border: 1px solid rgba(88, 166, 255, 0.25);
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .bug-link:hover {
+      background: rgba(88, 166, 255, 0.2);
+      border-color: rgba(88, 166, 255, 0.45);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="icon-container">
+    ${iconDataUrl ? `<img class="app-icon" src="${iconDataUrl}" alt="${escapeHtml(appName)}">` : ""}
+  </div>
+  <div class="app-title">${escapeHtml(appName)}</div>
+  <div class="app-version">v${escapeHtml(version)}</div>
+  <div class="app-description">${escapeHtml(description)}</div>
+  <div class="app-copyright">${escapeHtml(copyright)}</div>
+  <table class="versions-table">
+    <tr><td>Electron</td><td>${escapeHtml(process.versions.electron || "")}</td></tr>
+    <tr><td>Chromium</td><td>${escapeHtml(process.versions.chrome || "")}</td></tr>
+    <tr><td>Node.js</td><td>${escapeHtml(process.versions.node || "")}</td></tr>
+    <tr><td>V8</td><td>${escapeHtml(process.versions.v8 || "")}</td></tr>
+  </table>
+  <div>
+    <a class="bug-link" href="${escapeHtml(reportBugUrl)}" target="_blank">${escapeHtml(reportBugText)}</a>
+  </div>
+</body>
+</html>`;
+
+  aboutWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url);
+    return { action: "deny" };
+  });
+
+  aboutWindow.webContents.on("will-navigate", (e, url) => {
+    e.preventDefault();
+    shell.openExternal(url);
+  });
+
+  aboutWindow.webContents.on("before-input-event", (event, input) => {
+    if (input.key === "Escape") {
+      aboutWindow?.close();
+    }
+  });
+
+  aboutWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+
+  aboutWindow.once("ready-to-show", () => {
+    aboutWindow?.show();
+  });
+
+  aboutWindow.on("closed", () => {
+    aboutWindow = null;
+  });
+
+  return aboutWindow;
 };
 
 interface BuildMenuProps {
