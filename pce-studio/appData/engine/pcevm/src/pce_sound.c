@@ -171,9 +171,15 @@ void load_wave_ram_ch(unsigned char ch) {
   /* Reset internal waveform write index: 0x40 (DDA on, ch off), then 0x00 (DDA off, ch off) */
   hw_set_ctrl(0x40);
   hw_set_ctrl(0x00);
-  for (g_t_i = 0; g_t_i < 32; g_t_i++) {
-    hw_set_wave_data(g_wave_buf[g_t_i]);
-  }
+#asm
+  ldx #0
+.load_wave_loop:
+  lda _g_wave_buf, x
+  sta psg_wavebuf
+  inx
+  cpx #32
+  bne .load_wave_loop
+#endasm
 }
 
 unsigned short get_track_note_freq(unsigned char track, unsigned char note) {
