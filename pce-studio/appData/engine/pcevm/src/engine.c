@@ -1,6 +1,5 @@
 #include "include/engine.h"
 #include "include/pce_sound.h"
-#include "src/dialogue_font.h"
 
 void show_dialogue(const char *msg);
 void hide_dialogue(void);
@@ -5221,9 +5220,10 @@ void engine_init(void) {
   vm_init();
   projectile_init();
 
-  load_vram(FONT_VRAM_ADDR, dialogue_font_chr, 96 * 16);
-  set_font_addr(FONT_VRAM_ADDR);
   set_font_pal(15);
+  set_font_color(1, 3);
+  load_default_font(0, FONT_VRAM_ADDR);
+  set_font_addr(FONT_VRAM_ADDR);
   set_color(241, 0x1FF); /* Color 1 = Crisp White text */
 
   trigger_load_all();
@@ -5346,9 +5346,10 @@ void show_dialogue(const char *msg) {
   load_palette(UI_FRAME_PAL, ui_frame_pal, 1);
 #endif
 
-  load_vram(FONT_VRAM_ADDR, dialogue_font_chr, 96 * 16);
-  set_font_addr(FONT_VRAM_ADDR);
   set_font_pal(15);
+  set_font_color(1, 3);
+  load_default_font(0, FONT_VRAM_ADDR);
+  set_font_addr(FONT_VRAM_ADDR);
   set_color(241, 0x000); /* Color 1 = Solid Black text */
   set_color(243, 0x1FF); /* Color 3 = Solid White background */
 
@@ -5408,9 +5409,10 @@ void render_choice_dialogue(void) {
   load_palette(UI_FRAME_PAL, ui_frame_pal, 1);
 #endif
 
-  load_vram(FONT_VRAM_ADDR, dialogue_font_chr, 96 * 16);
-  set_font_addr(FONT_VRAM_ADDR);
   set_font_pal(15);
+  set_font_color(1, 3);
+  load_default_font(0, FONT_VRAM_ADDR);
+  set_font_addr(FONT_VRAM_ADDR);
   set_color(241, 0x000); /* Color 1 = Solid Black text */
   set_color(243, 0x1FF); /* Color 3 = Solid White background */
 
