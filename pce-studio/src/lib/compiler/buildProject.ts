@@ -579,10 +579,36 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     } catch (e) { }
   }
 
-  let currentAssetBank = 3;
+  let currentAssetBank = 4;
   let bgAsmDirectives = "";
   const bgSymbolMap = new Map<string, string>();
   let bgUniqueIndex = 0;
+
+  const getEstimatedChrBanks = (pngPath: string, dimW: number, dimH: number): number => {
+    try {
+      if (fs.existsSync(pngPath)) {
+        const pngBuf = fs.readFileSync(pngPath);
+        const { PNG } = require("pngjs");
+        const png = PNG.sync.read(pngBuf);
+        const uniqueTiles = new Set<string>();
+        for (let ty = 0; ty < Math.min(png.height, dimH * 8); ty += 8) {
+          for (let tx = 0; tx < Math.min(png.width, dimW * 8); tx += 8) {
+            const tileBytes: number[] = [];
+            for (let dy = 0; dy < 8; dy++) {
+              for (let dx = 0; dx < 8; dx++) {
+                const pIdx = ((ty + dy) * png.width + (tx + dx)) * 4;
+                tileBytes.push(png.data[pIdx], png.data[pIdx + 1], png.data[pIdx + 2]);
+              }
+            }
+            uniqueTiles.add(tileBytes.join(","));
+          }
+        }
+        const numTiles = Math.max(1, uniqueTiles.size);
+        return Math.max(1, Math.ceil((numTiles * 32 + 512) / 8192));
+      }
+    } catch (e) { }
+    return Math.max(1, Math.ceil((dimW * dimH * 32 + 512) / 8192));
+  };
 
   sceneBgFilenames.forEach((bgFile, idx) => {
     const scNum = idx + 1;
@@ -592,11 +618,19 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     if (!bgSymbolMap.has(key)) {
       const symPrefix = `bg_file_${bgUniqueIndex++}`;
       bgSymbolMap.set(key, symPrefix);
-      bgAsmDirectives += `\n .bank ${currentAssetBank++}\n`;
+
+      const srcPngPath = pathModule.join(destBgDir, bgFile);
+      const chrBanks = getEstimatedChrBanks(srcPngPath, dim.width, dim.height);
+      const batBanks = Math.max(1, Math.ceil((dim.width * dim.height * 2) / 8192));
+
+      bgAsmDirectives += `\n .bank ${currentAssetBank}\n .org $6000\n`;
       bgAsmDirectives += `_${symPrefix}_chr .incchr "assets/backgrounds/${bgFile}",0,0,${dim.width},${dim.height},1\n`;
       bgAsmDirectives += `_${symPrefix}_pal .incpal "assets/backgrounds/${bgFile}"\n`;
-      bgAsmDirectives += `\n .bank ${currentAssetBank++}\n`;
+      currentAssetBank += chrBanks;
+
+      bgAsmDirectives += `\n .bank ${currentAssetBank}\n .org $6000\n`;
       bgAsmDirectives += `_${symPrefix}_bat .incbat "assets/backgrounds/${bgFile}",$1000,0,0,${dim.width},${dim.height},_${symPrefix}_chr\n`;
+      currentAssetBank += batBanks;
     }
 
     const symPrefix = bgSymbolMap.get(key)!;
@@ -646,6 +680,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 #asm
  .data
  .bank ${currentAssetBank++}
+ .org $6000
 #endasm
 #incchr(ui_frame_chr, "assets/ui/frame.png", 0, 0, 3, 3)
 #incpal(ui_frame_pal, "assets/ui/frame.png")
@@ -1119,6 +1154,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 #asm
  .data
  .bank ${currentAssetBank++}
+ .org $6000
 #endasm
 #incspr(${symPrefix}_r0, "${relR0}", 0, 0, ${vramWidth16}, ${height16})
 #incpal(${palName}, "${relR0}")
@@ -1194,6 +1230,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 #asm
  .data
  .bank ${currentAssetBank++}
+ .org $6000
 #endasm
 #incspr(${stateSymPrefix}_r${fIdx}, "${relPcxR}", 0, 0, ${vramWidth16}, ${height16})
 #incspr(${stateSymPrefix}_l${fIdx}, "${relPcxL}", 0, 0, ${vramWidth16}, ${height16})
@@ -2827,7 +2864,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       }
       parallaxCode = layerLines;
     }
-    sceneBackgroundCases += `    case ${scNum}:\n      g_current_scene_type = SCENE_${scNum}_TYPE;\n      g_collision_width = SCENE_${scNum}_WIDTH;\n      g_collision_height = SCENE_${scNum}_HEIGHT;\n      set_screen_size(SCENE_${scNum}_SCR_SIZE);\n      camera_set_bounds(SCENE_${scNum}_WIDTH, SCENE_${scNum}_HEIGHT);\n${parallaxCode}      load_background(bg_scene${scNum}_chr, bg_scene${scNum}_pal, bg_scene${scNum}_bat, ${dim.width}, ${dim.height});\n      set_map_data(scene_${scNum}_collisions, ${dim.width}, ${dim.height});\n      break;\n`;
+    const bgFile = sceneBgFilenames[idx];
+    const key = `${bgFile}|${dim.width}|${dim.height}`;
+    const symPrefix = bgSymbolMap.get(key) || `bg_file_0`;
+    sceneBackgroundCases += `    case ${scNum}:\n      g_current_scene_type = SCENE_${scNum}_TYPE;\n      g_collision_width = SCENE_${scNum}_WIDTH;\n      g_collision_height = SCENE_${scNum}_HEIGHT;\n      set_screen_size(SCENE_${scNum}_SCR_SIZE);\n      camera_set_bounds(SCENE_${scNum}_WIDTH, SCENE_${scNum}_HEIGHT);\n${parallaxCode}      load_background(${symPrefix}_chr, ${symPrefix}_pal, ${symPrefix}_bat, ${dim.width}, ${dim.height});\n      set_map_data(scene_${scNum}_collisions, ${dim.width}, ${dim.height});\n      break;\n`;
   });
 
   // Build one helper per scene for actor loading, then a tiny dispatcher.
@@ -3099,6 +3139,7 @@ ${collisionIncludes}
 #asm
  .data
  .bank ${currentAssetBank++}
+ .org $6000
 #endasm
 ${musicIncludes}
 #asm
