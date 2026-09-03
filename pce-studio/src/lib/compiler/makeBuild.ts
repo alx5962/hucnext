@@ -76,6 +76,93 @@ export const makeBuild = async ({
     }
 
     progress(`HuC compilation output:\n${stdout}`);
+
+    // Verify that CONST_BANK (Bank 2) and all asset data banks did not overflow or overlap
+    const symPath = Path.join(buildRoot, "main.sym");
+    if (fs.existsSync(symPath)) {
+      const symContent = await fs.readFile(symPath, "utf8");
+      const lines = symContent.split("\n");
+      const bankSymbols = new Map<number, Array<{ name: string; addr: number }>>();
+      let maxBank = 0;
+
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        if (parts.length >= 3) {
+          const bankHex = parts[0];
+          if (!/^[0-9a-fA-F]{1,2}$/.test(bankHex)) continue;
+          const bankNum = parseInt(bankHex, 16);
+          const addr = parseInt(parts[1], 16);
+          const symName = parts[2];
+
+          if (bankNum < 200 && bankNum > maxBank) {
+            maxBank = bankNum;
+          }
+
+          // Check Bank 2 (CONST_BANK) overflow past $5FFF
+          // Constant data (strings, raw tables) is placed at $4000-$5FFF. __huc_rodata_end marks the end.
+          if (bankNum === 2 && symName === "__huc_rodata_end" && addr >= 0x6000) {
+            throw new Error(
+              `CRITICAL BUILD ERROR: CONST_BANK (Bank 2) overflow detected at symbol '${symName}' (address $${parts[1]}). ` +
+              `Bank 2 maximum address is $5FFF (8192 bytes). Overflow corrupts dialogues and game memory.`
+            );
+          }
+
+          // Check PC Engine 128-bank (1MB) hardware limit
+          if (bankNum > 127 && bankNum < 200) {
+            throw new Error(
+              `CRITICAL BUILD ERROR: ROM bank index out of range ($${bankHex} / ${bankNum} > 127). ` +
+              `PC Engine standard ROMs are limited to 128 banks (1 Megabyte).`
+            );
+          }
+
+          // Check asset symbols: all assets (.org $6000) must stay within $6000-$7FFF (8192 bytes)
+          const isAssetSymbol =
+            symName.startsWith("_bg_") ||
+            symName.startsWith("_actor_sc") ||
+            symName.startsWith("_player_spr_") ||
+            symName.startsWith("_col_data_") ||
+            symName.startsWith("col_data_") ||
+            symName.startsWith("_song_") ||
+            symName.startsWith("_proj_") ||
+            symName.startsWith("_ui_frame_");
+
+          if (isAssetSymbol) {
+            if (addr >= 0x8000) {
+              throw new Error(
+                `CRITICAL BUILD ERROR: Asset bank overflow detected in Bank $${bankHex} (${bankNum}) at symbol '${symName}' (address $${parts[1]}). ` +
+                `Assets mapped to MPR3 must remain within $6000-$7FFF (8192 bytes). Overflow corrupts sprites, collisions, or music.`
+              );
+            }
+
+            if (!bankSymbols.has(bankNum)) {
+              bankSymbols.set(bankNum, []);
+            }
+            bankSymbols.get(bankNum)!.push({ name: symName, addr });
+          }
+        }
+      }
+
+      // Check for illegal bank overlap: background banks must never contain non-background assets
+      for (const [bNum, symbols] of bankSymbols.entries()) {
+        const hasBg = symbols.some(s => s.name.startsWith("_bg_file_"));
+        const hasOtherAsset = symbols.some(s =>
+          s.name.startsWith("_ui_frame_") ||
+          s.name.startsWith("_col_data_") ||
+          s.name.startsWith("_actor_sc") ||
+          s.name.startsWith("_player_spr_") ||
+          s.name.startsWith("_proj_")
+        );
+        if (hasBg && hasOtherAsset) {
+          const names = symbols.map(s => s.name).join(", ");
+          throw new Error(
+            `CRITICAL BUILD ERROR: Illegal bank collision in Bank $${bNum.toString(16).toUpperCase()} (${bNum}). ` +
+            `Dedicated background data collided with other game assets: [${names}].`
+          );
+        }
+      }
+
+      progress(`[ROM Bank Validator] All checks passed! Max bank: ${maxBank}/127 (${Math.round(((maxBank + 1) / 128) * 100)}% capacity used).`);
+    }
   } catch (err: any) {
     const errText = (err.stdout ? String(err.stdout) : "") + "\n" + (err.stderr ? String(err.stderr) : "");
     const cleanErr = errText.trim() || err.message || "HuC compilation failed";

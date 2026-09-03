@@ -579,7 +579,65 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     } catch (e) { }
   }
 
-  let currentAssetBank = 4;
+  class RomBankManager {
+    private currentBank: number;
+    private currentOffset: number;
+    private allocatedBanks = new Map<number, { owner: string; bytesUsed: number }>();
+
+    constructor(startBank = 5) {
+      this.currentBank = startBank;
+      this.currentOffset = 0x6000;
+    }
+
+    allocateDedicatedBanks(numBanks: number, owner: string): { startBank: number; endBank: number } {
+      if (this.currentOffset > 0x6000) {
+        this.currentBank++;
+        this.currentOffset = 0x6000;
+      }
+      const startBank = this.currentBank;
+      for (let i = 0; i < numBanks; i++) {
+        this.allocatedBanks.set(startBank + i, { owner, bytesUsed: 8192 });
+      }
+      this.currentBank += numBanks;
+      this.currentOffset = 0x6000;
+      return { startBank, endBank: startBank + numBanks - 1 };
+    }
+
+    allocatePacked(sizeInBytes: number, align = 1, owner = ""): { bank: number; offset: number; isNewBank: boolean } {
+      if (align > 1) {
+        const rem = this.currentOffset % align;
+        if (rem !== 0) this.currentOffset += (align - rem);
+      }
+      let isNewBank = false;
+      if (this.currentOffset + sizeInBytes > 0x8000) {
+        this.currentBank++;
+        this.currentOffset = 0x6000;
+        isNewBank = true;
+      }
+      const bank = this.currentBank;
+      const offset = this.currentOffset;
+      this.currentOffset += sizeInBytes;
+
+      const existing = this.allocatedBanks.get(bank) || { owner, bytesUsed: 0 };
+      existing.bytesUsed = this.currentOffset - 0x6000;
+      this.allocatedBanks.set(bank, existing);
+
+      return { bank, offset, isNewBank };
+    }
+
+    sealCurrentBank(): void {
+      if (this.currentOffset > 0x6000) {
+        this.currentBank++;
+        this.currentOffset = 0x6000;
+      }
+    }
+
+    getMaxBank(): number {
+      return this.currentBank;
+    }
+  }
+
+  const bankManager = new RomBankManager(5);
   let bgAsmDirectives = "";
   const bgSymbolMap = new Map<string, string>();
   let bgUniqueIndex = 0;
@@ -621,16 +679,16 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
       const srcPngPath = pathModule.join(destBgDir, bgFile);
       const chrBanks = getEstimatedChrBanks(srcPngPath, dim.width, dim.height);
-      const batBanks = Math.max(1, Math.ceil((dim.width * dim.height * 2) / 8192));
+      const batBanks = Math.max(1, Math.ceil(((dim.width * dim.height * 2) + 512) / 8192));
 
-      bgAsmDirectives += `\n .bank ${currentAssetBank}\n .org $6000\n`;
+      const chrAlloc = bankManager.allocateDedicatedBanks(chrBanks, `${symPrefix}_chr`);
+      bgAsmDirectives += `\n .bank ${chrAlloc.startBank}\n .org $6000\n`;
       bgAsmDirectives += `_${symPrefix}_chr .incchr "assets/backgrounds/${bgFile}",0,0,${dim.width},${dim.height},1\n`;
-      bgAsmDirectives += `_${symPrefix}_pal .incpal "assets/backgrounds/${bgFile}"\n`;
-      currentAssetBank += chrBanks;
 
-      bgAsmDirectives += `\n .bank ${currentAssetBank}\n .org $6000\n`;
+      const batAlloc = bankManager.allocateDedicatedBanks(batBanks, `${symPrefix}_bat`);
+      bgAsmDirectives += `\n .bank ${batAlloc.startBank}\n .org $6000\n`;
+      bgAsmDirectives += `_${symPrefix}_pal .incpal "assets/backgrounds/${bgFile}"\n`;
       bgAsmDirectives += `_${symPrefix}_bat .incbat "assets/backgrounds/${bgFile}",$1000,0,0,${dim.width},${dim.height},_${symPrefix}_chr\n`;
-      currentAssetBank += batBanks;
     }
 
     const symPrefix = bgSymbolMap.get(key)!;
@@ -640,6 +698,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   });
 
   const bgDirectives = `#asm\n .data\n${bgAsmDirectives} .code\n#endasm\n`;
+  bankManager.sealCurrentBank();
 
   // Process UI frame.png
   const destUiDir = pathModule.join(buildDir, "assets", "ui");
@@ -676,11 +735,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     } catch (e) { }
   }
 
+  const uiAlloc = bankManager.allocatePacked(9 * 32 + 512, 1, "ui_frame");
   const uiFrameDirectives = `
 #asm
  .data
- .bank ${currentAssetBank++}
- .org $6000
+ .bank ${uiAlloc.bank}
+ .org $${uiAlloc.offset.toString(16)}
 #endasm
 #incchr(ui_frame_chr, "assets/ui/frame.png", 0, 0, 3, 3)
 #incpal(ui_frame_pal, "assets/ui/frame.png")
@@ -759,6 +819,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     if (!colSymbolMap.has(key)) {
       symName = `col_data_${colUniqueIndex++}`;
       colSymbolMap.set(key, symName);
+      const alloc = bankManager.allocatePacked(colBytes.length, 1, `col_${symName}`);
+      if (alloc.isNewBank || colUniqueIndex === 1) {
+        collisionIncludes += `\n#asm\n .data\n .bank ${alloc.bank}\n .org $${alloc.offset.toString(16)}\n#endasm\n`;
+      }
       collisionIncludes += `#incbin(${symName}, "${colFileName}")\n`;
       collisionIncludes += `#define scene_${scNum}_collisions ${symName}\n`;
     } else {
@@ -768,6 +832,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
     collisionIncludes += `#define HAS_SCENE_${scNum}_COLLISIONS 1\n`;
   });
+
+  if (collisionIncludes) {
+    collisionIncludes += `\n#asm\n .code\n#endasm\n`;
+  }
 
   const parseNumber = (val: any, fallback: number) => {
     if (typeof val === "number" && !isNaN(val)) return Math.floor(val);
@@ -1150,11 +1218,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       const relD0 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxD0).replace(/\\/g, "/")}`;
       const relD1 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxD1).replace(/\\/g, "/")}`;
 
+      const baseBytes = (8 * vramWidth16 * height16 * 128) + 512;
+      const baseAlloc = bankManager.allocatePacked(baseBytes, 1, `player_${symPrefix}`);
       playerDirectives += `
 #asm
  .data
- .bank ${currentAssetBank++}
- .org $6000
+ .bank ${baseAlloc.bank}
+ .org $${baseAlloc.offset.toString(16)}
 #endasm
 #incspr(${symPrefix}_r0, "${relR0}", 0, 0, ${vramWidth16}, ${height16})
 #incpal(${palName}, "${relR0}")
@@ -1226,11 +1296,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           const relPcxR = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxR).replace(/\\/g, "/")}`;
           const relPcxL = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxL).replace(/\\/g, "/")}`;
 
+          const stateFrameBytes = 2 * (vramWidth16 * height16 * 128);
+          const stateAlloc = bankManager.allocatePacked(stateFrameBytes, 1, `player_${stateSymPrefix}_f${fIdx}`);
           playerDirectives += `
 #asm
  .data
- .bank ${currentAssetBank++}
- .org $6000
+ .bank ${stateAlloc.bank}
+ .org $${stateAlloc.offset.toString(16)}
 #endasm
 #incspr(${stateSymPrefix}_r${fIdx}, "${relPcxR}", 0, 0, ${vramWidth16}, ${height16})
 #incspr(${stateSymPrefix}_l${fIdx}, "${relPcxL}", 0, 0, ${vramWidth16}, ${height16})
@@ -1450,6 +1522,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
   // Dynamic actors processing for all scenes
   let actorDirectives = "";
+  let actorDirectivesStarted = false;
   let actorDefines = "";
 
   allScenes.forEach((scene: any, sceneIdx: number) => {
@@ -1596,16 +1669,22 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
             const relPcxF0 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxF0).replace(/\\/g, "/")}`;
             const relPcxF1 = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxF1).replace(/\\/g, "/")}`;
+            const frameBytes = (2 * w16 * h16 * 128) + (fIdx === 0 ? 512 : 0);
+            const alloc = bankManager.allocatePacked(frameBytes, 1, `actor_sc${sceneNum}_${actorNum}_f${fIdx}`);
+            if (alloc.isNewBank || !actorDirectivesStarted) {
+              actorDirectivesStarted = true;
+              actorDirectives += `\n#asm\n .data\n .bank ${alloc.bank}\n .org $${alloc.offset.toString(16)}\n#endasm\n`;
+            }
             actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_f${fIdx}_p0_spr, "${relPcxF0}", 0, 0, ${w16}, ${h16})\n`;
             actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_f${fIdx}_p1_spr, "${relPcxF1}", 0, 0, ${w16}, ${h16})\n`;
             if (fIdx === 0) {
-              actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_p0_spr, "${relPcxF0}", 0, 0, ${w16}, ${h16})\n`;
-              actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_p1_spr, "${relPcxF1}", 0, 0, ${w16}, ${h16})\n`;
               actorDirectives += `#incpal(actor_sc${sceneNum}_${actorNum}_pal, "${relPcxF0}")\n`;
+              actorDefines += `#define actor_sc${sceneNum}_${actorNum}_p0_spr actor_sc${sceneNum}_${actorNum}_f0_p0_spr\n`;
+              actorDefines += `#define actor_sc${sceneNum}_${actorNum}_p1_spr actor_sc${sceneNum}_${actorNum}_f0_p1_spr\n`;
               if (aIdx === 0) {
-                actorDirectives += `#incspr(actor_sc${sceneNum}_p0_spr, "${relPcxF0}", 0, 0, ${w16}, ${h16})\n`;
-                actorDirectives += `#incspr(actor_sc${sceneNum}_p1_spr, "${relPcxF1}", 0, 0, ${w16}, ${h16})\n`;
-                actorDirectives += `#incpal(actor_sc${sceneNum}_pal, "${relPcxF0}")\n`;
+                actorDefines += `#define actor_sc${sceneNum}_p0_spr actor_sc${sceneNum}_${actorNum}_f0_p0_spr\n`;
+                actorDefines += `#define actor_sc${sceneNum}_p1_spr actor_sc${sceneNum}_${actorNum}_f0_p1_spr\n`;
+                actorDefines += `#define actor_sc${sceneNum}_pal actor_sc${sceneNum}_${actorNum}_pal\n`;
               }
             }
           } else {
@@ -1618,11 +1697,19 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             }
 
             const relPcxF = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxF).replace(/\\/g, "/")}`;
+            const frameBytes = (w16 * h16 * 128) + (fIdx === 0 ? 512 : 0);
+            const alloc = bankManager.allocatePacked(frameBytes, 1, `actor_sc${sceneNum}_${actorNum}_f${fIdx}`);
+            if (alloc.isNewBank || !actorDirectivesStarted) {
+              actorDirectivesStarted = true;
+              actorDirectives += `\n#asm\n .data\n .bank ${alloc.bank}\n .org $${alloc.offset.toString(16)}\n#endasm\n`;
+            }
             actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_f${fIdx}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n`;
             if (fIdx === 0) {
-              actorDirectives += `#incspr(actor_sc${sceneNum}_${actorNum}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc${sceneNum}_${actorNum}_pal, "${relPcxF}")\n`;
+              actorDirectives += `#incpal(actor_sc${sceneNum}_${actorNum}_pal, "${relPcxF}")\n`;
+              actorDefines += `#define actor_sc${sceneNum}_${actorNum}_spr actor_sc${sceneNum}_${actorNum}_f0_spr\n`;
               if (aIdx === 0) {
-                actorDirectives += `#incspr(actor_sc${sceneNum}_spr, "${relPcxF}", 0, 0, ${w16}, ${h16})\n#incpal(actor_sc${sceneNum}_pal, "${relPcxF}")\n`;
+                actorDefines += `#define actor_sc${sceneNum}_spr actor_sc${sceneNum}_${actorNum}_f0_spr\n`;
+                actorDefines += `#define actor_sc${sceneNum}_pal actor_sc${sceneNum}_${actorNum}_pal\n`;
               }
             }
           }
@@ -1675,6 +1762,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       }
     });
   });
+
+  if (actorDirectives) {
+    actorDirectives += `\n#asm\n .code\n#endasm\n`;
+  }
 
   // Compile Projectile Sprites
   let projDirectives = "";
@@ -1743,11 +1834,19 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       convertPngToPcx(srcPng, destPcxF, { cropX: 0, cropY: 0, cropW: canvasW, cropH: h16 * 16, padWidthTo, flipX: false, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
 
       const relPcxF = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxF).replace(/\\/g, "/")}`;
+      const projBytes = (w16 * h16 * 128) + 512;
+      const alloc = bankManager.allocatePacked(projBytes, 1, `proj_${projIdx}`);
+      if (alloc.isNewBank || projIdx === 0) {
+        projDirectives += `\n#asm\n .data\n .bank ${alloc.bank}\n .org $${alloc.offset.toString(16)}\n#endasm\n`;
+      }
       projDirectives += `#incspr(proj_spr_${projIdx}, "${relPcxF}", 0, 0, ${w16}, ${h16})\n#incpal(proj_pal_${projIdx}, "${relPcxF}")\n`;
       if (projIdx === 0) {
-        projDirectives += `#define HAS_PROJECTILES 1\n#incspr(proj_spr_default, "${relPcxF}", 0, 0, ${w16}, ${h16})\n#incpal(proj_pal_default, "${relPcxF}")\n`;
+        projDirectives += `#define HAS_PROJECTILES 1\n#define proj_spr_default proj_spr_0\n#define proj_pal_default proj_pal_0\n`;
       }
       projIdx++;
+    }
+    if (projDirectives) {
+      projDirectives += `\n#asm\n .code\n#endasm\n`;
     }
   }
 
@@ -1844,6 +1943,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   let musicIncludes = "";
   let hasMusicDef = "";
   let startMusicDef = "";
+  let initMusicAsm = "";
   const musicIdMap: Record<string, { filename: string; symbol: string }> = {};
   const musicByFilenameMap: Record<string, { id: string; symbol: string }> = {};
   const musicBySymbolMap: Record<string, { id: string; filename: string }> = {};
@@ -1899,15 +1999,18 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     if (compiledFiles.has(ugePath)) return;
     compiledFiles.add(ugePath);
     try {
-      const { loadUGESong, exportToC } = require("shared/lib/uge/ugeHelper");
+      const { loadUGESong, exportToAsm } = require("shared/lib/uge/ugeHelper");
       const ugeBuf = await fs.readFile(ugePath);
       const song = loadUGESong(ugeBuf);
       if (song) {
-        const musicC = exportToC(song, symbol);
+        const songAlloc = bankManager.allocateDedicatedBanks(1, `song_${symbol}`);
+        const songBank = songAlloc.startBank;
+        const musicAsm = exportToAsm(song, symbol, songBank);
         const musicOutDir = pathModule.join(buildDir, "music");
         await fs.ensureDir(musicOutDir);
-        await fs.writeFile(pathModule.join(musicOutDir, `${symbol}.c`), musicC, "utf8");
-        musicIncludes += `#include "music/${symbol}.c"\n`;
+        await fs.writeFile(pathModule.join(musicOutDir, `${symbol}.s`), musicAsm, "utf8");
+        musicIncludes += `#asm\n .include "music/${symbol}.s"\n#endasm\nunsigned int *${symbol}_Data;\n`;
+        initMusicAsm += `    lda #low(_${symbol}_Data_raw)\n    sta _${symbol}_Data\n    lda #high(_${symbol}_Data_raw)\n    sta _${symbol}_Data+1\n`;
         hasMusicDef = `#define HAS_MUSIC_DATA 1\n`;
         compiledTrackSymbols.push(symbol);
       }
@@ -1921,32 +2024,46 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   if (activeStartScene && activeStartScene.musicId) {
     usedMusicIds.add(activeStartScene.musicId);
   }
+  const checkEvts = (evts: any[]) => {
+    if (!Array.isArray(evts)) return;
+    for (const evt of evts) {
+      if (evt && (evt.command === "EVENT_MUSIC_PLAY" || evt.command === "EVENT_PLAY_MUSIC")) {
+        const mId = evt.args?.musicId || evt.args?.music;
+        if (mId && mId !== "LAST_MUSIC") {
+          usedMusicIds.add(mId);
+        }
+      }
+      if (evt?.children && typeof evt.children === "object") {
+        Object.values(evt.children).forEach((cEvts: any) => checkEvts(cEvts));
+      }
+      if (evt?.true && Array.isArray(evt.true)) checkEvts(evt.true);
+      if (evt?.false && Array.isArray(evt.false)) checkEvts(evt.false);
+    }
+  };
+
   for (const sc of allScenes) {
-    if (sc.musicId) usedMusicIds.add(sc.musicId);
     const events = [
       ...(Array.isArray(sc.script) ? sc.script : []),
-      ...(Array.isArray(sc.startScript) ? sc.startScript : [])
+      ...(Array.isArray(sc.startScript) ? sc.startScript : []),
+      ...(sc.actors || []).flatMap((act: any) => [
+        ...(Array.isArray(act.script) ? act.script : []),
+        ...(Array.isArray(act.startScript) ? act.startScript : [])
+      ]),
+      ...(sc.triggers || []).flatMap((trig: any) => [
+        ...(Array.isArray(trig.script) ? trig.script : []),
+        ...(Array.isArray(trig.leaveScript) ? trig.leaveScript : [])
+      ])
     ];
-    const checkEvts = (evts: any[]) => {
-      if (!Array.isArray(evts)) return;
-      for (const evt of evts) {
-        if (evt && (evt.command === "EVENT_MUSIC_PLAY" || evt.command === "EVENT_PLAY_MUSIC")) {
-          const mId = evt.args?.musicId || evt.args?.music;
-          if (mId && mId !== "LAST_MUSIC") {
-            usedMusicIds.add(mId);
-          }
-        }
-        if (evt?.children && typeof evt.children === "object") {
-          Object.values(evt.children).forEach((cEvts: any) => checkEvts(cEvts));
-        }
-        if (evt?.true && Array.isArray(evt.true)) checkEvts(evt.true);
-        if (evt?.false && Array.isArray(evt.false)) checkEvts(evt.false);
-      }
-    };
     checkEvts(events);
   }
 
-  // Compile used music tracks (or fallback to first available if none specified)
+  if (projectData.customEvents && Array.isArray(projectData.customEvents)) {
+    for (const ce of projectData.customEvents) {
+      if (ce.script) checkEvts(ce.script);
+    }
+  }
+
+  // Compile only music tracks actually called in the game
   const targetMusicKeys = Array.from(usedMusicIds);
   if (targetMusicKeys.length > 0) {
     for (const mId of targetMusicKeys) {
@@ -1971,22 +2088,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             await compileUgeTrack(p, sym);
             break;
           }
-        }
-      }
-    }
-  }
-
-  // Fallback scan for at least one .uge file if no tracks were compiled yet
-  if (compiledTrackSymbols.length === 0) {
-    for (const mDir of musicDirsToScan) {
-      if (fs.existsSync(mDir)) {
-        const ugeFiles = fs.readdirSync(mDir).filter((f: any) => typeof f === "string" && f.endsWith(".uge"));
-        if (ugeFiles.length > 0) {
-          const p = pathModule.join(mDir, ugeFiles[0]);
-          const fn = ugeFiles[0];
-          const sym = musicByFilenameMap[fn]?.symbol || `song_0`;
-          await compileUgeTrack(p, sym);
-          break;
         }
       }
     }
@@ -3136,11 +3237,6 @@ ${triggerDefines}
 ${collisionIncludes}
 #include "src/pce_system.c"
 #include "src/pce_sound.c"
-#asm
- .data
- .bank ${currentAssetBank++}
- .org $6000
-#endasm
 ${musicIncludes}
 #asm
  .code
@@ -3156,7 +3252,14 @@ ${sceneInitFunctionC}
 
 #include "src/engine.c"
 
+void pce_init_music_ptrs(void) {
+#asm
+${initMusicAsm}
+#endasm
+}
+
 main() {
+    pce_init_music_ptrs();
     engine_run();
 }
 `;

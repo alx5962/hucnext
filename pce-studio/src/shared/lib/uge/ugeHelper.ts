@@ -927,6 +927,286 @@ const unsigned int ${trackName}_Data[] = {
   return data;
 };
 
+/**
+ * Exports a Song to a PC Engine PCEAS-compatible assembly source file.
+ * Placed in a dedicated asset bank at .org $6000 to completely avoid CONST_BANK overflow.
+ *
+ * @param song - The song to export.
+ * @param trackName - C / ASM identifier used as the base name for exported symbols.
+ * @param bankNum - The ROM asset bank number assigned to this track.
+ */
+export const exportToAsm = (
+  song: Song,
+  trackName: string,
+  bankNum: number,
+): string => {
+  type InstrumentType = "duty" | "wave" | "noise";
+
+  const decHex = (n: number, maxLength = 2) => {
+    return "$" + (n & 0xff).toString(16).toUpperCase().padStart(maxLength, "0");
+  };
+
+  const findPattern = function (pattern: PatternCell[]) {
+    for (let idx = 0; idx < patterns.length; idx++) {
+      if (patternEqual(pattern, patterns[idx])) return idx;
+    }
+    return null;
+  };
+
+  const getSequenceMappingFor = function (track: number) {
+    return song.sequence
+      .map(
+        (sequence) =>
+          `_${trackName}_song_pattern_${patternMap[sequence.channels[track]]}`,
+      )
+      .join(", ");
+  };
+
+  const formatPatternCell = function (cell: PatternCell) {
+    const note = cell.note !== null ? cell.note : 255;
+    let instrument = 0;
+    let effectCode = 0;
+    let effectParam = 0;
+    if (cell.instrument !== null) instrument = cell.instrument + 1;
+    if (cell.effectCode !== null) {
+      effectCode = cell.effectCode;
+      effectParam = cell.effectParam || 0;
+    }
+    const instEff = ((instrument & 0x0f) << 4) | (effectCode & 0x0f);
+    return `${decHex(note)}, ${decHex(instEff)}, ${decHex(effectParam)}`;
+  };
+
+  const formatSubPatternCell = function (
+    cell: SubPatternCell,
+    isLast: boolean,
+  ) {
+    const note = cell.note ?? 255;
+    const jump = cell.jump !== null && isLast ? 1 : (cell.jump ?? 0);
+    let effectCode = 0;
+    let effectParam = 0;
+    if (cell.effectCode !== null) {
+      effectCode = cell.effectCode;
+      effectParam = cell.effectParam || 0;
+    }
+    const jumpEff = ((jump & 0x0f) << 4) | (effectCode & 0x0f);
+    return `${decHex(note)}, ${decHex(jumpEff)}, ${decHex(effectParam)}`;
+  };
+
+  const getUsedInstrumentIndexes = function () {
+    const usedInstruments: Record<InstrumentType, Set<number>> = {
+      duty: new Set(),
+      wave: new Set(),
+      noise: new Set(),
+    };
+
+    const instrumentTypeByTrack: InstrumentType[] = [
+      "duty",
+      "duty",
+      "wave",
+      "noise",
+    ];
+
+    for (const sequenceItem of song.sequence) {
+      for (let track = 0; track < TRACKER_NUM_CHANNELS; track++) {
+        const pattern = song.patterns[sequenceItem.channels[track]];
+        if (!pattern) continue;
+        const instrumentType = instrumentTypeByTrack[track];
+        for (const cell of pattern) {
+          if (cell.note !== null && cell.instrument !== null) {
+            usedInstruments[instrumentType].add(cell.instrument);
+          }
+        }
+      }
+    }
+    return usedInstruments;
+  };
+
+  const formatDutyInstrument = function (instr: DutyInstrument) {
+    const sweep =
+      (instr.frequencySweepTime << 4) |
+      (instr.frequencySweepShift < 0 ? 0x08 : 0x00) |
+      Math.abs(instr.frequencySweepShift);
+    const lenDuty =
+      (instr.dutyCycle << 6) |
+      ((instr.length !== null ? 64 - instr.length : 0) & 0x3f);
+    let envelope =
+      (instr.initialVolume << 4) | (instr.volumeSweepChange > 0 ? 0x08 : 0x00);
+    if (instr.volumeSweepChange !== 0) {
+      envelope |= 8 - Math.abs(instr.volumeSweepChange);
+    }
+    const highmask = 0x80 | (instr.length !== null ? 0x40 : 0);
+
+    return `${decHex(sweep)}, ${decHex(lenDuty)}, ${decHex(envelope)}, $00, $00, ${decHex(highmask)}`;
+  };
+
+  const formatWaveInstrument = function (instr: WaveInstrument) {
+    const length = (instr.length !== null ? 256 - instr.length : 0) & 0xff;
+    const volume = instr.volume << 5;
+    const waveform = instr.waveIndex;
+    const highmask = 0x80 | (instr.length !== null ? 0x40 : 0);
+
+    return `${decHex(length)}, ${decHex(volume)}, ${decHex(waveform)}, $00, $00, ${decHex(highmask)}`;
+  };
+
+  const formatNoiseInstrument = function (instr: NoiseInstrument) {
+    let envelope =
+      (instr.initialVolume << 4) | (instr.volumeSweepChange > 0 ? 0x08 : 0x00);
+    if (instr.volumeSweepChange !== 0)
+      envelope |= 8 - Math.abs(instr.volumeSweepChange);
+    let highmask = (instr.length !== null ? 64 - instr.length : 0) & 0x3f;
+    if (instr.length !== null) highmask |= 0x40;
+    if (instr.bitCount === 7) highmask |= 0x80;
+
+    return `${decHex(envelope)}, $00, $00, ${decHex(highmask)}, $00, $00`;
+  };
+
+  const formatWave = function (wave: Uint8Array) {
+    return Array.from(Array(16).keys(), (n) =>
+      decHex((wave[n * 2] << 4) | wave[n * 2 + 1]),
+    ).join(", ");
+  };
+
+  // Load patterns
+  const patterns: PatternCell[][] = [];
+  const patternMap: { [key: string]: number } = {};
+
+  const usedPatternIds = new Set<number>();
+  for (const sequenceItem of song.sequence) {
+    for (const patternId of sequenceItem.channels) {
+      usedPatternIds.add(patternId);
+    }
+  }
+
+  for (let n = 0; n < song.patterns.length; n++) {
+    if (!usedPatternIds.has(n)) continue;
+    const sourcePattern = song.patterns[n];
+    const targetPattern = [];
+    for (let m = 0; m < sourcePattern.length; m++) {
+      targetPattern.push(sourcePattern[m]);
+    }
+    const idx = findPattern(targetPattern);
+    if (idx !== null) {
+      patternMap[n] = idx;
+    } else {
+      patternMap[n] = patterns.length;
+      patterns.push(targetPattern);
+    }
+  }
+
+  const usedInstrumentIndexes = getUsedInstrumentIndexes();
+
+  const emittedSubpatterns = new Map<string, string>();
+  const subpatternDefinitions: string[] = [];
+
+  const registerSubpattern = (
+    instr: DutyInstrument | WaveInstrument | NoiseInstrument,
+    type: InstrumentType,
+  ) => {
+    if (
+      !instr.subpatternEnabled ||
+      !usedInstrumentIndexes[type].has(instr.index)
+    ) {
+      return;
+    }
+
+    const subpatternKey = JSON.stringify(instr.subpattern);
+    let subpatternSymbol = emittedSubpatterns.get(subpatternKey);
+
+    if (!subpatternSymbol) {
+      subpatternSymbol = `_${trackName}_subpattern_${emittedSubpatterns.size}`;
+      emittedSubpatterns.set(subpatternKey, subpatternSymbol);
+
+      let definition = `${subpatternSymbol}:\n`;
+      const cells = [];
+      for (let idx = 0; idx < 32; idx++) {
+        cells.push(
+          `    .db ${formatSubPatternCell(
+            instr.subpattern[idx],
+            idx === 32 - 1,
+          )}`,
+        );
+      }
+      definition += cells.join("\n") + "\n";
+      subpatternDefinitions.push(definition);
+    }
+  };
+
+  for (const instr of song.dutyInstruments) {
+    registerSubpattern(instr, "duty");
+  }
+  for (const instr of song.waveInstruments) {
+    registerSubpattern(instr, "wave");
+  }
+  for (const instr of song.noiseInstruments) {
+    registerSubpattern(instr, "noise");
+  }
+
+  let data = `; Auto-generated PC Engine assembly music data for ${trackName}
+; Banked into dedicated asset bank ${bankNum} (mapped to MPR3 $6000)
+    .data
+    .bank ${bankNum}
+    .org $6000
+
+_${trackName}_order_cnt:
+    .db ${song.sequence.length * 2}
+`;
+
+  for (let idx = 0; idx < patterns.length; idx++) {
+    data += `_${trackName}_song_pattern_${idx}:\n`;
+    for (let c = 0; c < patterns[idx].length; c += 4) {
+      const slice = patterns[idx].slice(c, c + 4);
+      data += `    .db ${slice.map(formatPatternCell).join(", ")}\n`;
+    }
+  }
+
+  for (const definition of subpatternDefinitions) {
+    data += definition;
+  }
+
+  for (let track = 0; track < 4; track++) {
+    data += `_${trackName}_order${track + 1}:\n    .dw ${getSequenceMappingFor(
+      track,
+    )}\n`;
+  }
+
+  data += `_${trackName}_duty_instruments:\n`;
+  for (const instr of song.dutyInstruments) {
+    data += `    .db ${formatDutyInstrument(instr)}\n`;
+  }
+
+  data += `_${trackName}_wave_instruments:\n`;
+  for (const instr of song.waveInstruments) {
+    data += `    .db ${formatWaveInstrument(instr)}\n`;
+  }
+
+  data += `_${trackName}_noise_instruments:\n`;
+  for (const instr of song.noiseInstruments) {
+    data += `    .db ${formatNoiseInstrument(instr)}\n`;
+  }
+
+  data += `_${trackName}_waves:\n`;
+  for (const wave of song.waves) {
+    data += `    .db ${formatWave(wave)}\n`;
+  }
+
+  data += `
+; --- Descriptor in CONST_BANK (always accessible in MPR2 $4000-$5FFF) ---
+    .data
+    .bank CONST_BANK
+
+_${trackName}_Data_raw:
+    .dw ${song.ticksPerRow}
+    .dw _${trackName}_order_cnt
+    .dw _${trackName}_order1, _${trackName}_order2, _${trackName}_order3, _${trackName}_order4
+    .dw _${trackName}_duty_instruments, _${trackName}_wave_instruments, _${trackName}_noise_instruments
+    .dw 0
+    .dw _${trackName}_waves
+    .dw ${bankNum}
+`;
+
+  return data;
+};
+
 const subpatternFromNoiseMacro = function (
   noiseMacro: number[],
   ticksPerRow: number,

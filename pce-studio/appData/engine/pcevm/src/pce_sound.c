@@ -1,6 +1,8 @@
 unsigned char g_psg_reg_ch;
 unsigned char g_psg_reg_val;
 unsigned short g_psg_reg_freq;
+unsigned char g_pce_song_bank;
+unsigned char g_old_bank;
 
 void hw_set_ch(unsigned char ch) {
   g_psg_reg_ch = ch;
@@ -346,6 +348,7 @@ void pce_sound_init(void) {
   g_ch_wave_idx = 0xFF;
   g_pce_music_playing = 0;
   g_pce_song = 0;
+  g_pce_song_bank = 0;
   g_pce_order_idx = 0;
   g_pce_row_idx = 0;
   g_pce_tick_cnt = 0;
@@ -369,6 +372,7 @@ void pce_sound_play(unsigned int *song) {
   }
   pce_sound_init();
   g_pce_song = song;
+  g_pce_song_bank = (unsigned char)(song[11]);
   g_ticks_per_row = (unsigned char)(song[0]);
   if (g_ticks_per_row == 0) g_ticks_per_row = 6;
   g_pce_order_idx = 0;
@@ -618,11 +622,34 @@ void pce_sound_update(void) {
   if (g_pce_tick_cnt != 0xFF) {
     g_pce_tick_cnt++;
     if (g_pce_tick_cnt < g_ticks_per_row) {
+      if (g_pce_song_bank) {
+#asm
+        tma #3
+        sta _g_old_bank
+        lda _g_pce_song_bank
+        tam #3
+#endasm
+      }
       process_tick_effects(g_pce_tick_cnt);
+      if (g_pce_song_bank) {
+#asm
+        lda _g_old_bank
+        tam #3
+#endasm
+      }
       return;
     }
   }
   g_pce_tick_cnt = 0;
+
+  if (g_pce_song_bank) {
+#asm
+    tma #3
+    sta _g_old_bank
+    lda _g_pce_song_bank
+    tam #3
+#endasm
+  }
 
   g_u_order_cnt_ptr = (unsigned char *)(g_pce_song[1]);
   g_u_max_orders = (*g_u_order_cnt_ptr) / 2;
@@ -669,6 +696,13 @@ void pce_sound_update(void) {
         g_pce_order_idx = 0;
       }
     }
+  }
+
+  if (g_pce_song_bank) {
+#asm
+    lda _g_old_bank
+    tam #3
+#endasm
   }
 }
 
