@@ -5569,7 +5569,7 @@ void check_actor_interaction(unsigned int input) {
 
   if (pressed & (JOY_I | JOY_A)) {
     for (i = 1; i < g_actor_count; i++) {
-      if (g_actor_active[i]) {
+      if (g_actor_active[i] && actor_is_in_bounds(i)) {
         dx = g_actor_x[0] - g_actor_x[i];
         dy = g_actor_y[0] - g_actor_y[i];
         if (dx < 0)
@@ -6064,7 +6064,7 @@ void update_pointnclick(void) {
     /* Check hover over actors */
     hit_actor = 0;
     for (i = 1; i < g_actor_count; i++) {
-      if (g_actor_active[i]) {
+      if (g_actor_active[i] && actor_is_in_bounds(i)) {
         adx = g_actor_x[0] - g_actor_x[i];
         ady = g_actor_y[0] - g_actor_y[i];
         if (adx < 0) adx = -adx;

@@ -63,5 +63,7 @@ void actor_push(int id, int dir, int slide);
 void actor_effects(int id, int effect_id);
 void actor_hide_all(void);
 void actor_show_all(void);
+int actor_is_in_bounds(int id);
 
 #endif
+

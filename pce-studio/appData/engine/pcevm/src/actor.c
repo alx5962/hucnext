@@ -61,6 +61,22 @@ int actor_spawn(int x, int y, int tile_id, int palette, int size) {
   return id;
 }
 
+int actor_is_in_bounds(int id) {
+  int screen_x, screen_y;
+  if (id == 0)
+    return 1;
+  if (id < 0 || id >= g_actor_count || !g_actor_active[id] || g_actor_hidden[id])
+    return 0;
+
+  screen_x = g_actor_x[id] - g_cam_x;
+  screen_y = g_actor_y[id] - g_cam_y;
+
+  if (screen_x < -64 || screen_x > 256 || screen_y < -64 || screen_y > 224)
+    return 0;
+
+  return 1;
+}
+
 void actor_update_all(void) {
   int i, flip;
   int screen_x, screen_y, spr_h;
@@ -72,6 +88,9 @@ void actor_update_all(void) {
   /* Animate non-player actors that have multiple frames */
   for (i = 1; i < g_actor_count; i++) {
     if (g_actor_active[i] && !g_actor_hidden[i] && g_actor_num_frames[i] > 1) {
+      if (!actor_is_in_bounds(i))
+        continue;
+
       g_actor_anim_timer[i]++;
       spd = (g_actor_anim_speed[i] > 0) ? g_actor_anim_speed[i] : 15;
       if (g_actor_anim_timer[i] >= spd) {
@@ -260,7 +279,7 @@ void actor_emote(int id, int emote_id) {
 
 void actor_push(int id, int dir, int slide) {
   int step_x, step_y, new_x, new_y, step;
-  if (id <= 0 || id >= PCE_MAX_ACTORS || !g_actor_active[id])
+  if (id <= 0 || id >= PCE_MAX_ACTORS || !g_actor_active[id] || !actor_is_in_bounds(id))
     return;
 
   step_x = 0;

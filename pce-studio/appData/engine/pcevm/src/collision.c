@@ -40,6 +40,9 @@ int collision_check_box(int x, int y) {
     /* Solid actor collisions (prevents player from walking over actors) */
     for (i = 1; i < g_actor_count; i++) {
         if (g_actor_active[i] && !g_actor_hidden[i] && !g_actor_collisions_disabled[i]) {
+            if (!actor_is_in_bounds(i))
+                continue;
+
             act_l = g_actor_x[i] + g_actor_bbox_left[i];
             act_r = g_actor_x[i] + g_actor_bbox_right[i];
             act_t = g_actor_y[i] + g_actor_bbox_top[i];
@@ -98,6 +101,9 @@ int collision_check_actor(int id, int x, int y) {
             }
         } else {
             if (g_actor_active[i] && !g_actor_hidden[i] && !g_actor_collisions_disabled[i]) {
+                if (!actor_is_in_bounds(i))
+                    continue;
+
                 other_l = g_actor_x[i] + g_actor_bbox_left[i];
                 other_r = g_actor_x[i] + g_actor_bbox_right[i];
                 other_t = g_actor_y[i] + g_actor_bbox_top[i];

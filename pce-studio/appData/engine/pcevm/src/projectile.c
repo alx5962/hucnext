@@ -93,7 +93,7 @@ void projectile_update_all(void) {
     if (g_proj_owner[i] == 0) {
       /* Player projectile: check against active enemy actors */
       for (a = 1; a < g_actor_count; a++) {
-        if (g_actor_active[a] && !g_actor_hidden[a] && !g_actor_collisions_disabled[a]) {
+        if (g_actor_active[a] && !g_actor_hidden[a] && !g_actor_collisions_disabled[a] && actor_is_in_bounds(a)) {
           ax = g_actor_x[a];
           ay = g_actor_y[a];
           aw = 16;
