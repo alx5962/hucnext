@@ -138,6 +138,7 @@ export const createEmulator = (): EmulatorController => {
     for (let c = 0; c < 6; c++) {
       chActive[c] = false;
       chVol[c] = 0;
+      chIsNoise[c] = false;
     }
   };
 
@@ -177,9 +178,15 @@ export const createEmulator = (): EmulatorController => {
     note: number,
     instIndex: number,
   ) => {
+    // Track 3 (noise) is disabled in the PC Engine ROM engine (pce_sound.c mutes it);
+    // disable here to prevent unwanted noise sound and match ROM playback.
+    if (track === 3) {
+      return;
+    }
+
     const pceCh = track < 3 ? track : 4;
     chActive[pceCh] = true;
-    chIsNoise[pceCh] = track === 3;
+    chIsNoise[pceCh] = false;
 
     if (note < 72 && pceNote2Freq[note]) {
       let period = pceNote2Freq[note];
@@ -409,6 +416,9 @@ export const createEmulator = (): EmulatorController => {
     setChannel: (channel: number, muted: boolean) => {
       if (channel >= 0 && channel < 6) {
         chMuted[channel] = muted;
+      }
+      if (channel === 3) {
+        chMuted[4] = muted;
       }
       return muted;
     },
