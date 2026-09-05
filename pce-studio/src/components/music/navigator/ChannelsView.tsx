@@ -132,29 +132,25 @@ const Row = ({
       e.stopPropagation();
       API.music.sendToMusicWindow({
         action: "set-mute",
-        channel: index,
+        channel: item.index,
         muted: !muted,
       });
     },
-    [muted, index],
+    [muted, item.index],
   );
 
   const setSolo = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault();
       e.stopPropagation();
-      dispatch(
-        trackerActions.setChannelSolo({
-          channel: index,
-          solo: !solo,
-        }),
-      );
+      dispatch(trackerActions.setSelectedChannel(toValidChannelId(item.index)));
       API.music.sendToMusicWindow({
-        action: "set-channel-status",
-        channel: index,
+        action: "set-solo",
+        channel: item.index,
         enabled: !solo,
       });
     },
-    [dispatch, index, solo],
+    [dispatch, item.index, solo],
   );
 
   const themeContext = useContext(ThemeContext);
@@ -203,10 +199,10 @@ const Row = ({
         <Button
           variant="normal"
           size="small"
-          onClick={toggleVisibleChannel(index)}
+          onClick={toggleVisibleChannel(item.index)}
         >
           <StyledVisiblityIcon>
-            {visibleChannels.indexOf(index) > -1 ? (
+            {visibleChannels.indexOf(item.index) > -1 ? (
               <EyeOpenIcon />
             ) : (
               <EyeClosedIcon />
@@ -254,7 +250,7 @@ export const ChannelsView = () => {
 
   const setSelectedId = useCallback(
     (_id: string, item: ChannelNavigatorItem) => {
-      dispatch(trackerActions.setSelectedChannel(item.index));
+      dispatch(trackerActions.setSelectedChannel(toValidChannelId(item.index)));
     },
     [dispatch],
   );
