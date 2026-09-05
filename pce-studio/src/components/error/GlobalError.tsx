@@ -103,8 +103,8 @@ const GlobalError = () => {
   const stackTraceLines = error.stackTrace.split("\n");
 
   const reportIssue = useCallback(() => {
-    const owner = "chrismaltby";
-    const repo = "gb-studio";
+    const owner = "alx5962";
+    const repo = "hucnext";
     const issueTitle = encodeURIComponent("Bug report: " + message);
     const issueBody = encodeURIComponent(
       `**Error message**\n\`${message}\`\n\n**Stack trace**\n\`\`\`\n${stackTrace}\n\`\`\`\n\n**Platform**\n- OS: ${API.platform}\n- Version: ALXPCE Studio ${VERSION} (${COMMITHASH})\n\n**Additional context**\nAdd any other context about the problem here.\ne.g. What was the last thing you did before the error appeared.\n`,
