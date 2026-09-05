@@ -5185,6 +5185,8 @@ void load_scene(int scene_num, int player_x, int player_y) {
   g_script_scene = scene_num;
   if (scene_has_startup_script(scene_num)) {
     g_script_step = 0;
+    g_script_type = SCRIPT_TYPE_STARTUP;
+    g_script_target = 0;
   } else {
     g_script_step = -1;
   }
@@ -5320,6 +5322,10 @@ void draw_ui_frame(int x, int y, int w, int h) {
 void pce_put_text_line(const char *str, int x, int y, int max_w) {
   int i;
   for (i = 0; i < max_w; i++) {
+    while (str && str[0] == '!' && str[1] == 'S' && str[2] >= '0' &&
+           str[2] <= '9' && str[3] == '!') {
+      str += 4;
+    }
     if (str && *str && *str != '\n') {
       put_char(*str, x + i, y);
       str++;

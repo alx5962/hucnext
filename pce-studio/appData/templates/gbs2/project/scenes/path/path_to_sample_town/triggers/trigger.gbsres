@@ -7,8 +7,8 @@
   "name": "",
   "x": 56,
   "y": 17,
-  "width": 3,
-  "height": 1,
+  "width": 4,
+  "height": 2,
   "prefabScriptOverrides": {},
   "script": [
     {
@@ -17,6 +17,27 @@
         "state": "blank"
       },
       "id": "253b873e-076b-4ce2-982a-dd2eaee32dd2"
+    },
+    {
+      "command": "EVENT_ACTOR_MOVE_TO",
+      "args": {
+        "__section": "movement",
+        "actorId": "$self$",
+        "x": {
+          "type": "number",
+          "value": 52
+        },
+        "y": {
+          "type": "number",
+          "value": 7
+        },
+        "collideWith": [
+          "walls"
+        ],
+        "lockDirection": [],
+        "moveType": "horizontal"
+      },
+      "id": "b1e81f01-4e04-4b0b-aa40-f6ceb87d505c"
     }
   ],
   "leaveScript": []

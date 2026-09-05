@@ -268,8 +268,26 @@ void actor_set_anim_speed(int id, int speed) {
 }
 
 void actor_set_frame(int id, int frame) {
-  if (id >= 0 && id < PCE_MAX_ACTORS)
+  int frame_step;
+  if (id >= 0 && id < PCE_MAX_ACTORS) {
     g_actor_anim_frame[id] = frame;
+    if (id == 0) {
+      g_player_anim_frame = frame;
+      if (g_actor_state[0] > 0) {
+        g_actor_tile_id[0] = 0x5000 + frame * g_player_spr_vram_size;
+      } else {
+        g_actor_tile_id[0] =
+            0x5000 + (g_actor_dir[0] * 2 + frame) * g_player_spr_vram_size;
+      }
+    } else {
+      frame_step = (g_actor_parts[id] > 1)
+                       ? (2 * g_actor_frame_vram_size[id])
+                       : g_actor_frame_vram_size[id];
+      g_actor_tile_id[id] =
+          g_actor_base_tile_id[id] +
+          (frame * frame_step);
+    }
+  }
 }
 
 void actor_emote(int id, int emote_id) {

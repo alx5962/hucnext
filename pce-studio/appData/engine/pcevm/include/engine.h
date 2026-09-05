@@ -24,6 +24,14 @@ int g_shmup_scroll_x = 0;
 
 int g_script_scene = 1;
 int g_script_step = -1;
+#ifndef SCRIPT_TYPE_STARTUP
+#define SCRIPT_TYPE_STARTUP 0
+#define SCRIPT_TYPE_ACTOR 1
+#define SCRIPT_TYPE_TRIGGER 2
+#define SCRIPT_TYPE_INPUT 3
+#endif
+int g_script_type = 0;
+int g_script_target = 0;
 int g_wait_timer = 0;
 unsigned int g_await_input_mask = 0;
 
