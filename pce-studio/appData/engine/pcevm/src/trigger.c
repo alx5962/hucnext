@@ -9,9 +9,23 @@ int interact_trigger(int scene_num, int trigger_num);
 
 void trigger_init(void) {
   g_trigger_count = 0;
+  g_active_trigger_count = 0;
   g_trigger_cooldown = 0;
   g_inside_trigger = 0;
   g_current_trigger_hit = -1;
+}
+
+void trigger_activate_scene(int scene_id) {
+  int i;
+  g_active_trigger_count = 0;
+  for (i = 0; i < g_trigger_count; i++) {
+    if (g_triggers[i].scene_id == scene_id) {
+      if (g_active_trigger_count < 32) {
+        g_active_trigger_indices[g_active_trigger_count] = i;
+        g_active_trigger_count++;
+      }
+    }
+  }
 }
 
 void trigger_load_all(void) {
@@ -44,7 +58,7 @@ void trigger_add(int scene_id, int x, int y, int w, int h, int target_scene,
 }
 
 void trigger_check(int px, int py) {
-  int i, tx1, ty1, tx2, ty2;
+  int t, i, tx1, ty1, tx2, ty2;
   int hit_trigger;
 
   hit_trigger = -1;
@@ -53,10 +67,8 @@ void trigger_check(int px, int py) {
     g_trigger_cooldown--;
   }
 
-  for (i = 0; i < g_trigger_count; i++) {
-    if (g_triggers[i].scene_id != g_current_scene) {
-      continue;
-    }
+  for (t = 0; t < g_active_trigger_count; t++) {
+    i = g_active_trigger_indices[t];
 
     tx1 = g_triggers[i].x;
     ty1 = g_triggers[i].y;
@@ -112,14 +124,13 @@ void trigger_check(int px, int py) {
 }
 
 int trigger_find_at(int px, int py) {
-  int i, tx1, ty1, tx2, ty2;
+  int t, i, tx1, ty1, tx2, ty2;
   int cx, cy;
   cx = px + 4;
   cy = py + 4;
-  for (i = 0; i < g_trigger_count; i++) {
-    if (g_triggers[i].scene_id != g_current_scene) {
-      continue;
-    }
+  for (t = 0; t < g_active_trigger_count; t++) {
+    i = g_active_trigger_indices[t];
+
     tx1 = g_triggers[i].x;
     ty1 = g_triggers[i].y;
     tx2 = tx1 + g_triggers[i].w;

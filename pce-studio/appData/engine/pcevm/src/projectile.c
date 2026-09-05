@@ -2,9 +2,12 @@
 #include "include/projectile.h"
 #include "include/engine.h"
 
+static unsigned char s_proj_was_active[PROJ_MAX_COUNT];
+
 void projectile_init(void) {
   int i;
   for (i = 0; i < PROJ_MAX_COUNT; i++) {
+    s_proj_was_active[i] = 0;
     g_proj_active[i] = 0;
     g_proj_x[i] = 0;
     g_proj_y[i] = 0;
@@ -130,21 +133,26 @@ void projectile_render_all(void) {
   int i, screen_x, screen_y;
 
   for (i = 0; i < PROJ_MAX_COUNT; i++) {
-    spr_set(PROJ_SPRITE_START + i);
     if (!g_proj_active[i] || g_current_scene_type == SCENE_TYPE_LOGO) {
-      spr_x(512);
-      spr_y(512);
-      spr_hide();
+      if (s_proj_was_active[i]) {
+        spr_set(PROJ_SPRITE_START + i);
+        spr_x(512);
+        spr_y(512);
+        spr_hide();
+        s_proj_was_active[i] = 0;
+      }
       continue;
     }
 
     screen_x = g_proj_x[i] - g_cam_x;
     screen_y = g_proj_y[i] - g_cam_y;
 
+    spr_set(PROJ_SPRITE_START + i);
     if (screen_x < -16 || screen_x > 256 || screen_y < -16 || screen_y > 224) {
       spr_x(512);
       spr_y(512);
       spr_hide();
+      s_proj_was_active[i] = 0;
     } else {
       spr_x(screen_x);
       spr_y(screen_y);
@@ -152,6 +160,7 @@ void projectile_render_all(void) {
       spr_pal(g_proj_palette[i]);
       spr_pri(1);
       spr_ctrl(FLIP_MAS | SIZE_MAS, g_proj_size[i] | NO_FLIP);
+      s_proj_was_active[i] = 1;
     }
   }
 }

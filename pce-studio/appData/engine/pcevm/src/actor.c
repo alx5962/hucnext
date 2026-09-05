@@ -194,7 +194,6 @@ void actor_update_all(void) {
       }
     }
   }
-  satb_update();
 }
 
 void actor_set_pos(int id, int x, int y) {

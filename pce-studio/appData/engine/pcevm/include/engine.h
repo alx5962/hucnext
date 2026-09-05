@@ -99,6 +99,8 @@ int g_player_bbox_bottom;
 /* Global trigger & VM state */
 pce_trigger_t g_triggers[MAX_TRIGGERS];
 int g_trigger_count;
+int g_active_trigger_count;
+int g_active_trigger_indices[32];
 int g_inside_trigger;
 int g_current_trigger_hit;
 int g_vm_vars[VM_MAX_VARS];

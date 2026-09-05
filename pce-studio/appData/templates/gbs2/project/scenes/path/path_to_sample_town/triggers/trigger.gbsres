@@ -35,9 +35,25 @@
           "walls"
         ],
         "lockDirection": [],
-        "moveType": "horizontal"
+        "moveType": "horizontal",
+        "__comment": true
       },
       "id": "b1e81f01-4e04-4b0b-aa40-f6ceb87d505c"
+    },
+    {
+      "command": "EVENT_ACTOR_SET_POSITION",
+      "args": {
+        "actorId": "$self$",
+        "x": {
+          "type": "number",
+          "value": 51
+        },
+        "y": {
+          "type": "number",
+          "value": 8
+        }
+      },
+      "id": "2c2063c5-28a6-4ced-82b4-860d0ee9cc9d"
     }
   ],
   "leaveScript": []

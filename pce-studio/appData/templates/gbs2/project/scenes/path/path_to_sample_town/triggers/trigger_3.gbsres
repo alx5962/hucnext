@@ -6,7 +6,7 @@
   "prefabId": "",
   "name": "",
   "x": 96,
-  "y": 17,
+  "y": 18,
   "width": 5,
   "height": 2,
   "prefabScriptOverrides": {},
@@ -17,6 +17,21 @@
         "state": "blank"
       },
       "id": "e4bbea2c-40ac-4234-87bf-00619dca8a67"
+    },
+    {
+      "command": "EVENT_ACTOR_SET_POSITION",
+      "args": {
+        "actorId": "$self$",
+        "x": {
+          "type": "number",
+          "value": 90
+        },
+        "y": {
+          "type": "number",
+          "value": 8
+        }
+      },
+      "id": "0e005b4e-3b2d-4014-8909-19932e8bada0"
     }
   ],
   "leaveScript": []

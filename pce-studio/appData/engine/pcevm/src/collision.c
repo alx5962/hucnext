@@ -17,6 +17,7 @@ int collision_check_box(int x, int y) {
     int x_left, x_right, y_top, y_bottom;
     int tx1, tx2, ty1, ty2;
     int i, act_l, act_r, act_t, act_b;
+    int adx, ady;
 
     x_left = x + g_player_bbox_left;
     x_right = x + g_player_bbox_right;
@@ -40,6 +41,11 @@ int collision_check_box(int x, int y) {
     /* Solid actor collisions (prevents player from walking over actors) */
     for (i = 1; i < g_actor_count; i++) {
         if (g_actor_active[i] && !g_actor_hidden[i] && !g_actor_collisions_disabled[i]) {
+            adx = x - g_actor_x[i];
+            if (adx < -48 || adx > 48) continue;
+            ady = y - g_actor_y[i];
+            if (ady < -48 || ady > 48) continue;
+
             if (!actor_is_in_bounds(i))
                 continue;
 
@@ -61,6 +67,7 @@ int collision_check_actor(int id, int x, int y) {
     int x_left, x_right, y_top, y_bottom;
     int tx_start, tx_end, ty_start, ty_end, tx, ty;
     int i, other_l, other_r, other_t, other_b;
+    int adx, ady;
 
     if (id < 0 || id >= PCE_MAX_ACTORS) return 1;
 
@@ -92,6 +99,11 @@ int collision_check_actor(int id, int x, int y) {
     for (i = 0; i < g_actor_count; i++) {
         if (i == id) continue;
         if (i == 0) {
+            adx = x - g_actor_x[0];
+            if (adx < -48 || adx > 48) continue;
+            ady = y - g_actor_y[0];
+            if (ady < -48 || ady > 48) continue;
+
             other_l = g_actor_x[0] + g_player_bbox_left;
             other_r = g_actor_x[0] + g_player_bbox_right;
             other_t = g_actor_y[0] + g_player_bbox_top;
@@ -101,6 +113,11 @@ int collision_check_actor(int id, int x, int y) {
             }
         } else {
             if (g_actor_active[i] && !g_actor_hidden[i] && !g_actor_collisions_disabled[i]) {
+                adx = x - g_actor_x[i];
+                if (adx < -48 || adx > 48) continue;
+                ady = y - g_actor_y[i];
+                if (ady < -48 || ady > 48) continue;
+
                 if (!actor_is_in_bounds(i))
                     continue;
 
