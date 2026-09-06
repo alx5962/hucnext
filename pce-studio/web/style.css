@@ -53,6 +53,7 @@ header h1 {
 .fork-notice {
     font-size: 0.85rem;
     color: var(--text-muted);
+    margin-bottom: 8px;
 }
 
 .fork-notice a {
