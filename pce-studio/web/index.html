@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PC Engine Web Emulator</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="emu_loader.js"></script>
+    <script src="libpce.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PC Engine Web Emulator</h1>
+            <p class="fork-notice">
+                Forked and adapted from 
+                <a href="https://www.emulationonline.com/systems/pc_engine/emulator/" target="_blank" rel="noopener noreferrer">Emulation Online (PicoEngine Web)</a>.
+                Core powered by <a href="https://github.com/EmulationOnline/libpce" target="_blank" rel="noopener noreferrer">libpce</a> 
+                and <a href="https://github.com/drhelius/GearGrafx" target="_blank" rel="noopener noreferrer">GearGrafx</a> (GPL-3.0).
+            </p>
+        </header>
+
+        <section class="toolbar">
+            <div class="rom-loader">
+                <label for="cart_picker" class="button primary">Choose ROM (.pce)</label>
+                <input id="cart_picker" type="file" accept=".pce" />
+                <span class="hint">or drag & drop a .pce file onto the screen</span>
+            </div>
+            <div class="scale-buttons">
+                <span>Scale:</span>
+                <button id="scale-1x" class="button">1x</button>
+                <button id="scale-2x" class="button active">2x</button>
+                <button id="scale-3x" class="button">3x</button>
+            </div>
+        </section>
+
+        <main class="display-area">
+            <div id="bezel"></div>
+        </main>
+
+        <section class="controls-section">
+            <div class="controller">
+                <div class="dpad-container">
+                    <div class="dpad">
+                        <button class="arrow-btn" id="up" aria-label="Up">▲</button>
+                        <button class="arrow-btn" id="left" aria-label="Left">◀</button>
+                        <div class="dpad-center"></div>
+                        <button class="arrow-btn" id="right" aria-label="Right">▶</button>
+                        <button class="arrow-btn" id="down" aria-label="Down">▼</button>
+                    </div>
+                </div>
+
+                <div class="center-buttons">
+                    <button class="pill-btn" id="select">Select (Shift)</button>
+                    <button class="pill-btn" id="start">Run (Enter)</button>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn" id="b">I (Z)</button>
+                    <button class="action-btn" id="a">II (X)</button>
+                </div>
+            </div>
+
+            <div class="keyboard-reference">
+                <h3>Keyboard Mapping</h3>
+                <table>
+                    <thead>
+                        <tr><th>PC Engine Button</th><th>Keyboard Key</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>D-Pad</td><td>Arrow Keys</td></tr>
+                        <tr><td>Button I</td><td><strong>Z</strong></td></tr>
+                        <tr><td>Button II</td><td><strong>X</strong></td></tr>
+                        <tr><td>Select</td><td><strong>Shift</strong></td></tr>
+                        <tr><td>Run (Start)</td><td><strong>Enter</strong></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <footer>
+            <small>PC Engine & TurboGrafx-16 are trademarks of NEC and Hudson Soft. This emulator is provided for development and homebrew testing under the GNU GPL v3 license.</small>
+        </footer>
+    </div>
+</body>
+</html>
