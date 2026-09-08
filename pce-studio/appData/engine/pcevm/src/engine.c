@@ -5478,10 +5478,11 @@ void show_choice(int var_id, const char *opt1, const char *opt2) {
   g_dialogue_active = 1;
   g_dialogue_timer = 0;
   g_choice_active = 1;
+  g_choice_is_menu = 0;
   g_choice_var = var_id;
   g_choice_index = 0;
   g_choice_count = 2;
-  g_choice_cancel_b = 1;
+  g_choice_cancel_b = 0;
   copy_choice_opt(g_choice_opt0, opt1 ? opt1 : "Yes", 28);
   copy_choice_opt(g_choice_opt1, opt2 ? opt2 : "No", 28);
   g_choice_opt2[0] = '\0';
@@ -5497,6 +5498,7 @@ void show_menu(int var_id, int count, const char *opt1, const char *opt2,
   g_dialogue_active = 1;
   g_dialogue_timer = 0;
   g_choice_active = 1;
+  g_choice_is_menu = 1;
   g_choice_var = var_id;
   g_choice_index = 0;
   g_choice_count = (count >= 2 && count <= 4) ? count : 2;
@@ -5541,8 +5543,8 @@ void check_actor_interaction(unsigned int input) {
         g_choice_index++;
         render_choice_dialogue();
       }
-    } else if (pressed & (JOY_I | JOY_A | JOY_STRT)) {
-      if (g_choice_count == 2) {
+    } else if (g_choice_is_menu ? (pressed & (JOY_I | JOY_A | JOY_STRT)) : (pressed & (JOY_I | JOY_A))) {
+      if (!g_choice_is_menu) {
         /* Choice: option 0 = true (1), option 1 = false (0) */
         vm_set_var(g_choice_var, (g_choice_index == 0) ? 1 : 0);
       } else {
@@ -6004,10 +6006,12 @@ void update_pointnclick(void) {
         g_choice_index++;
         render_choice_dialogue();
       }
-    } else if (pressed & (JOY_I | JOY_A | JOY_STRT)) {
-      if (g_choice_count == 2) {
+    } else if (g_choice_is_menu ? (pressed & (JOY_I | JOY_A | JOY_STRT)) : (pressed & (JOY_I | JOY_A))) {
+      if (!g_choice_is_menu) {
+        /* Choice: option 0 = true (1), option 1 = false (0) */
         vm_set_var(g_choice_var, (g_choice_index == 0) ? 1 : 0);
       } else {
+        /* Menu: option 1-based index */
         vm_set_var(g_choice_var, g_choice_index + 1);
       }
       hide_dialogue();
