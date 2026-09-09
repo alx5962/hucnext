@@ -343,5 +343,15 @@
     "login": "Alexandr199514",
     "html_url": "https://github.com/Alexandr199514",
     "group": "silver"
+  },
+  {
+    "login": "EmulationOnline",
+    "html_url": "https://github.com/EmulationOnline/libpce",
+    "group": "silver"
+  },
+  {
+    "login": "pce-devel",
+    "html_url": "https://github.com/pce-devel/huc",
+    "group": "silver"
   }
 ]
