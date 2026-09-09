@@ -2084,7 +2084,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       ...(Array.isArray(sc.startScript) ? sc.startScript : []),
       ...(sc.actors || []).flatMap((act: any) => [
         ...(Array.isArray(act.script) ? act.script : []),
-        ...(Array.isArray(act.startScript) ? act.startScript : [])
+        ...(Array.isArray(act.startScript) ? act.startScript : []),
+        ...(Array.isArray(act.updateScript) ? act.updateScript : [])
       ]),
       ...(sc.triggers || []).flatMap((trig: any) => [
         ...(Array.isArray(trig.script) ? trig.script : []),
@@ -2199,7 +2200,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     return 0;
   };
 
-  const parseValueExpr = (valArg: any): string => {
+  const parseValueExpr = (valArg: any, currentActorNum: number = 0, scene?: any): string => {
     if (valArg === undefined || valArg === null) return "0";
     if (typeof valArg === "number") return String(valArg);
     if (typeof valArg === "boolean") return valArg ? "1" : "0";
@@ -2214,7 +2215,22 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       if (valArg.type === "false") return "0";
       if (valArg.type === "number") return String(typeof valArg.value === "number" ? valArg.value : (Number(valArg.value) || 0));
       if (valArg.type === "variable") return `vm_get_var(${parseVarIndex(valArg.value)})`;
-      if (valArg.value !== undefined) return parseValueExpr(valArg.value);
+      if (valArg.type === "property") {
+        let propTarget = currentActorNum;
+        if (valArg.target === "player") propTarget = 0;
+        else if (valArg.target && valArg.target !== "$self$" && scene?.actors) {
+          const tIdx = scene.actors.findIndex((a: any) => a.id === valArg.target);
+          if (tIdx !== -1) propTarget = tIdx + 1;
+        }
+        const propName = String(valArg.property || "").toLowerCase();
+        if (propName === "xpos") return `(g_actor_x[${propTarget}] >> 3)`;
+        if (propName === "ypos") return `(g_actor_y[${propTarget}] >> 3)`;
+        if (propName === "pxpos") return `g_actor_x[${propTarget}]`;
+        if (propName === "pypos") return `g_actor_y[${propTarget}]`;
+        if (propName === "direction") return `g_actor_dir[${propTarget}]`;
+        if (propName === "frame") return `g_actor_anim_frame[${propTarget}]`;
+      }
+      if (valArg.value !== undefined) return parseValueExpr(valArg.value, currentActorNum, scene);
     }
     return "0";
   };
@@ -2279,6 +2295,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   let sceneActorInteractCases = "";
   let sceneTriggerInteractHelpers = "";
   let sceneTriggerInteractCases = "";
+  let sceneActorUpdateHelpers = "";
+  let sceneActorUpdateCases = "";
 
   allScenes.forEach((scene: any, idx: number) => {
     const scNum = idx + 1;
@@ -2296,7 +2314,36 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       return defaultActor;
     };
 
-    const compileEventSequence = (evts: any[], isStartupContext = false, currentActorNum = 0) => {
+    const parseCoordExpr = (valArg: any, fallbackTiles: number, currentActorNum: number = 0, units: string = "tiles"): string => {
+      if (valArg === undefined || valArg === null) return String(fallbackTiles * 8);
+      if (typeof valArg === "number") {
+        return String(units === "pixels" ? Math.floor(valArg) : Math.floor(valArg) * 8);
+      }
+      if (typeof valArg === "string" && !isNaN(Number(valArg))) {
+        const n = Number(valArg);
+        return String(units === "pixels" ? Math.floor(n) : Math.floor(n) * 8);
+      }
+      if (typeof valArg === "object" && valArg !== null) {
+        if (valArg.type === "number") {
+          const num = typeof valArg.value === "number" ? valArg.value : (Number(valArg.value) || fallbackTiles);
+          return String(units === "pixels" ? Math.floor(num) : Math.floor(num) * 8);
+        }
+        if (valArg.type === "variable") {
+          const vIdx = parseVarIndex(valArg.value);
+          return units === "pixels" ? `vm_get_var(${vIdx})` : `(vm_get_var(${vIdx}) * 8)`;
+        }
+        if (valArg.type === "property") {
+          const propTarget = findTargetNum(valArg.target, currentActorNum);
+          const propName = String(valArg.property || "").toLowerCase();
+          if (propName === "xpos" || propName === "pxpos") return `g_actor_x[${propTarget}]`;
+          if (propName === "ypos" || propName === "pypos") return `g_actor_y[${propTarget}]`;
+        }
+        if (valArg.value !== undefined) return parseCoordExpr(valArg.value, fallbackTiles, currentActorNum, units);
+      }
+      return String(fallbackTiles * 8);
+    };
+
+    const compileEventSequence = (evts: any[], isStartupContext = false, currentActorNum = 0, isUpdateScript = false) => {
       let stepIndex = 0;
       let stepCases = "";
 
@@ -2335,7 +2382,11 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             if (typeof evt.args?.time === "number") seconds = evt.args.time;
             else if (typeof evt.args?.time === "object" && evt.args?.time?.value !== undefined) seconds = Number(evt.args.time.value);
             const frames = Math.max(1, Math.round(seconds * 60));
-            stepCases += `      case ${stepIndex}:\n        g_wait_timer = ${frames};\n        return ${stepIndex + 1};\n`;
+            if (isUpdateScript && currentActorNum > 0) {
+              stepCases += `      case ${stepIndex}:\n        g_actor_wait_timer[${currentActorNum}] = ${frames};\n        return ${stepIndex + 1};\n`;
+            } else {
+              stepCases += `      case ${stepIndex}:\n        g_wait_timer = ${frames};\n        return ${stepIndex + 1};\n`;
+            }
             stepIndex++;
           } else if (evt.command === "EVENT_CAMERA_SHAKE") {
             let seconds = 0.5;
@@ -2417,15 +2468,17 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             stepIndex++;
           } else if (evt.command === "EVENT_ACTOR_MOVE_TO" || evt.command === "EVENT_ACTOR_MOVE_TO_VALUE") {
             const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
-            const px = parseCoord(evt.args?.x, 0);
-            const py = parseCoord(evt.args?.y, 0);
-            stepCases += `      case ${stepIndex}:\n        actor_move_to(${targetNum}, ${px}, ${py});\n        return ${stepIndex + 1};\n`;
+            const units = evt.args?.units === "pixels" ? "pixels" : "tiles";
+            const px = parseCoordExpr(evt.args?.x, 0, currentActorNum, units);
+            const py = parseCoordExpr(evt.args?.y, 0, currentActorNum, units);
+            stepCases += `      case ${stepIndex}:\n        if (!actor_move_step(${targetNum}, ${px}, ${py})) return ${stepIndex};\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_ACTOR_MOVE_RELATIVE") {
             const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
-            const dx = parseCoord(evt.args?.x, 0);
-            const dy = parseCoord(evt.args?.y, 0);
-            stepCases += `      case ${stepIndex}:\n        actor_set_pos_rel(${targetNum}, ${dx}, ${dy});\n        return ${stepIndex + 1};\n`;
+            const units = evt.args?.units === "pixels" ? "pixels" : "tiles";
+            const dx = parseCoordExpr(evt.args?.x, 0, currentActorNum, units);
+            const dy = parseCoordExpr(evt.args?.y, 0, currentActorNum, units);
+            stepCases += `      case ${stepIndex}:\n        if (!actor_move_rel_step(${targetNum}, ${dx}, ${dy})) return ${stepIndex};\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_ACTOR_SET_DIRECTION" || evt.command === "EVENT_ACTOR_SET_DIRECTION_TO_VALUE") {
             const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
@@ -2711,6 +2764,46 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             stepCases += `      case ${branchStep}:\n        if (has_saved_data(${slot})) return ${trueStart};\n        else return ${falseTarget};\n`;
             stepCases += `      case ${trueEndJumpStep}:\n        return ${trueEndTarget};\n`;
             continue;
+          } else if (evt.command === "EVENT_IF_ACTOR_DISTANCE_FROM_ACTOR") {
+            const act1 = findTargetNum(evt.args?.actorId, currentActorNum);
+            const act2 = findTargetNum(evt.args?.otherActorId, currentActorNum);
+            const op = evt.args?.operator || "<=";
+            const opMap: Record<string, number> = {
+              "==": 0,
+              "!=": 1,
+              "<": 2,
+              "<=": 3,
+              ">": 4,
+              ">=": 5,
+            };
+            const opCode = opMap[op] ?? 3;
+            const distExpr = parseValueExpr(evt.args?.distance, currentActorNum, scene);
+            const condExpr = `(actor_distance_check(${act1}, ${act2}, ${distExpr}, ${opCode}))`;
+
+            const trueList = (evt.true && Array.isArray(evt.true)) ? evt.true : (evt.children?.true && Array.isArray(evt.children.true) ? evt.children.true : []);
+            const falseList = (evt.false && Array.isArray(evt.false)) ? evt.false : (evt.children?.false && Array.isArray(evt.children.false) ? evt.children.false : []);
+
+            const branchStep = stepIndex;
+            stepIndex++;
+
+            const trueStart = stepIndex;
+            processEventList(trueList, isLastEvent);
+            const trueEndJumpStep = stepIndex;
+            stepIndex++;
+
+            let falseStart = -1;
+            if (falseList.length > 0) {
+              falseStart = stepIndex;
+              processEventList(falseList, isLastEvent);
+            }
+            const afterStep = stepIndex;
+
+            const falseTarget = (falseList.length > 0) ? falseStart : (isLastEvent ? (isUpdateScript ? 0 : -1) : afterStep);
+            const trueEndTarget = isLastEvent ? (isUpdateScript ? 0 : -1) : afterStep;
+
+            stepCases += `      case ${branchStep}:\n        if ${condExpr} return ${trueStart};\n        else return ${falseTarget};\n`;
+            stepCases += `      case ${trueEndJumpStep}:\n        return ${trueEndTarget};\n`;
+            continue;
           } else if (
             evt.command === "EVENT_LOAD_PROJECTILE_SLOT" ||
             evt.command === "EVENT_MATH_DIV" ||
@@ -2734,7 +2827,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             evt.command === "EVENT_IDLE" ||
             evt.command === "EVENT_IF_ACTOR_AT_POSITION" ||
             evt.command === "EVENT_IF_ACTOR_DIRECTION" ||
-            evt.command === "EVENT_IF_ACTOR_DISTANCE_FROM_ACTOR" ||
             evt.command === "EVENT_IF_ACTOR_RELATIVE_TO_ACTOR" ||
             evt.command === "EVENT_IF_COLOR_SUPPORTED" ||
             evt.command === "EVENT_IF_CURRENT_SCENE_IS" ||
@@ -2954,6 +3046,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     const actorStepHelpers: string[] = [];
     const actorDispatchCases: string[] = [];
     const actorInteractCases: string[] = [];
+    const actorUpdateStepHelpers: string[] = [];
+    const actorUpdateCases: string[] = [];
 
     (scene.actors || []).forEach((scActor: any, aIdx: number) => {
       const actorNum = aIdx + 1;
@@ -2982,11 +3076,25 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           actorInteractCases.push(`    case ${actorNum}:\n      g_script_scene = ${scNum};\n      g_script_type = 1;\n      g_script_target = ${actorNum};\n      g_script_step = 0;\n      g_script_step = run_scene_step(${scNum}, 0);\n      return 1;\n`);
         }
       }
+
+      if (scActor.updateScript && Array.isArray(scActor.updateScript) && scActor.updateScript.length > 0) {
+        const updateResult = compileEventSequence(scActor.updateScript, false, actorNum, true);
+        if (updateResult.stepCount > 0) {
+          updateResult.casesCode += `      case ${updateResult.stepCount}:\n        return 0;\n`;
+          actorUpdateStepHelpers.push(`int run_scene_${scNum}_actor_${actorNum}_update_step(int step) {\n  switch (step) {\n${updateResult.casesCode}    default:\n      return 0;\n  }\n}\n\n`);
+          actorUpdateCases.push(`    case ${actorNum}:\n      if (g_actor_wait_timer[${actorNum}] > 0) {\n        g_actor_wait_timer[${actorNum}]--;\n      } else {\n        g_actor_update_step[${actorNum}] = run_scene_${scNum}_actor_${actorNum}_update_step(g_actor_update_step[${actorNum}]);\n      }\n      break;\n`);
+        }
+      }
     });
 
     if (actorInteractCases.length > 0) {
       sceneActorInteractHelpers += `int interact_scene_${scNum}_actor(int actor_num) {\n  switch (actor_num) {\n${actorInteractCases.join("")}    default:\n      return 0;\n  }\n}\n\n`;
       sceneActorInteractCases += `  if (scene_num == ${scNum}) return interact_scene_${scNum}_actor(actor_num);\n`;
+    }
+
+    if (actorUpdateCases.length > 0) {
+      sceneActorUpdateHelpers += `${actorUpdateStepHelpers.join("")}void update_scene_${scNum}_actors(void) {\n  int a;\n  for (a = 1; a < g_actor_count; a++) {\n    if (!g_actor_active[a] || g_actor_hidden[a]) continue;\n    switch (a) {\n${actorUpdateCases.join("")}      default:\n        break;\n    }\n  }\n}\n\n`;
+      sceneActorUpdateCases += `  if (scene_num == ${scNum}) { update_scene_${scNum}_actors(); return; }\n`;
     }
 
     // 4. Triggers: each compiled into isolated run_scene_X_trigger_Y_step
@@ -3203,6 +3311,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 #define HAS_SCENE_STARTUP_SCRIPTS 1
 #define HAS_INTERACT_ACTOR 1
 #define HAS_INTERACT_TRIGGER 1
+#define HAS_ACTOR_UPDATE_SCRIPTS 1
 #define HAS_SCENE_BACKGROUND 1
 #define HAS_SCENE_MUSIC 1
 #define HAS_SCENE_PLAYER_SPRITE 1
@@ -3221,6 +3330,7 @@ ${sceneStepHelpers}
 ${sceneInputCheckHelpers}
 ${sceneActorInteractHelpers}
 ${sceneTriggerInteractHelpers}
+${sceneActorUpdateHelpers}
 int run_scene_step(int scene_num, int step) {
   int prev_sc;
   int res_step;
@@ -3251,6 +3361,9 @@ ${sceneActorInteractCases}  return 0;
 int interact_trigger(int scene_num, int trigger_num) {
 ${sceneTriggerInteractCases}  return 0;
 }
+
+void update_scene_actors(int scene_num) {
+${sceneActorUpdateCases}}
 
 void load_scene_music(int scene_num) {
   switch (scene_num) {

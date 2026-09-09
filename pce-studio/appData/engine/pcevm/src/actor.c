@@ -36,6 +36,11 @@ void actor_init(void) {
     g_actor_bbox_right[i] = 15;
     g_actor_bbox_top[i] = 0;
     g_actor_bbox_bottom[i] = 15;
+    g_actor_update_step[i] = 0;
+    g_actor_wait_timer[i] = 0;
+    g_actor_target_x[i] = 0;
+    g_actor_target_y[i] = 0;
+    g_actor_target_active[i] = 0;
   }
 }
 
@@ -254,6 +259,98 @@ void actor_move_to(int id, int target_x, int target_y) {
     g_actor_x[id] = target_x;
     g_actor_y[id] = target_y;
   }
+}
+
+int actor_distance_check(int a1, int a2, int dist_tiles, int op) {
+  int dx, dy, dist_sq, thresh_sq;
+  if (a1 < 0 || a1 >= PCE_MAX_ACTORS || a2 < 0 || a2 >= PCE_MAX_ACTORS) return 0;
+  if (!g_actor_active[a1] || !g_actor_active[a2]) return 0;
+
+  dx = g_actor_x[a1] - g_actor_x[a2];
+  dy = g_actor_y[a1] - g_actor_y[a2];
+  if (dx < 0) dx = -dx;
+  if (dy < 0) dy = -dy;
+  dx = dx >> 3;
+  dy = dy >> 3;
+
+  dist_sq = dx * dx + dy * dy;
+  thresh_sq = dist_tiles * dist_tiles;
+
+  switch (op) {
+    case 0: return (dist_sq == thresh_sq);
+    case 1: return (dist_sq != thresh_sq);
+    case 2: return (dist_sq <  thresh_sq);
+    case 3: return (dist_sq <= thresh_sq);
+    case 4: return (dist_sq >  thresh_sq);
+    case 5: return (dist_sq >= thresh_sq);
+    default: return 0;
+  }
+}
+
+int actor_move_step(int id, int target_x, int target_y) {
+  int dx, dy, step_x, step_y, spd, new_x, new_y, blocked;
+  if (id < 0 || id >= PCE_MAX_ACTORS || !g_actor_active[id]) return 1;
+
+  dx = target_x - g_actor_x[id];
+  dy = target_y - g_actor_y[id];
+
+  if (dx == 0 && dy == 0) return 1;
+
+  spd = g_actor_move_speed[id];
+  if (spd <= 0) spd = 1;
+
+  blocked = 0;
+
+  if (dx != 0) {
+    if (dx > 0) {
+      step_x = (dx < spd) ? dx : spd;
+      g_actor_dir[id] = DIR_RIGHT;
+    } else {
+      step_x = (-dx < spd) ? dx : -spd;
+      g_actor_dir[id] = DIR_LEFT;
+    }
+    new_x = g_actor_x[id] + step_x;
+    if (!g_actor_collisions_disabled[id] && collision_check_actor_walls(id, new_x, g_actor_y[id])) {
+      blocked = 1;
+    } else {
+      g_actor_x[id] = new_x;
+    }
+  }
+
+  if (dy != 0 && (!blocked || dx == 0)) {
+    if (dy > 0) {
+      step_y = (dy < spd) ? dy : spd;
+      g_actor_dir[id] = DIR_DOWN;
+    } else {
+      step_y = (-dy < spd) ? dy : -spd;
+      g_actor_dir[id] = DIR_UP;
+    }
+    new_y = g_actor_y[id] + step_y;
+    if (!g_actor_collisions_disabled[id] && collision_check_actor_walls(id, g_actor_x[id], new_y)) {
+      if (dx == 0 || blocked) return 1;
+    } else {
+      g_actor_y[id] = new_y;
+    }
+  }
+
+  if (g_actor_x[id] == target_x && g_actor_y[id] == target_y) return 1;
+  if (blocked && dy == 0) return 1;
+
+  return 0;
+}
+
+int actor_move_rel_step(int id, int dx, int dy) {
+  if (id < 0 || id >= PCE_MAX_ACTORS || !g_actor_active[id]) return 1;
+  if (!g_actor_target_active[id]) {
+    g_actor_target_x[id] = g_actor_x[id] + dx;
+    g_actor_target_y[id] = g_actor_y[id] + dy;
+    g_actor_target_active[id] = 1;
+  }
+  if (actor_move_step(id, g_actor_target_x[id], g_actor_target_y[id])) {
+    g_actor_target_active[id] = 0;
+    return 1;
+  }
+  return 0;
 }
 
 void actor_set_move_speed(int id, int speed) {

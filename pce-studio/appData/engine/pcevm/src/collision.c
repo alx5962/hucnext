@@ -135,3 +135,44 @@ int collision_check_actor(int id, int x, int y) {
 
     return 0;
 }
+
+int collision_check_actor_walls(int id, int x, int y) {
+    int x_left, x_right, y_top, y_bottom;
+    int tx_start, tx_end, ty_start, ty_end, tx, ty;
+
+    if (id < 0 || id >= PCE_MAX_ACTORS) return 1;
+
+    x_left = x + g_actor_bbox_left[id];
+    x_right = x + g_actor_bbox_right[id];
+    y_top = y + g_actor_bbox_top[id];
+    y_bottom = y + g_actor_bbox_bottom[id];
+
+    if (g_collision_width > 0 && g_collision_height > 0) {
+        /* 1. Scene boundaries */
+        if (x_left < 0 || y_top < 0 || (x_right >> 3) >= g_collision_width || (y_bottom >> 3) >= g_collision_height) {
+            return 1;
+        }
+
+        /* 2. Tile map collisions */
+        tx_start = x_left >> 3;
+        tx_end = x_right >> 3;
+        ty_start = y_top >> 3;
+        ty_end = y_bottom >> 3;
+
+        if (g_current_scene_type == SCENE_TYPE_PLATFORM) {
+            if (ty_end > ty_start) {
+                ty_end--;
+            }
+        }
+
+        for (ty = ty_start; ty <= ty_end; ty++) {
+            for (tx = tx_start; tx <= tx_end; tx++) {
+                if (collision_check_tile(tx, ty) != COLLISION_NONE) {
+                    return 1;
+                }
+            }
+        }
+    }
+
+    return 0;
+}

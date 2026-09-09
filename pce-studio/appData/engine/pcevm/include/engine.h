@@ -76,8 +76,14 @@ unsigned int g_input_script_disabled_mask;
 int g_player_anim_timer;
 int g_player_anim_frame;
 int g_actor_count;
+int g_actor_update_step[PCE_MAX_ACTORS];
+int g_actor_wait_timer[PCE_MAX_ACTORS];
+int g_actor_target_x[PCE_MAX_ACTORS];
+int g_actor_target_y[PCE_MAX_ACTORS];
+int g_actor_target_active[PCE_MAX_ACTORS];
 
 void player_set_state(int actor_num, int state);
+void update_scene_actors(int scene_num);
 
 /* Global camera state */
 int g_cam_x;

@@ -2,7 +2,7 @@
 #define PCE_ACTOR_H
 
 #ifndef PCE_MAX_ACTORS
-#define PCE_MAX_ACTORS 32
+#define PCE_MAX_ACTORS 16
 #endif
 
 #ifndef SZ_16x16
@@ -64,6 +64,9 @@ void actor_effects(int id, int effect_id);
 void actor_hide_all(void);
 void actor_show_all(void);
 int actor_is_in_bounds(int id);
+int actor_distance_check(int a1, int a2, int dist_tiles, int op);
+int actor_move_step(int id, int target_x, int target_y);
+int actor_move_rel_step(int id, int dx, int dy);
 
 #endif
 

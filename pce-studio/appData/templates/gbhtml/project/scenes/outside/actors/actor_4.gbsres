@@ -76,7 +76,8 @@
         "frames": {
           "type": "number",
           "value": 30
-        }
+        },
+        "__comment": false
       }
     },
     {
@@ -178,7 +179,8 @@
           "type": "number",
           "value": 16
         },
-        "__collapseElse": false
+        "__collapseElse": false,
+        "__comment": false
       },
       "children": {
         "true0": [

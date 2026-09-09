@@ -43,6 +43,13 @@ int interact_trigger(int scene_num, int trigger_num) {
 }
 #endif
 
+#ifndef HAS_ACTOR_UPDATE_SCRIPTS
+void update_scene_actors(int scene_num) {
+  (void)scene_num;
+}
+#endif
+
+
 #ifndef HAS_SCENE_BACKGROUND
 void load_scene_background(int scene_num) { (void)scene_num; }
 #endif
@@ -6288,6 +6295,8 @@ void engine_update(void) {
   } else {
     update_topdown();
   }
+
+  update_scene_actors(g_current_scene);
 
   projectile_update_all();
 }
