@@ -5334,6 +5334,137 @@ void pce_put_text_line(const char *str, int x, int y, int max_w) {
   }
 }
 
+static char g_dialogue_expanded[128];
+
+int pce_format_int(int val, char *buf, int len, int max_len) {
+  int d;
+  int started;
+  int divisor;
+
+  if (val == -32768) {
+    if (len < max_len - 6) {
+      buf[len++] = '-';
+      buf[len++] = '3';
+      buf[len++] = '2';
+      buf[len++] = '7';
+      buf[len++] = '6';
+      buf[len++] = '8';
+    }
+    return len;
+  }
+  if (val < 0) {
+    if (len < max_len) buf[len++] = '-';
+    val = -val;
+  }
+  if (val == 0) {
+    if (len < max_len) buf[len++] = '0';
+    return len;
+  }
+
+  started = 0;
+  divisor = 10000;
+  while (divisor > 0) {
+    d = val / divisor;
+    if (d > 0 || started) {
+      started = 1;
+      if (len < max_len) buf[len++] = '0' + d;
+      val = val - (d * divisor);
+    }
+    divisor = divisor / 10;
+  }
+  return len;
+}
+
+void pce_expand_dialogue(const char *src, char *dst, int max_dst) {
+  int d_len;
+  const char *p;
+  const char *v;
+  const char *spec_ptr;
+  int var_idx;
+  int is_var;
+  int val;
+
+  d_len = 0;
+  p = src;
+  if (!src) {
+    if (max_dst > 0) dst[0] = '\0';
+    return;
+  }
+
+  while (*p && d_len < max_dst - 1) {
+    /* Skip speed, wait, or font codes: !S...!, !W...!, !F...! */
+    if (p[0] == '!' && (p[1] == 'S' || p[1] == 's' || p[1] == 'W' || p[1] == 'w' || p[1] == 'F' || p[1] == 'f')) {
+      spec_ptr = p + 2;
+      while (*spec_ptr && *spec_ptr != '!' && *spec_ptr != '\n') {
+        spec_ptr++;
+      }
+      if (*spec_ptr == '!') {
+        p = spec_ptr + 1;
+        continue;
+      }
+    }
+
+    /* Check for printf prefix e.g. %d$XX$ or %D1$XX$ */
+    if (p[0] == '%' && (p[1] == 'd' || p[1] == 'D' || p[1] == 'c' || p[1] == 't' || p[1] == 'f')) {
+      spec_ptr = p + 2;
+      if (p[1] == 'D' && p[2] >= '0' && p[2] <= '9') {
+        spec_ptr = p + 3;
+      }
+      if (*spec_ptr == '$' || *spec_ptr == '#') {
+        p = spec_ptr;
+      }
+    }
+
+    /* Check for variable token $XX$ or $L0$ or $T0$ or $V0$ */
+    if (*p == '$') {
+      v = p + 1;
+      var_idx = 0;
+      is_var = 0;
+      if (*v == 'L' || *v == 'l' || *v == 'T' || *v == 't' || *v == 'V' || *v == 'v') {
+        v++;
+      }
+      while (*v >= '0' && *v <= '9') {
+        var_idx = var_idx * 10 + (*v - '0');
+        is_var = 1;
+        v++;
+      }
+      if (is_var && *v == '$') {
+        val = vm_get_var(var_idx);
+        d_len = pce_format_int(val, dst, d_len, max_dst - 1);
+        p = v + 1;
+        continue;
+      }
+    }
+
+    /* Check for character variable token #XX# */
+    if (*p == '#') {
+      v = p + 1;
+      var_idx = 0;
+      is_var = 0;
+      if (*v == 'L' || *v == 'l' || *v == 'T' || *v == 't' || *v == 'V' || *v == 'v') {
+        v++;
+      }
+      while (*v >= '0' && *v <= '9') {
+        var_idx = var_idx * 10 + (*v - '0');
+        is_var = 1;
+        v++;
+      }
+      if (is_var && *v == '#') {
+        val = vm_get_var(var_idx);
+        if (d_len < max_dst - 1) {
+          dst[d_len++] = (char)(val & 0xFF);
+        }
+        p = v + 1;
+        continue;
+      }
+    }
+
+    /* Normal character */
+    dst[d_len++] = *p++;
+  }
+  dst[d_len] = '\0';
+}
+
 void show_dialogue(const char *msg) {
   int base_x;
   int base_y;
@@ -5341,6 +5472,9 @@ void show_dialogue(const char *msg) {
 
   if (!msg || !*msg)
     return;
+
+  pce_expand_dialogue(msg, g_dialogue_expanded, 128);
+  msg = g_dialogue_expanded;
 
   g_dialogue_active = 1;
   g_dialogue_timer =
@@ -5390,15 +5524,7 @@ void show_dialogue(const char *msg) {
 }
 
 void copy_choice_opt(char *dst, const char *src, int max_len) {
-  int i;
-  if (!src) {
-    dst[0] = '\0';
-    return;
-  }
-  for (i = 0; i < max_len - 1 && src[i]; i++) {
-    dst[i] = src[i];
-  }
-  dst[i] = '\0';
+  pce_expand_dialogue(src, dst, max_len);
 }
 
 void render_choice_dialogue(void) {

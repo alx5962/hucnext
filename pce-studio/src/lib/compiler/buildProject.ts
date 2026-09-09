@@ -138,6 +138,43 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   }
   const defaultSpriteMode = settingsGbsData?.spriteMode || projectData?.settings?.spriteMode || (typeof projectDirPath === "object" ? projectDirPath?.settings?.spriteMode : undefined) || "8x16";
 
+  // Load variables to map variable names to IDs
+  const varMapByName = new Map<string, string>();
+  const variablesGbsPath = pathModule.join(projDir, "project", "variables.gbsres");
+  if (fs.existsSync(variablesGbsPath)) {
+    try {
+      const varData = fs.readJsonSync(variablesGbsPath);
+      const vars = Array.isArray(varData?.variables) ? varData.variables : [];
+      for (const v of vars) {
+        if (v && v.name && v.id !== undefined) {
+          const paddedId = String(v.id).padStart(2, "0");
+          varMapByName.set(v.name, paddedId);
+        }
+      }
+    } catch (e) { }
+  } else if (Array.isArray(projectData?.variables)) {
+    for (const v of projectData.variables) {
+      if (v && v.name && v.id !== undefined) {
+        const paddedId = String(v.id).padStart(2, "0");
+        varMapByName.set(v.name, paddedId);
+      }
+    }
+  }
+
+  const formatDialogueTextForC = (input: string): string => {
+    if (!input) return "";
+    let str = input;
+    if (varMapByName.size > 0) {
+      for (const [varName, varId] of varMapByName.entries()) {
+        const escapedName = varName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        str = str.replace(new RegExp(`\\$${escapedName}\\$`, "g"), `$${varId}$`);
+        str = str.replace(new RegExp(`\\$${escapedName}\\b`, "g"), `$${varId}$`);
+      }
+    }
+    str = str.replace(/!S\d!/g, "");
+    return str.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n");
+  };
+
   // Load gbsres files if present
   const assetsDir = pathModule.join(projDir, "assets");
   const outputAssetsDir = pathModule.join(buildDir, "assets");
@@ -1720,7 +1757,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         let textDef = "";
         const actText = extractActorText(scActor);
         if (actText) {
-          const cleanText = actText.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
+          const cleanText = formatDialogueTextForC(actText);
           textDef = `#define ACTOR_SCENE_${sceneNum}_${actorNum}_TEXT "${cleanText}"\n`;
           if (aIdx === 0) textDef += `#define ACTOR_SCENE_${sceneNum}_TEXT "${cleanText}"\n`;
         }
@@ -2289,9 +2326,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
               textVal = evt.args.text.join("\n");
             }
             if (textVal) {
-              const cleaned = textVal.replace(/!S\d!/g, "");
-              const escaped = cleaned.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n");
-              stepCases += `      case ${stepIndex}:\n        show_dialogue("${escaped}");\n        return ${stepIndex + 1};\n`;
+              const cleanText = formatDialogueTextForC(textVal);
+              stepCases += `      case ${stepIndex}:\n        show_dialogue("${cleanText}");\n        return ${stepIndex + 1};\n`;
               stepIndex++;
             }
           } else if (evt.command === "EVENT_WAIT") {
@@ -2448,23 +2484,22 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             const rawText = Array.isArray(evt.args?.text)
               ? evt.args.text.join("\n")
               : (typeof evt.args?.text === "string" ? evt.args.text : "");
-            const cleaned = rawText.replace(/!S\d!/g, "");
-            const cleanText = cleaned.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n");
+            const cleanText = formatDialogueTextForC(rawText);
             stepCases += `      case ${stepIndex}:\n        show_dialogue("${cleanText}");\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_CHOICE") {
             const varIdx = parseVarIndex(evt.args?.variable);
-            const trueText = String(evt.args?.trueText || "Yes").replace(/!S\d!/g, "").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
-            const falseText = String(evt.args?.falseText || "No").replace(/!S\d!/g, "").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
+            const trueText = formatDialogueTextForC(String(evt.args?.trueText || "Yes")).replace(/\\n/g, " ");
+            const falseText = formatDialogueTextForC(String(evt.args?.falseText || "No")).replace(/\\n/g, " ");
             stepCases += `      case ${stepIndex}:\n        show_choice(${varIdx}, "${trueText}", "${falseText}");\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_MENU") {
             const varIdx = parseVarIndex(evt.args?.variable);
             const items = Math.max(2, Math.min(4, Number(evt.args?.items) || 2));
-            const opt1 = String(evt.args?.option1 || "Option 1").replace(/!S\d!/g, "").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
-            const opt2 = String(evt.args?.option2 || "Option 2").replace(/!S\d!/g, "").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
-            const opt3 = String(evt.args?.option3 || "Option 3").replace(/!S\d!/g, "").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
-            const opt4 = String(evt.args?.option4 || "Option 4").replace(/!S\d!/g, "").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, " ");
+            const opt1 = formatDialogueTextForC(String(evt.args?.option1 || "Option 1")).replace(/\\n/g, " ");
+            const opt2 = formatDialogueTextForC(String(evt.args?.option2 || "Option 2")).replace(/\\n/g, " ");
+            const opt3 = formatDialogueTextForC(String(evt.args?.option3 || "Option 3")).replace(/\\n/g, " ");
+            const opt4 = formatDialogueTextForC(String(evt.args?.option4 || "Option 4")).replace(/\\n/g, " ");
             const cancelB = evt.args?.cancelOnB !== false ? 1 : 0;
             stepCases += `      case ${stepIndex}:\n        show_menu(${varIdx}, ${items}, "${opt1}", "${opt2}", "${opt3}", "${opt4}", ${cancelB});\n        return ${stepIndex + 1};\n`;
             stepIndex++;
@@ -2932,7 +2967,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         } else {
           const actText = extractActorText(scActor);
           if (actText) {
-            const cleanText = actText.replace(/!S\d!/g, "").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n");
+            const cleanText = formatDialogueTextForC(actText);
             actorStepHelpers.push(`int run_scene_${scNum}_actor_${actorNum}_step(int step) {\n  switch (step) {\n      case 0:\n        show_dialogue("${cleanText}");\n        return -1;\n    default:\n      return -1;\n  }\n}\n\n`);
             actorDispatchCases.push(`    case ${actorNum}:\n      return run_scene_${scNum}_actor_${actorNum}_step(step);\n`);
             actorInteractCases.push(`    case ${actorNum}:\n      g_script_scene = ${scNum};\n      g_script_type = 1;\n      g_script_target = ${actorNum};\n      g_script_step = 0;\n      g_script_step = run_scene_step(${scNum}, 0);\n      return 1;\n`);
@@ -2941,7 +2976,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       } else {
         const actText = extractActorText(scActor);
         if (actText) {
-          const cleanText = actText.replace(/!S\d!/g, "").replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n");
+          const cleanText = formatDialogueTextForC(actText);
           actorStepHelpers.push(`int run_scene_${scNum}_actor_${actorNum}_step(int step) {\n  switch (step) {\n      case 0:\n        show_dialogue("${cleanText}");\n        return -1;\n    default:\n      return -1;\n  }\n}\n\n`);
           actorDispatchCases.push(`    case ${actorNum}:\n      return run_scene_${scNum}_actor_${actorNum}_step(step);\n`);
           actorInteractCases.push(`    case ${actorNum}:\n      g_script_scene = ${scNum};\n      g_script_type = 1;\n      g_script_target = ${actorNum};\n      g_script_step = 0;\n      g_script_step = run_scene_step(${scNum}, 0);\n      return 1;\n`);

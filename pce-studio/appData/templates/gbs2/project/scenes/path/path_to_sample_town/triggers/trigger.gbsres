@@ -5,9 +5,9 @@
   "symbol": "trigger_30",
   "prefabId": "",
   "name": "",
-  "x": 56,
-  "y": 17,
-  "width": 4,
+  "x": 55,
+  "y": 16,
+  "width": 5,
   "height": 2,
   "prefabScriptOverrides": {},
   "script": [
@@ -17,28 +17,6 @@
         "state": "blank"
       },
       "id": "253b873e-076b-4ce2-982a-dd2eaee32dd2"
-    },
-    {
-      "command": "EVENT_ACTOR_MOVE_TO",
-      "args": {
-        "__section": "movement",
-        "actorId": "$self$",
-        "x": {
-          "type": "number",
-          "value": 52
-        },
-        "y": {
-          "type": "number",
-          "value": 7
-        },
-        "collideWith": [
-          "walls"
-        ],
-        "lockDirection": [],
-        "moveType": "horizontal",
-        "__comment": true
-      },
-      "id": "b1e81f01-4e04-4b0b-aa40-f6ceb87d505c"
     },
     {
       "command": "EVENT_ACTOR_SET_POSITION",
@@ -51,7 +29,8 @@
         "y": {
           "type": "number",
           "value": 8
-        }
+        },
+        "__collapse": false
       },
       "id": "2c2063c5-28a6-4ced-82b4-860d0ee9cc9d"
     }
