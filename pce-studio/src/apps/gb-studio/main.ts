@@ -59,6 +59,7 @@ import confirmEjectEngineReplaceDialog from "lib/electron/dialog/confirmEjectEng
 import confirmEjectWebTemplateDialog from "lib/electron/dialog/confirmEjectWebTemplateDialog";
 import confirmEjectWebTemplateReplaceDialog from "lib/electron/dialog/confirmEjectWebTemplateReplaceDialog";
 import ejectEngineToDir from "lib/project/ejectEngineToDir";
+import { calculateProjectStats } from "lib/project/generateProjectStats";
 import type { ProjectExportType } from "store/features/buildGame/buildGameActions";
 import {
   assetsRoot,
@@ -1715,6 +1716,27 @@ ipcMain.handle("project:engine-eject", () => {
 });
 
 ipcMain.handle(
+  "project:generate-stats",
+  async (_event, project: ProjectResources) => {
+    if (!projectPath) {
+      return null;
+    }
+    const projectRoot = Path.dirname(projectPath);
+    const statsResult = calculateProjectStats(project);
+    const outputPath = Path.join(projectRoot, "PROJECT_STATS.md");
+    await writeFile(outputPath, statsResult.markdown, "utf8");
+    return {
+      filePath: outputPath,
+      totalEstimatedSymbols: statsResult.totalEstimatedSymbols,
+      hucSymbolLimit: statsResult.hucSymbolLimit,
+      symbolUsagePercent: statsResult.symbolUsagePercent,
+      totalScenes: statsResult.totalScenes,
+      status: statsResult.status,
+    };
+  },
+);
+
+ipcMain.handle(
   "project:export",
   async (
     event,
@@ -2361,6 +2383,10 @@ menu.on("exportProjectSrc", () => {
 
 menu.on("exportProjectData", () => {
   sendToProjectWindow("menu:export-project", "data");
+});
+
+menu.on("generateStats", () => {
+  sendToProjectWindow("menu:generate-stats");
 });
 
 menu.on("pasteInPlace", () => {

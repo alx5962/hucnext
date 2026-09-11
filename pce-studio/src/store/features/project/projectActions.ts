@@ -324,6 +324,21 @@ const saveProject = createAsyncThunk<void>(
   },
 );
 
+const generateStats = (): AppThunk<Promise<void>> => async (dispatch, getState) => {
+  const state = getState();
+  const project = denormalizeProject(state.project.present);
+  try {
+    const res = await API.project.generateStats(project);
+    if (res) {
+      console.log(
+        `[Project Stats] Generated ${res.filePath}: ${res.totalEstimatedSymbols}/${res.hucSymbolLimit} symbols (${res.symbolUsagePercent}%) across ${res.totalScenes} scenes.`,
+      );
+    }
+  } catch (e) {
+    console.error("Failed to generate project stats:", e);
+  }
+};
+
 const projectActions = {
   openProject,
   closeProject,
@@ -333,6 +348,7 @@ const projectActions = {
   saveProject,
   setSaveStep,
   setSaveWriteProgress,
+  generateStats,
   renameAsset,
   renameBackgroundAsset,
   renameTilesetAsset,

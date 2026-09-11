@@ -426,6 +426,10 @@ API.events.menu.arrangeScenes.subscribe(() => {
   store.dispatch(entitiesActions.arrangeScenes());
 });
 
+API.events.menu.generateStats.subscribe(() => {
+  store.dispatch(projectActions.generateStats());
+});
+
 // Settings changed
 
 API.events.settings.uiScaleChanged.subscribe((_, zoomLevel) => {

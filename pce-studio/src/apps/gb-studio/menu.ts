@@ -71,6 +71,7 @@ const listeners: Record<MenuListenerKey, MenuListenerFn[]> = {
   openMusic: [],
   toggleMidiInput: [],
   selectMidiInput: [],
+  generateStats: [],
 };
 
 const notifyListeners = (event: MenuListenerKey, value?: unknown) => {
@@ -863,6 +864,13 @@ const buildMenu = async ({
           label: l10n("MENU_LEARN_MORE"),
           click() {
             shell.openExternal("https://www.gbstudio.dev");
+          },
+        },
+        { type: "separator" },
+        {
+          label: l10n("MENU_GENERATE_STATS"),
+          click() {
+            notifyListeners("generateStats");
           },
         },
       ],

@@ -34,6 +34,7 @@ export type MenuListenerKey =
   | "projectPlugins"
   | "openMusic"
   | "toggleMidiInput"
-  | "selectMidiInput";
+  | "selectMidiInput"
+  | "generateStats";
 
 export type MenuZoomType = "in" | "out" | "reset";

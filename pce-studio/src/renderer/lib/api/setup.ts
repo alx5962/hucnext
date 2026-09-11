@@ -280,6 +280,8 @@ const APISetup = {
       listener: (event: IpcRendererEvent, message: string) => void,
     ) => ipcRenderer.on("build:error", listener),
     ejectEngine: () => ipcRenderer.invoke("project:engine-eject"),
+    generateStats: (data: ProjectResources) =>
+      ipcRenderer.invoke("project:generate-stats", data),
     exportProject: (
       data: ProjectResources,
       engineSchema: EngineSchema,
@@ -546,6 +548,10 @@ const APISetup = {
       arrangeScenes:
         createSubscribeAPI<(event: IpcRendererEvent) => void>(
           "menu:arrange-scenes",
+        ),
+      generateStats:
+        createSubscribeAPI<(event: IpcRendererEvent) => void>(
+          "menu:generate-stats",
         ),
     },
     app: {
