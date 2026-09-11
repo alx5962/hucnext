@@ -179,10 +179,18 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   const assetsDir = pathModule.join(projDir, "assets");
   const outputAssetsDir = pathModule.join(buildDir, "assets");
   if (fs.existsSync(outputAssetsDir)) {
-    await fs.remove(outputAssetsDir);
+    try {
+      await fs.remove(outputAssetsDir);
+    } catch (e) {
+      // Ignore transient Windows EPERM or file lock issues when cleaning output assets
+    }
   }
   if (fs.existsSync(assetsDir)) {
-    await fs.copy(assetsDir, outputAssetsDir, { overwrite: true });
+    try {
+      await fs.copy(assetsDir, outputAssetsDir, { overwrite: true, errorOnExist: false });
+    } catch (e) {
+      // Ignore transient file lock issues
+    }
   }
 
   // Parse sprite gbsres files
