@@ -17,6 +17,7 @@ export type MenuListenerKey =
   | "updateShowConnections"
   | "updateShowNavigator"
   | "updateShowSceneScreenGrid"
+  | "arrangeScenes"
   | "updateCheckSpelling"
   | "updateEmulatorMuted"
   | "run"

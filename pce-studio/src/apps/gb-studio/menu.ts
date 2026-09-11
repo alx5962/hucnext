@@ -53,6 +53,7 @@ const listeners: Record<MenuListenerKey, MenuListenerFn[]> = {
   updateShowConnections: [],
   updateShowNavigator: [],
   updateShowSceneScreenGrid: [],
+  arrangeScenes: [],
   updateCheckSpelling: [],
   updateEmulatorMuted: [],
   run: [],
@@ -783,6 +784,14 @@ const buildMenu = async ({
               },
             },
           ],
+        },
+        { type: "separator" },
+        {
+          id: "arrangeScenes",
+          label: l10n("MENU_ARRANGE_SCENES"),
+          click() {
+            notifyListeners("arrangeScenes");
+          },
         },
         { type: "separator" },
         {

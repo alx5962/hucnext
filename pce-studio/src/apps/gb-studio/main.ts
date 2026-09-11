@@ -2489,6 +2489,10 @@ menu.on("updateShowSceneScreenGrid", async (value) => {
   sendToProjectWindow("setting:changed", "showSceneScreenGrid", value);
 });
 
+menu.on("arrangeScenes", () => {
+  sendToProjectWindow("menu:arrange-scenes");
+});
+
 menu.on("updateEmulatorMuted", async (value) => {
   const isMuted = value === true;
   await settingsSet(EMULATOR_MUTED_SETTING_KEY, isMuted);

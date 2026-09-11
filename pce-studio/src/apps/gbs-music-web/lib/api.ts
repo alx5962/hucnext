@@ -401,6 +401,9 @@ export const installWebRendererApi = (store: MusicEditorStore) => {
         pasteInPlace: {
           subscribe: () => () => undefined,
         },
+        arrangeScenes: {
+          subscribe: () => () => undefined,
+        },
         midiInputToggle: {
           subscribe: () => () => undefined,
         },
