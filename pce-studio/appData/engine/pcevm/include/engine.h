@@ -154,6 +154,15 @@ int scene_has_startup_script(int scene_num);
 int scene_has_actor_script(int scene_num, int actor_num);
 int interact_actor(int scene_num, int actor_num);
 int interact_trigger(int scene_num, int trigger_num);
+int interact_trigger_leave(int scene_num, int trigger_num);
+
+#ifndef SCRIPT_TYPE_STARTUP
+#define SCRIPT_TYPE_STARTUP 0
+#define SCRIPT_TYPE_ACTOR 1
+#define SCRIPT_TYPE_TRIGGER 2
+#define SCRIPT_TYPE_INPUT 3
+#define SCRIPT_TYPE_TRIGGER_LEAVE 4
+#endif
 
 /* Scene type constants */
 #define SCENE_TYPE_TOPDOWN      0

@@ -6,6 +6,7 @@
 static unsigned char g_trigger_cooldown = 0;
 void load_scene(int scene_num, int player_x, int player_y);
 int interact_trigger(int scene_num, int trigger_num);
+int interact_trigger_leave(int scene_num, int trigger_num);
 
 void trigger_init(void) {
   g_trigger_count = 0;
@@ -60,6 +61,7 @@ void trigger_add(int scene_id, int x, int y, int w, int h, int target_scene,
 void trigger_check(int px, int py) {
   int t, i, tx1, ty1, tx2, ty2;
   int hit_trigger;
+  int last_trigger;
 
   hit_trigger = -1;
 
@@ -83,6 +85,12 @@ void trigger_check(int px, int py) {
     }
   }
 
+  last_trigger = g_current_trigger_hit;
+
+  if (last_trigger >= 0 && last_trigger != hit_trigger) {
+    interact_trigger_leave(g_current_scene, last_trigger);
+  }
+
   if (hit_trigger >= 0) {
     /* Entering or inside trigger: disable input scripts and ensure clean sprite state */
     if (g_inside_trigger == 0) {
@@ -93,9 +101,9 @@ void trigger_check(int px, int py) {
     g_inside_trigger = 1;
     g_current_trigger_hit = hit_trigger;
 
-    if (g_trigger_cooldown == 0) {
+    if (last_trigger != hit_trigger) {
+      g_trigger_cooldown = 20;
       if (g_triggers[hit_trigger].target_scene > 0) {
-        g_trigger_cooldown = 20;
         g_inside_trigger = 0;
         g_current_trigger_hit = -1;
         load_scene(g_triggers[hit_trigger].target_scene,
@@ -103,15 +111,12 @@ void trigger_check(int px, int py) {
                    g_triggers[hit_trigger].target_y);
         return;
       } else if (g_triggers[hit_trigger].target_x >= 0 && g_triggers[hit_trigger].target_y >= 0) {
-        g_trigger_cooldown = 20;
         actor_set_pos(0, g_triggers[hit_trigger].target_x, g_triggers[hit_trigger].target_y);
         return;
       } else if (interact_trigger(g_current_scene, hit_trigger)) {
-        g_trigger_cooldown = 20;
         return;
       }
       if (g_triggers[hit_trigger].script) {
-        g_trigger_cooldown = 20;
         vm_start_script(g_triggers[hit_trigger].script);
         return;
       }

@@ -46,6 +46,11 @@ int interact_trigger(int scene_num, int trigger_num) {
   (void)trigger_num;
   return 0;
 }
+int interact_trigger_leave(int scene_num, int trigger_num) {
+  (void)scene_num;
+  (void)trigger_num;
+  return 0;
+}
 #endif
 
 #ifndef HAS_ACTOR_UPDATE_SCRIPTS

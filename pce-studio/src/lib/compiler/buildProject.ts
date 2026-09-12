@@ -1939,6 +1939,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     });
     (scene.triggers || []).forEach((tr: any) => {
       collectProjSprites(tr.script);
+      collectProjSprites(tr.leaveScript);
     });
   });
 
@@ -3235,6 +3236,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     // 4. Triggers: each compiled into isolated run_scene_X_trigger_Y_step
     const triggerStepHelpers: string[] = [];
     const triggerDispatchCases: string[] = [];
+    const triggerLeaveStepHelpers: string[] = [];
+    const triggerLeaveDispatchCases: string[] = [];
 
     scTriggers.forEach(({ globalIdx, trigger: scTrigger }) => {
       if (scTrigger.script && Array.isArray(scTrigger.script) && scTrigger.script.length > 0) {
@@ -3243,6 +3246,14 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           trigResult.casesCode += `      case ${trigResult.stepCount}:\n        return -1;\n`;
           triggerStepHelpers.push(`int run_scene_${scNum}_trigger_${globalIdx}_step(int step) {\n  switch (step) {\n${trigResult.casesCode}    default:\n      return -1;\n  }\n}\n\n`);
           triggerDispatchCases.push(`    case ${globalIdx}:\n      return run_scene_${scNum}_trigger_${globalIdx}_step(step);\n`);
+        }
+      }
+      if (scTrigger.leaveScript && Array.isArray(scTrigger.leaveScript) && scTrigger.leaveScript.length > 0) {
+        const trigLeaveResult = compileEventSequence(scTrigger.leaveScript, false, 0);
+        if (trigLeaveResult.stepCount > 0) {
+          trigLeaveResult.casesCode += `      case ${trigLeaveResult.stepCount}:\n        return -1;\n`;
+          triggerLeaveStepHelpers.push(`int run_scene_${scNum}_trigger_${globalIdx}_leave_step(int step) {\n  switch (step) {\n${trigLeaveResult.casesCode}    default:\n      return -1;\n  }\n}\n\n`);
+          triggerLeaveDispatchCases.push(`    case ${globalIdx}:\n      return run_scene_${scNum}_trigger_${globalIdx}_leave_step(step);\n`);
         }
       }
     });
@@ -3263,6 +3274,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     if (triggerDispatchCases.length > 0) {
       sceneStepBody += `  if (g_script_type == 2) {\n    switch (g_script_target) {\n${triggerDispatchCases.join("")}      default:\n        return -1;\n    }\n  }\n`;
     }
+    if (triggerLeaveDispatchCases.length > 0) {
+      sceneStepBody += `  if (g_script_type == 4) {\n    switch (g_script_target) {\n${triggerLeaveDispatchCases.join("")}      default:\n        return -1;\n    }\n  }\n`;
+    }
     if (inputDispatchCases.length > 0) {
       sceneStepBody += `  if (g_script_type == 3) {\n    switch (g_script_target) {\n${inputDispatchCases.join("")}      default:\n        return -1;\n    }\n  }\n`;
     }
@@ -3273,6 +3287,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     sceneStepHelpers += sceneStartupStepHelper;
     if (actorStepHelpers.length > 0) sceneStepHelpers += actorStepHelpers.join("");
     if (triggerStepHelpers.length > 0) sceneStepHelpers += triggerStepHelpers.join("");
+    if (triggerLeaveStepHelpers.length > 0) sceneStepHelpers += triggerLeaveStepHelpers.join("");
     if (inputStepHelpers.length > 0) sceneStepHelpers += inputStepHelpers.join("");
     sceneStepHelpers += sceneStepFunction;
 
@@ -3462,6 +3477,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 #define SCRIPT_TYPE_ACTOR 1
 #define SCRIPT_TYPE_TRIGGER 2
 #define SCRIPT_TYPE_INPUT 3
+#define SCRIPT_TYPE_TRIGGER_LEAVE 4
 #endif
 
 int run_scene_step(int scene_num, int step);
@@ -3509,6 +3525,15 @@ int interact_actor(int scene_num, int actor_num) {
 int interact_trigger(int scene_num, int trigger_num) {
   g_script_scene = scene_num;
   g_script_type = 2;
+  g_script_target = trigger_num;
+  g_script_step = 0;
+  g_script_step = run_scene_step(scene_num, 0);
+  return (g_script_step >= 0 || g_script_scene != scene_num) ? 1 : 0;
+}
+
+int interact_trigger_leave(int scene_num, int trigger_num) {
+  g_script_scene = scene_num;
+  g_script_type = 4;
   g_script_target = trigger_num;
   g_script_step = 0;
   g_script_step = run_scene_step(scene_num, 0);

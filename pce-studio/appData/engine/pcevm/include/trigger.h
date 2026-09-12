@@ -21,6 +21,7 @@ void trigger_add(int scene_id, int x, int y, int w, int h, int target_scene, int
 void trigger_activate_scene(int scene_id);
 void trigger_check(int px, int py);
 int trigger_find_at(int px, int py);
+int interact_trigger_leave(int scene_num, int trigger_num);
 
 #endif /* PCE_TRIGGER_H */
 
