@@ -8,6 +8,7 @@ import { SearchableCard } from "ui/cards/SearchableCard";
 import { SearchableSettingRow } from "ui/form/SearchableSettingRow";
 import { SettingRowInput, SettingRowLabel } from "ui/form/SettingRow";
 import { Select } from "ui/form/Select";
+import { CheckboxField } from "ui/form/CheckboxField";
 import settingsActions from "store/features/settings/settingsActions";
 import { TargetSystem } from "store/features/settings/settingsState";
 import { useAppDispatch, useAppSelector } from "store/hooks";
@@ -47,9 +48,24 @@ export const SettingsSectionCart = ({
   const targetSystem: TargetSystem =
     rawTargetSystem === "cd" ? "iso" : (rawTargetSystem as TargetSystem) || "pce";
 
+  const sf2Enabled = useAppSelector(
+    (state) => Boolean((state.project.present.settings as any).sf2Enabled),
+  );
+
   const onChangeTargetSystem = useCallback(
     (targetSystem: TargetSystem) => {
       dispatch(settingsActions.editSettings({ targetSystem } as any));
+    },
+    [dispatch],
+  );
+
+  const onChangeSF2Enabled = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      dispatch(
+        settingsActions.editSettings({
+          sf2Enabled: e.currentTarget.checked,
+        } as any),
+      );
     },
     [dispatch],
   );
@@ -58,6 +74,7 @@ export const SettingsSectionCart = ({
     dispatch(
       settingsActions.editSettings({
         targetSystem: "pce",
+        sf2Enabled: false,
       } as any),
     );
   }, [dispatch]);
@@ -79,6 +96,8 @@ export const SettingsSectionCart = ({
     }
   };
 
+  const isCDTarget = targetSystem === "iso" || targetSystem === "cd";
+
   return (
     <SearchableCard
       searchTerm={searchTerm}
@@ -91,6 +110,9 @@ export const SettingsSectionCart = ({
         "CD-ROM",
         "PCE",
         "SGX",
+        "SF2",
+        "Street Fighter",
+        "Mapper",
       ]}
     >
       <CardAnchor id="settingsTargetSystem" />
@@ -120,6 +142,39 @@ export const SettingsSectionCart = ({
               <p>{getTargetDescription()}</p>
             </Alert>
           </div>
+        </SettingRowInput>
+      </SearchableSettingRow>
+
+      <SearchableSettingRow
+        searchTerm={searchTerm}
+        searchMatches={[
+          "SF2",
+          "Street Fighter",
+          "Mapper",
+          l10n("FIELD_ENABLE_SF2"),
+        ]}
+      >
+        <SettingRowLabel>{l10n("FIELD_ENABLE_SF2")}</SettingRowLabel>
+        <SettingRowInput>
+          {isCDTarget ? (
+            <Alert variant="warning">
+              <p>{l10n("FIELD_SF2_UNAVAILABLE_CD")}</p>
+            </Alert>
+          ) : (
+            <>
+              <CheckboxField
+                name="sf2Enabled"
+                label={l10n("FIELD_ENABLE_SF2")}
+                checked={sf2Enabled}
+                onChange={onChangeSF2Enabled}
+              />
+              <div style={{ marginTop: 8 }}>
+                <Alert variant="info">
+                  <p>{l10n("FIELD_ENABLE_SF2_DESC")}</p>
+                </Alert>
+              </div>
+            </>
+          )}
         </SettingRowInput>
       </SearchableSettingRow>
 

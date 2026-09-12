@@ -337,6 +337,7 @@ export const defaultProjectSettings: Settings = {
   defaultCharacterEncoding: "",
   defaultPlayerSprites: {},
   targetSystem: "pce",
+  sf2Enabled: false,
   cartType: "mbc5",
   batterylessEnabled: false,
   favoriteEvents: ["EVENT_TEXT", "EVENT_SWITCH_SCENE"],

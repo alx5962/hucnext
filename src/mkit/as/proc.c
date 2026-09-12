@@ -721,6 +721,9 @@ proc_reloc(void)
 
 				bank_free[reloc_bank] -= proc_ptr->size;
 
+				if (reloc_bank > max_bank)
+					max_bank = reloc_bank;
+
 				++num_relocated;
 			}
 		}

@@ -64,15 +64,19 @@ export const makeBuild = async ({
   }
 
   const targetSystem = data?.settings?.targetSystem || "pce";
+  const sf2Enabled = Boolean(data?.settings?.sf2Enabled);
+  const isCD = targetSystem === "iso" || targetSystem === "cd" || targetSystem === "scd";
 
   let targetLabel = "PC Engine HuCard (.PCE ROM)";
   let targetFlag = "";
   if (targetSystem === "sgx") {
-    targetLabel = "SuperGrafx (.SGX ROM)";
+    targetLabel = sf2Enabled ? "SuperGrafx + SF2 Mapper (.SGX ROM)" : "SuperGrafx (.SGX ROM)";
     targetFlag = "-sgx ";
-  } else if (targetSystem === "iso" || targetSystem === "cd" || targetSystem === "scd") {
+  } else if (isCD) {
     targetLabel = "Super CD-ROM² (.ISO Track Image)";
     targetFlag = "-scd ";
+  } else if (sf2Enabled) {
+    targetLabel = "PC Engine HuCard + SF2 Mapper (.PCE ROM)";
   }
 
   progress(`Running HuC compiler (${targetLabel})...`);
@@ -91,8 +95,10 @@ export const makeBuild = async ({
 
     // Step 2: Run PCEAS with -O and --strip to strip unused procedures and optimize bank packing
     let pceasTarget = "-raw -pad ";
-    if (targetSystem === "iso" || targetSystem === "cd" || targetSystem === "scd") {
+    if (isCD) {
       pceasTarget = "-scd ";
+    } else if (sf2Enabled) {
+      pceasTarget = "--sf2 -raw ";
     }
 
     const pceasCmd = `"${pceasExe}" -O --strip ${pceasTarget}main.s`;
@@ -137,12 +143,22 @@ export const makeBuild = async ({
             );
           }
 
-          // Check PC Engine 128-bank (1MB) hardware limit (HuCard and SGX)
-          if (targetSystem !== "iso" && targetSystem !== "cd" && targetSystem !== "scd" && bankNum > 127 && bankNum < 200) {
-            throw new Error(
-              `CRITICAL BUILD ERROR: ROM bank index out of range ($${bankHex} / ${bankNum} > 127). ` +
-              `PC Engine standard ROMs are limited to 128 banks (1 Megabyte).`
-            );
+          // Check PC Engine hardware bank limits
+          if (!isCD) {
+            if (sf2Enabled) {
+              // SF2 Mapper supports up to 1024 banks (8 Megabytes)
+              if (bankNum > 1023) {
+                throw new Error(
+                  `CRITICAL BUILD ERROR: ROM bank index out of range ($${bankHex} / ${bankNum} > 1023). ` +
+                  `Street Fighter II mapper ROMs are limited to 1,024 banks (8 Megabytes).`
+                );
+              }
+            } else if (bankNum > 127 && bankNum < 200) {
+              throw new Error(
+                `CRITICAL BUILD ERROR: ROM bank index out of range ($${bankHex} / ${bankNum} > 127). ` +
+                `PC Engine standard ROMs are limited to 128 banks (1 Megabyte). Enable the Street Fighter II Mapper in Project Settings to support up to 8 Megabytes.`
+              );
+            }
           }
 
           // Check asset symbols: all assets (.org $6000) must stay within $6000-$7FFF (8192 bytes)
@@ -191,7 +207,8 @@ export const makeBuild = async ({
         }
       }
 
-      progress(`[ROM Bank Validator] All checks passed! Max bank: ${maxBank}/127 (${Math.round(((maxBank + 1) / 128) * 100)}% capacity used).`);
+      const capacityBanks = sf2Enabled ? 1024 : isCD ? 32 : 128;
+      progress(`[ROM Bank Validator] All checks passed! Max bank: ${maxBank}/${capacityBanks - 1} (${Math.round(((maxBank + 1) / capacityBanks) * 100)}% capacity used).`);
     }
   } catch (err: any) {
     const errText = (err.stdout ? String(err.stdout) : "") + "\n" + (err.stderr ? String(err.stderr) : "");

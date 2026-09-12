@@ -946,6 +946,7 @@ export const SettingsResource = Type.Object({
   defaultCharacterEncoding: Type.String(),
   defaultPlayerSprites: Type.Record(Type.String(), Type.String()),
   targetSystem: Type.Optional(TargetSystem),
+  sf2Enabled: Type.Optional(Type.Boolean()),
   cartType: Type.Optional(Type.String()),
   batterylessEnabled: Type.Optional(Type.Boolean()),
   favoriteEvents: Type.Array(Type.String()),
