@@ -13,7 +13,7 @@ export const getROMFileStem = (
       : kebabCase(safeProject.trim());
 
   const stem = stripInvalidFilenameCharacters(source)
-    .replace(/(\.gb|\.gbc|\.pocket|\.pce)$/i, "")
+    .replace(/(\.gb|\.gbc|\.pocket|\.pce|\.sgx|\.iso|\.cue)$/i, "")
     .trim();
 
   if (stem.replace(/-/g, "").length === 0) {
@@ -28,8 +28,14 @@ export const getROMFilename = (
   projectName: string,
   isColorOnly?: boolean,
   buildType?: string,
+  targetSystem: string = "pce",
 ): string => {
-  const fileExt = "pce";
+  let fileExt = "pce";
+  if (targetSystem === "sgx") {
+    fileExt = "sgx";
+  } else if (targetSystem === "iso" || targetSystem === "cd") {
+    fileExt = "iso";
+  }
   const fileStem = getROMFileStem(overrideName, projectName);
   return `${fileStem}.${fileExt}`;
 };

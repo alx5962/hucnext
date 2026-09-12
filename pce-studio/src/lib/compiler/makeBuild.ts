@@ -22,6 +22,7 @@ export const cancelBuildCommandsInProgress = () => { };
 export const makeBuild = async ({
   buildRoot,
   romFilename,
+  data,
   progress = () => { },
   warnings = () => { },
 }: MakeOptions) => {
@@ -62,9 +63,21 @@ export const makeBuild = async ({
     throw new Error(`Main source file missing at ${mainC}`);
   }
 
-  progress("Running HuC compiler (C -> 6502 Assembly -> .PCE ROM)...");
+  const targetSystem = data?.settings?.targetSystem || "pce";
 
-  const cmd = `"${hucExe}" main.c`;
+  let targetLabel = "PC Engine HuCard (.PCE ROM)";
+  let targetFlag = "";
+  if (targetSystem === "sgx") {
+    targetLabel = "SuperGrafx (.SGX ROM)";
+    targetFlag = "-sgx ";
+  } else if (targetSystem === "iso" || targetSystem === "cd" || targetSystem === "scd") {
+    targetLabel = "Super CD-ROM² (.ISO Track Image)";
+    targetFlag = "-scd ";
+  }
+
+  progress(`Running HuC compiler (${targetLabel})...`);
+
+  const cmd = `"${hucExe}" ${targetFlag}main.c`;
   try {
     const { stdout, stderr } = await execAsync(cmd, {
       cwd: buildRoot,
@@ -107,8 +120,8 @@ export const makeBuild = async ({
             );
           }
 
-          // Check PC Engine 128-bank (1MB) hardware limit
-          if (bankNum > 127 && bankNum < 200) {
+          // Check PC Engine 128-bank (1MB) hardware limit (HuCard and SGX)
+          if (targetSystem !== "iso" && targetSystem !== "cd" && bankNum > 127 && bankNum < 200) {
             throw new Error(
               `CRITICAL BUILD ERROR: ROM bank index out of range ($${bankHex} / ${bankNum} > 127). ` +
               `PC Engine standard ROMs are limited to 128 banks (1 Megabyte).`
@@ -177,14 +190,40 @@ export const makeBuild = async ({
   await fs.ensureDir(romDir);
 
   const defaultOutputPce = Path.join(buildRoot, "main.pce");
-  const targetOutputPce = Path.join(romDir, romFilename || "game.pce");
+  const defaultOutputSgx = Path.join(buildRoot, "main.sgx");
+  const defaultOutputIso = Path.join(buildRoot, "main.iso");
+  const defaultOutputCue = Path.join(buildRoot, "main.cue");
 
-  if (fs.existsSync(defaultOutputPce)) {
-    await fs.move(defaultOutputPce, targetOutputPce, { overwrite: true });
+  const defaultExt = targetSystem === "iso" || targetSystem === "cd" ? "iso" : targetSystem === "sgx" ? "sgx" : "pce";
+  const targetOutputRom = Path.join(romDir, romFilename || `game.${defaultExt}`);
+
+  if (targetSystem === "iso" || targetSystem === "cd") {
+    if (fs.existsSync(defaultOutputIso)) {
+      await fs.move(defaultOutputIso, targetOutputRom, { overwrite: true });
+    }
+    const targetOutputCue = Path.join(romDir, (romFilename || "game").replace(/\.[^/.]+$/, "") + ".cue");
+    if (fs.existsSync(defaultOutputCue)) {
+      await fs.move(defaultOutputCue, targetOutputCue, { overwrite: true });
+    } else if (fs.existsSync(targetOutputRom)) {
+      // Auto-generate standard single-track data CUE sheet for PC Engine emulators
+      const isoBase = Path.basename(targetOutputRom);
+      const cueContent = `FILE "${isoBase}" BINARY\n  TRACK 01 MODE1/2048\n    INDEX 01 00:00:00\n`;
+      await fs.writeFile(targetOutputCue, cueContent, "utf8");
+    }
+  } else if (targetSystem === "sgx") {
+    if (fs.existsSync(defaultOutputSgx)) {
+      await fs.move(defaultOutputSgx, targetOutputRom, { overwrite: true });
+    } else if (fs.existsSync(defaultOutputPce)) {
+      await fs.move(defaultOutputPce, targetOutputRom, { overwrite: true });
+    }
+  } else {
+    if (fs.existsSync(defaultOutputPce)) {
+      await fs.move(defaultOutputPce, targetOutputRom, { overwrite: true });
+    }
   }
 
-  progress(`Successfully generated ROM at ${targetOutputPce}`);
-  return targetOutputPce;
+  progress(`Successfully generated output at ${targetOutputRom}`);
+  return targetOutputRom;
 };
 
 export default makeBuild;

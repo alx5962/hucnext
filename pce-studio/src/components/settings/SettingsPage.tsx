@@ -106,8 +106,8 @@ const SettingsPage = () => {
             <SettingsMenuItem onClick={onMenuItem("settingsControls")}>
               {l10n("SETTINGS_CONTROLS")}
             </SettingsMenuItem>
-            <SettingsMenuItem onClick={onMenuItem("settingsCartType")}>
-              {l10n("SETTINGS_CART_TYPE")}
+            <SettingsMenuItem onClick={onMenuItem("settingsTargetSystem")}>
+              {l10n("SETTINGS_TARGET_SYSTEM")}
             </SettingsMenuItem>
             <SettingsMenuItem onClick={onMenuItem("settingsBuild")}>
               {l10n("SETTINGS_BUILD")}

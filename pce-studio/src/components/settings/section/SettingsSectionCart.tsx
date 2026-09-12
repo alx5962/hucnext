@@ -5,119 +5,121 @@ import { Alert } from "ui/alerts/Alert";
 import { Button } from "ui/buttons/Button";
 import { CardAnchor, CardButtons, CardHeading } from "ui/cards/Card";
 import { SearchableCard } from "ui/cards/SearchableCard";
-import { Checkbox } from "ui/form/Checkbox";
 import { SearchableSettingRow } from "ui/form/SearchableSettingRow";
 import { SettingRowInput, SettingRowLabel } from "ui/form/SettingRow";
 import { Select } from "ui/form/Select";
 import settingsActions from "store/features/settings/settingsActions";
-import { CartType } from "store/features/settings/settingsState";
+import { TargetSystem } from "store/features/settings/settingsState";
 import { useAppDispatch, useAppSelector } from "store/hooks";
 
 interface SettingsSectionCartProps {
   searchTerm: string;
 }
 
-interface CartTypeOption {
-  value: CartType;
+interface TargetSystemOption {
+  value: TargetSystem;
   label: string;
 }
-
-const cartOptions: CartTypeOption[] = [
-  {
-    value: "mbc5",
-    label: "MBC5",
-  },
-  {
-    value: "mbc3",
-    label: "MBC3",
-  },
-];
 
 export const SettingsSectionCart = ({
   searchTerm,
 }: SettingsSectionCartProps) => {
   const dispatch = useAppDispatch();
 
-  const cartType =
-    useAppSelector((state) => state.project.present.settings.cartType) ||
-    "mbc5";
+  const targetOptions: TargetSystemOption[] = [
+    {
+      value: "pce",
+      label: l10n("FIELD_TARGET_PCE"),
+    },
+    {
+      value: "sgx",
+      label: l10n("FIELD_TARGET_SGX"),
+    },
+    {
+      value: "iso",
+      label: l10n("FIELD_TARGET_SCD"),
+    },
+  ];
 
-  const batterylessEnabled = useAppSelector(
-    (state) => state.project.present.settings.batterylessEnabled,
+  const rawTargetSystem = useAppSelector(
+    (state) => (state.project.present.settings as any).targetSystem,
   );
+  const targetSystem: TargetSystem =
+    rawTargetSystem === "cd" ? "iso" : (rawTargetSystem as TargetSystem) || "pce";
 
-  const onChangeCartType = useCallback(
-    (cartType: CartType) => {
-      dispatch(settingsActions.editSettings({ cartType }));
+  const onChangeTargetSystem = useCallback(
+    (targetSystem: TargetSystem) => {
+      dispatch(settingsActions.editSettings({ targetSystem } as any));
     },
     [dispatch],
   );
 
-  const onToggleBatteryless = useCallback(() => {
-    dispatch(
-      settingsActions.editSettings({ batterylessEnabled: !batterylessEnabled }),
-    );
-  }, [dispatch, batterylessEnabled]);
-
   const onRestoreDefault = useCallback(() => {
     dispatch(
       settingsActions.editSettings({
-        cartType: undefined,
-        batterylessEnabled: false,
-      }),
+        targetSystem: "pce",
+      } as any),
     );
   }, [dispatch]);
 
   const currentValue =
-    cartOptions.find((option) => option.value === cartType) || cartOptions[0];
+    targetOptions.find((option) => option.value === targetSystem) ||
+    targetOptions[0];
+
+  const getTargetDescription = () => {
+    switch (targetSystem) {
+      case "sgx":
+        return l10n("FIELD_TARGET_INFO_SGX");
+      case "iso":
+      case "cd":
+        return l10n("FIELD_TARGET_INFO_SCD");
+      case "pce":
+      default:
+        return l10n("FIELD_TARGET_INFO_PCE");
+    }
+  };
 
   return (
     <SearchableCard
       searchTerm={searchTerm}
-      searchMatches={[l10n("SETTINGS_CART_TYPE")]}
+      searchMatches={[
+        l10n("SETTINGS_TARGET_SYSTEM"),
+        l10n("FIELD_TARGET_SYSTEM"),
+        "HuCard",
+        "SuperGrafx",
+        "ISO",
+        "CD-ROM",
+        "PCE",
+        "SGX",
+      ]}
     >
+      <CardAnchor id="settingsTargetSystem" />
       <CardAnchor id="settingsCartType" />
-      <CardHeading>{l10n("SETTINGS_CART_TYPE")}</CardHeading>
+      <CardHeading>{l10n("SETTINGS_TARGET_SYSTEM")}</CardHeading>
 
       <SearchableSettingRow
         searchTerm={searchTerm}
-        searchMatches={[l10n("SETTINGS_CART_TYPE")]}
+        searchMatches={[
+          l10n("SETTINGS_TARGET_SYSTEM"),
+          l10n("FIELD_TARGET_SYSTEM"),
+        ]}
       >
-        <SettingRowLabel>{l10n("SETTINGS_CART_TYPE")}</SettingRowLabel>
+        <SettingRowLabel>{l10n("FIELD_TARGET_SYSTEM")}</SettingRowLabel>
         <SettingRowInput>
           <Select
             value={currentValue}
-            options={cartOptions}
-            onChange={(newValue: SingleValue<CartTypeOption>) => {
+            options={targetOptions}
+            onChange={(newValue: SingleValue<TargetSystemOption>) => {
               if (newValue) {
-                onChangeCartType(newValue.value);
+                onChangeTargetSystem(newValue.value);
               }
             }}
           />
-        </SettingRowInput>
-      </SearchableSettingRow>
-
-      <SearchableSettingRow
-        searchTerm={searchTerm}
-        searchMatches={[l10n("FIELD_CART_BATTERYLESS")]}
-      >
-        <SettingRowLabel>{l10n("FIELD_CART_BATTERYLESS")}</SettingRowLabel>
-        <SettingRowInput>
-          <Checkbox
-            id="batterylessEnabled"
-            name="batterylessEnabled"
-            checked={batterylessEnabled}
-            onChange={onToggleBatteryless}
-          />
-          {batterylessEnabled && (
-            <div style={{ marginTop: 3 }}>
-              <Alert variant="warning">
-                <p>{l10n("FIELD_CART_BATTERYLESS_MORE_INFO_1")}</p>
-                <p>{l10n("FIELD_CART_BATTERYLESS_MORE_INFO_2")}</p>
-                <p>{l10n("FIELD_CART_BATTERYLESS_MORE_INFO_3")}</p>
-              </Alert>
-            </div>
-          )}
+          <div style={{ marginTop: 8 }}>
+            <Alert variant="info">
+              <p>{getTargetDescription()}</p>
+            </Alert>
+          </div>
         </SettingRowInput>
       </SearchableSettingRow>
 

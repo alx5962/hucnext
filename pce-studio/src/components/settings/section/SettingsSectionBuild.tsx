@@ -51,6 +51,10 @@ export const SettingsSectionBuild = ({
   const romFilename = useAppSelector(
     (state) => state.project.present.settings.romFilename,
   );
+  const targetSystem =
+    (useAppSelector(
+      (state) => (state.project.present.settings as any).targetSystem,
+    ) as string) || "pce";
   const [currentRomFilename, setCurrentRomFilename] = useState(romFilename);
 
   const defaultRomFilename = getROMFilename(
@@ -58,6 +62,7 @@ export const SettingsSectionBuild = ({
     projectName,
     colorMode === "color",
     "rom",
+    targetSystem,
   );
 
   const onChangeROMFilename = useCallback(

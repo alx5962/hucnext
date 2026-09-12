@@ -1585,11 +1585,13 @@ ipcMain.handle(
       project.settings.romFilename,
       projectName,
     );
+    const targetSystem = (project.settings as any)?.targetSystem || "pce";
     const romFilename = getROMFilename(
       project.settings.romFilename,
       projectName,
       colorOnly,
       buildType,
+      targetSystem,
     );
     try {
       const compiledData = await buildProject(project, {
@@ -1620,6 +1622,15 @@ ipcMain.handle(
         await copy(tmpRomPath, projectRomPath, { overwrite: true });
       }
 
+      // If CD-ROM target, also copy companion .cue sheet
+      if (targetSystem === "iso" || targetSystem === "cd") {
+        const tmpCuePath = tmpRomPath.replace(/\.iso$/i, ".cue");
+        const projectCuePath = projectRomPath.replace(/\.iso$/i, ".cue");
+        if (await pathExists(tmpCuePath)) {
+          await copy(tmpCuePath, projectCuePath, { overwrite: true });
+        }
+      }
+
       if (exportBuild) {
         if (buildType !== "rom") {
           await copy(
@@ -1642,9 +1653,10 @@ ipcMain.handle(
           }`,
         );
       } else {
+        const ext = Path.extname(romFilename) || ".pce";
         buildLog(`-`);
         buildLog(
-          `${l10n("COMPILER_BUILD_SUCCESS")} Opening ROM with default .pce application...`,
+          `${l10n("COMPILER_BUILD_SUCCESS")} Opening ROM with default ${ext} application...`,
         );
         const romToLaunch = (await pathExists(projectRomPath))
           ? projectRomPath

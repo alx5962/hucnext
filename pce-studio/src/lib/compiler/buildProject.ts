@@ -3509,10 +3509,12 @@ main() {
 
   const makeBuildModule = require("./makeBuild");
   const makeBuildFn = makeBuildModule.default || makeBuildModule.makeBuild || makeBuildModule;
+  const targetSystem = projectData.settings?.targetSystem || "pce";
+  const defaultExt = targetSystem === "iso" || targetSystem === "cd" ? "iso" : targetSystem === "sgx" ? "sgx" : "pce";
   const defaultRomName = (projectData.name || pathModule.basename(projDir) || "game").toLowerCase().replace(/[^a-z0-9_-]/g, "");
   const romFilename = (typeof outputBuildDir === "object" && outputBuildDir?.romFilename)
     ? outputBuildDir.romFilename
-    : (projectData.settings?.romFilename ? `${projectData.settings.romFilename}.pce` : `${defaultRomName || "game"}.pce`);
+    : (projectData.settings?.romFilename ? `${projectData.settings.romFilename}.${defaultExt}` : `${defaultRomName || "game"}.${defaultExt}`);
 
   const progress = (typeof outputBuildDir === "object" && outputBuildDir?.progress) ? outputBuildDir.progress : (() => { });
   const warnings = (typeof outputBuildDir === "object" && outputBuildDir?.warnings) ? outputBuildDir.warnings : (() => { });
@@ -3524,6 +3526,7 @@ main() {
         romFilename,
         progress,
         warnings,
+        data: projectData,
       });
     } catch (e: any) {
       if (warnings) {

@@ -801,6 +801,15 @@ export type ShowSceneScreenGridSetting = Static<
   typeof ShowSceneScreenGridSetting
 >;
 
+export const TargetSystem = Type.Union([
+  Type.Literal("pce"),
+  Type.Literal("sgx"),
+  Type.Literal("iso"),
+  Type.Literal("cd"),
+]);
+
+export type TargetSystem = Static<typeof TargetSystem>;
+
 export const CartType = Type.Union([
   Type.Literal("mbc5"),
   Type.Literal("mbc3"),
@@ -936,8 +945,9 @@ export const SettingsResource = Type.Object({
   defaultFontId: Type.String(),
   defaultCharacterEncoding: Type.String(),
   defaultPlayerSprites: Type.Record(Type.String(), Type.String()),
-  cartType: CartType,
-  batterylessEnabled: Type.Boolean(),
+  targetSystem: Type.Optional(TargetSystem),
+  cartType: Type.Optional(Type.String()),
+  batterylessEnabled: Type.Optional(Type.Boolean()),
   favoriteEvents: Type.Array(Type.String()),
   customColorsWhite: Type.String(),
   customColorsLight: Type.String(),
