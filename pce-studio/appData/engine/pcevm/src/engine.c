@@ -28,6 +28,11 @@ int scene_has_startup_script(int scene_num) {
 #endif
 
 #ifndef HAS_INTERACT_ACTOR
+int scene_has_actor_script(int scene_num, int actor_num) {
+  (void)scene_num;
+  (void)actor_num;
+  return 0;
+}
 int interact_actor(int scene_num, int actor_num) {
   (void)scene_num;
   (void)actor_num;
@@ -5204,6 +5209,8 @@ void load_scene(int scene_num, int player_x, int player_y) {
   g_dialogue_active = 0;
   g_choice_active = 0;
   g_dialogue_timer = 0;
+  g_dialogue_cooldown = 0;
+  g_actor_interact_cooldown = 0;
   g_actor_state[0] = 0;
   g_input_script_disabled_mask = 0;
   g_inside_trigger = 0;
@@ -5494,6 +5501,8 @@ void show_dialogue(const char *msg) {
   g_dialogue_active = 1;
   g_dialogue_timer =
       300; /* Auto-close dialogue after 5 seconds (300 frames at 60Hz) */
+  g_dialogue_cooldown = DIALOGUE_INPUT_COOLDOWN_FRAMES;
+  g_last_input = pce_sys_read_joy(0);
   actor_update_all();
   satb_update();
 
@@ -5618,6 +5627,8 @@ void render_choice_dialogue(void) {
 void show_choice(int var_id, const char *opt1, const char *opt2) {
   g_dialogue_active = 1;
   g_dialogue_timer = 0;
+  g_dialogue_cooldown = DIALOGUE_INPUT_COOLDOWN_FRAMES;
+  g_last_input = pce_sys_read_joy(0);
   g_choice_active = 1;
   g_choice_is_menu = 0;
   g_choice_var = var_id;
@@ -5638,6 +5649,8 @@ void show_menu(int var_id, int count, const char *opt1, const char *opt2,
                const char *opt3, const char *opt4, int cancel_b) {
   g_dialogue_active = 1;
   g_dialogue_timer = 0;
+  g_dialogue_cooldown = DIALOGUE_INPUT_COOLDOWN_FRAMES;
+  g_last_input = pce_sys_read_joy(0);
   g_choice_active = 1;
   g_choice_is_menu = 1;
   g_choice_var = var_id;
@@ -5658,14 +5671,15 @@ void hide_dialogue(void) {
   if (g_dialogue_active) {
     g_dialogue_active = 0;
     g_dialogue_timer = 0;
+    g_dialogue_cooldown = 0;
     g_choice_active = 0;
+    g_actor_interact_cooldown = INTERACT_COOLDOWN_FRAMES;
+    g_last_input = pce_sys_read_joy(0);
     load_scene_background(g_current_scene);
     actor_update_all();
     satb_update();
   }
 }
-
-static unsigned int g_last_input = 0;
 
 void check_actor_interaction(unsigned int input) {
   int dx, dy, i;
@@ -5674,6 +5688,9 @@ void check_actor_interaction(unsigned int input) {
   g_last_input = input;
 
   if (g_choice_active) {
+    if (g_dialogue_cooldown > 0) {
+      return;
+    }
     if (pressed & (JOY_UP | JOY_LEFT)) {
       if (g_choice_index > 0) {
         g_choice_index--;
@@ -5701,7 +5718,10 @@ void check_actor_interaction(unsigned int input) {
   }
 
   if (g_dialogue_active) {
-    if (pressed) {
+    if (g_dialogue_cooldown > 0) {
+      return;
+    }
+    if (pressed & (JOY_I | JOY_II | JOY_A | JOY_B | JOY_STRT)) {
       hide_dialogue();
     }
     return;
@@ -5717,7 +5737,9 @@ void check_actor_interaction(unsigned int input) {
     }
   }
 
-  if (pressed & (JOY_I | JOY_A)) {
+  if (g_actor_interact_cooldown > 0) {
+    /* Ignore interaction inputs during debounce window */
+  } else if (pressed & (JOY_I | JOY_A)) {
     for (i = 1; i < g_actor_count; i++) {
       if (g_actor_active[i] && actor_is_in_bounds(i)) {
         dx = g_actor_x[0] - g_actor_x[i];
@@ -5728,15 +5750,23 @@ void check_actor_interaction(unsigned int input) {
           dy = -dy;
         if (dx <= 24 && dy <= 24) {
           if (interact_actor(g_current_scene, i)) {
+            g_actor_interact_cooldown = INTERACT_COOLDOWN_FRAMES;
+            g_last_input = pce_sys_read_joy(0);
             return;
           }
           if (g_current_scene == 1) {
             if (i == 1) {
 #ifdef ACTOR_SCENE_1_1_TEXT
               show_dialogue(ACTOR_SCENE_1_1_TEXT);
+              g_actor_interact_cooldown = INTERACT_COOLDOWN_FRAMES;
+              g_last_input = pce_sys_read_joy(0);
+              return;
 #else
 #ifdef ACTOR_SCENE_1_TEXT
               show_dialogue(ACTOR_SCENE_1_TEXT);
+              g_actor_interact_cooldown = INTERACT_COOLDOWN_FRAMES;
+              g_last_input = pce_sys_read_joy(0);
+              return;
 #endif
 #endif
 
@@ -6137,6 +6167,9 @@ void update_pointnclick(void) {
   g_last_input = input;
 
   if (g_choice_active) {
+    if (g_dialogue_cooldown > 0) {
+      return;
+    }
     if (pressed & (JOY_UP | JOY_LEFT)) {
       if (g_choice_index > 0) {
         g_choice_index--;
@@ -6164,7 +6197,10 @@ void update_pointnclick(void) {
   }
 
   if (g_dialogue_active) {
-    if (pressed) {
+    if (g_dialogue_cooldown > 0) {
+      return;
+    }
+    if (pressed & (JOY_I | JOY_II | JOY_A | JOY_B | JOY_STRT)) {
       hide_dialogue();
     }
     return;
@@ -6233,9 +6269,14 @@ void update_pointnclick(void) {
     g_actor_tile_id[0] = 0x5000 + g_player_anim_frame * g_player_spr_vram_size;
 
     /* Handle interaction click */
-    if (pressed & (JOY_I | JOY_A)) {
+    if (g_actor_interact_cooldown > 0) {
+      /* Ignore clicks during interaction debounce */
+    } else if (pressed & (JOY_I | JOY_A)) {
       if (hit_actor > 0) {
-        interact_actor(g_current_scene, hit_actor);
+        if (interact_actor(g_current_scene, hit_actor)) {
+          g_actor_interact_cooldown = INTERACT_COOLDOWN_FRAMES;
+          g_last_input = pce_sys_read_joy(0);
+        }
       } else if (hit_trigger >= 0) {
         if (g_triggers[hit_trigger].target_scene > 0) {
           load_scene(g_triggers[hit_trigger].target_scene,
@@ -6260,6 +6301,13 @@ void update_logo(void) {
 void engine_update(void) {
   vm_step();
   pce_sound_update();
+
+  if (g_dialogue_cooldown > 0) {
+    g_dialogue_cooldown--;
+  }
+  if (g_actor_interact_cooldown > 0) {
+    g_actor_interact_cooldown--;
+  }
 
   if (g_dialogue_active) {
     if (g_dialogue_timer > 0) {

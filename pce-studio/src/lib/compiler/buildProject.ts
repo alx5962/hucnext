@@ -2427,6 +2427,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   let sceneInputCheckHelpers = "";
   let sceneInputCheckCases = "";
   let sceneStartupCases = "";
+  let sceneActorScriptCases = "";
   let sceneActorUpdateHelpers = "";
   let sceneActorUpdateCases = "";
 
@@ -3181,6 +3182,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     const actorDispatchCases: string[] = [];
     const actorUpdateStepHelpers: string[] = [];
     const actorUpdateCases: string[] = [];
+    const actorHasScriptNums: number[] = [];
 
     (scene.actors || []).forEach((scActor: any, aIdx: number) => {
       const actorNum = aIdx + 1;
@@ -3190,12 +3192,14 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           actorResult.casesCode += `      case ${actorResult.stepCount}:\n        return -1;\n`;
           actorStepHelpers.push(`int run_scene_${scNum}_actor_${actorNum}_step(int step) {\n  switch (step) {\n${actorResult.casesCode}    default:\n      return -1;\n  }\n}\n\n`);
           actorDispatchCases.push(`    case ${actorNum}:\n      return run_scene_${scNum}_actor_${actorNum}_step(step);\n`);
+          actorHasScriptNums.push(actorNum);
         } else {
           const actText = extractActorText(scActor);
           if (actText) {
             const cleanText = formatDialogueTextForC(actText);
             actorStepHelpers.push(`int run_scene_${scNum}_actor_${actorNum}_step(int step) {\n  switch (step) {\n      case 0:\n        show_dialogue("${cleanText}");\n        return -1;\n    default:\n      return -1;\n  }\n}\n\n`);
             actorDispatchCases.push(`    case ${actorNum}:\n      return run_scene_${scNum}_actor_${actorNum}_step(step);\n`);
+            actorHasScriptNums.push(actorNum);
           }
         }
       } else {
@@ -3204,6 +3208,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           const cleanText = formatDialogueTextForC(actText);
           actorStepHelpers.push(`int run_scene_${scNum}_actor_${actorNum}_step(int step) {\n  switch (step) {\n      case 0:\n        show_dialogue("${cleanText}");\n        return -1;\n    default:\n      return -1;\n  }\n}\n\n`);
           actorDispatchCases.push(`    case ${actorNum}:\n      return run_scene_${scNum}_actor_${actorNum}_step(step);\n`);
+          actorHasScriptNums.push(actorNum);
         }
       }
 
@@ -3216,6 +3221,11 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         }
       }
     });
+
+    if (actorHasScriptNums.length > 0) {
+      const cond = actorHasScriptNums.map(n => `actor_num == ${n}`).join(" || ");
+      sceneActorScriptCases += `  if (scene_num == ${scNum}) return (${cond}) ? 1 : 0;\n`;
+    }
 
     if (actorUpdateCases.length > 0) {
       sceneActorUpdateHelpers += `${actorUpdateStepHelpers.join("")}void update_scene_${scNum}_actors(void) {\n  int a;\n  for (a = 1; a < g_actor_count; a++) {\n    if (!g_actor_active[a] || g_actor_hidden[a]) continue;\n    switch (a) {\n${actorUpdateCases.join("")}      default:\n        break;\n    }\n  }\n}\n\n`;
@@ -3482,13 +3492,18 @@ int scene_has_startup_script(int scene_num) {
 ${sceneStartupCases}  return 0;
 }
 
+int scene_has_actor_script(int scene_num, int actor_num) {
+${sceneActorScriptCases}  return 0;
+}
+
 int interact_actor(int scene_num, int actor_num) {
+  if (!scene_has_actor_script(scene_num, actor_num)) return 0;
   g_script_scene = scene_num;
   g_script_type = 1;
   g_script_target = actor_num;
   g_script_step = 0;
   g_script_step = run_scene_step(scene_num, 0);
-  return (g_script_step >= 0 || g_script_scene != scene_num || g_dialogue_active) ? 1 : 0;
+  return 1;
 }
 
 int interact_trigger(int scene_num, int trigger_num) {

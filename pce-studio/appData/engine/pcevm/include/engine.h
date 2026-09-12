@@ -35,8 +35,19 @@ int g_script_target = 0;
 int g_wait_timer = 0;
 unsigned int g_await_input_mask = 0;
 
+#ifndef DIALOGUE_INPUT_COOLDOWN_FRAMES
+#define DIALOGUE_INPUT_COOLDOWN_FRAMES 15
+#endif
+
+#ifndef INTERACT_COOLDOWN_FRAMES
+#define INTERACT_COOLDOWN_FRAMES 20
+#endif
+
 int g_dialogue_active = 0;
 int g_dialogue_timer = 0;
+int g_dialogue_cooldown = 0;
+int g_actor_interact_cooldown = 0;
+unsigned int g_last_input = 0;
 int g_choice_active = 0;
 int g_choice_var = 0;
 int g_choice_index = 0;
@@ -140,6 +151,7 @@ void load_scene_actors(int scene_num);
 int run_scene_step(int scene_num, int step);
 int check_scene_input(int scene_num, unsigned int pressed);
 int scene_has_startup_script(int scene_num);
+int scene_has_actor_script(int scene_num, int actor_num);
 int interact_actor(int scene_num, int actor_num);
 int interact_trigger(int scene_num, int trigger_num);
 
