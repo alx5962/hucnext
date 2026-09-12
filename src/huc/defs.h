@@ -177,8 +177,8 @@
  * #define	SYMTBSZ	32768
  * #define	NUMGLBS	1500
  */
-#define SYMTBSZ 4096
-#define NUMGLBS 2048
+#define SYMTBSZ 8192
+#define NUMGLBS 4096
 
 #define STARTGLB        symtab
 #define ENDGLB  (STARTGLB + NUMGLBS)
@@ -285,7 +285,7 @@ struct tag_symbol {
 
 /* literal pool */
 
-#define LITABSZ 8192
+#define LITABSZ 65536
 #define LITMAX  LITABSZ - 1
 
 /* input string */

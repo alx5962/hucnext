@@ -740,7 +740,7 @@ enum ICOMPARE {
 #endif
 
 /* symbol table parameters (locals are reset for every function) */
-#define SYMTBSZ 4096
+#define SYMTBSZ 8192
 #define NUMGLBS (SYMTBSZ - 512)
 
 #define STARTGLB 0
