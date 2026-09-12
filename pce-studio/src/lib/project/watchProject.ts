@@ -183,7 +183,7 @@ const watchProject = (
     ignoreInitial: true,
     persistent: true,
     awaitWriteFinish: musicAwaitWriteFinish,
-    ignored: ignoreUnlessExt([".uge", ".mod"]),
+    ignored: ignoreUnlessExt([".uge", ".mod", ".wav"]),
   })
     .on("add", callbacks.onChangedMusic)
     .on("change", callbacks.onChangedMusic)

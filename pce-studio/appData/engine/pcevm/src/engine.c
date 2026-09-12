@@ -5137,7 +5137,9 @@ void load_scene(int scene_num, int player_x, int player_y) {
     spr_hide();
   }
   satb_update();
+#ifdef HAS_PROJECTILES
   projectile_init();
+#endif
 
   load_scene_player_sprite(scene_num);
 
@@ -5220,15 +5222,21 @@ void engine_init(void) {
   pce_sys_init();
   pce_sound_init();
 #ifdef HAS_MUSIC_DATA
+#ifdef START_CDDA_TRACK
+  cd_playtrk(START_CDDA_TRACK, START_CDDA_TRACK + 1, 1);
+#else
 #ifdef START_MUSIC_DATA
   pce_sound_play(START_MUSIC_DATA);
+#endif
 #endif
 #endif
   actor_init();
   camera_init();
   trigger_init();
   vm_init();
+#ifdef HAS_PROJECTILES
   projectile_init();
+#endif
 
   set_font_pal(15);
   set_font_color(1, 3);
@@ -6282,29 +6290,57 @@ void engine_update(void) {
     }
   }
 
-  if (g_current_scene_type == SCENE_TYPE_PLATFORM) {
+  if (0) {
+  }
+#ifdef HAS_SCENE_TYPE_PLATFORM
+  else if (g_current_scene_type == SCENE_TYPE_PLATFORM) {
     update_platform();
-  } else if (g_current_scene_type == SCENE_TYPE_ADVENTURE) {
+  }
+#endif
+#ifdef HAS_SCENE_TYPE_ADVENTURE
+  else if (g_current_scene_type == SCENE_TYPE_ADVENTURE) {
     update_adventure();
-  } else if (g_current_scene_type == SCENE_TYPE_SHMUP) {
+  }
+#endif
+#ifdef HAS_SCENE_TYPE_SHMUP
+  else if (g_current_scene_type == SCENE_TYPE_SHMUP) {
     update_shmup();
-  } else if (g_current_scene_type == SCENE_TYPE_POINTNCLICK) {
+  }
+#endif
+#ifdef HAS_SCENE_TYPE_POINTNCLICK
+  else if (g_current_scene_type == SCENE_TYPE_POINTNCLICK) {
     update_pointnclick();
-  } else if (g_current_scene_type == SCENE_TYPE_LOGO) {
+  }
+#endif
+#ifdef HAS_SCENE_TYPE_LOGO
+  else if (g_current_scene_type == SCENE_TYPE_LOGO) {
     update_logo();
-  } else {
+  }
+#endif
+#ifdef HAS_SCENE_TYPE_TOPDOWN
+  else if (g_current_scene_type == SCENE_TYPE_TOPDOWN) {
     update_topdown();
+  }
+#endif
+  else {
+#ifdef HAS_SCENE_TYPE_TOPDOWN
+    update_topdown();
+#endif
   }
 
   update_scene_actors(g_current_scene);
 
+#ifdef HAS_PROJECTILES
   projectile_update_all();
+#endif
 }
 
 void engine_render(void) {
   camera_apply();
   actor_update_all();
+#ifdef HAS_PROJECTILES
   projectile_render_all();
+#endif
   pce_sys_vsync();
 }
 

@@ -21,7 +21,12 @@ export const registerMusicListeners = (startListening: StartAppListening) => {
       }
 
       const filename = assetPath("music", track);
-      if (track.type === "uge") {
+      if (track.type === "wav" || filename.toLowerCase().endsWith(".wav")) {
+        try {
+          const audio = new Audio(`file://${filename}`);
+          audio.play();
+        } catch { }
+      } else if (track.type === "uge") {
         API.music.playUGE(filename);
       } else {
         API.music.playMOD(filename, !track.settings.disableSpeedConversion);

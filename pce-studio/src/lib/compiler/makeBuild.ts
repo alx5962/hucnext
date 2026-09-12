@@ -77,9 +77,26 @@ export const makeBuild = async ({
 
   progress(`Running HuC compiler (${targetLabel})...`);
 
-  const cmd = `"${hucExe}" ${targetFlag}main.c`;
   try {
-    const { stdout, stderr } = await execAsync(cmd, {
+    // Step 1: Run HuC to compile C source into assembly (main.s)
+    const hucCmd = `"${hucExe}" -s ${targetFlag}main.c`;
+    const hucRes = await execAsync(hucCmd, {
+      cwd: buildRoot,
+      env,
+    });
+
+    if (hucRes.stderr && hucRes.stderr.trim().length > 0) {
+      warnings(hucRes.stderr);
+    }
+
+    // Step 2: Run PCEAS with -O and --strip to strip unused procedures and optimize bank packing
+    let pceasTarget = "-raw -pad ";
+    if (targetSystem === "iso" || targetSystem === "cd" || targetSystem === "scd") {
+      pceasTarget = "-scd ";
+    }
+
+    const pceasCmd = `"${pceasExe}" -O --strip ${pceasTarget}main.s`;
+    const { stdout, stderr } = await execAsync(pceasCmd, {
       cwd: buildRoot,
       env,
     });
@@ -88,7 +105,7 @@ export const makeBuild = async ({
       warnings(stderr);
     }
 
-    progress(`HuC compilation output:\n${stdout}`);
+    progress(`HuC & PCEAS compilation output:\n${stdout}`);
 
     // Verify that CONST_BANK (Bank 2) and all asset data banks did not overflow or overlap
     const symPath = Path.join(buildRoot, "main.sym");
@@ -121,7 +138,7 @@ export const makeBuild = async ({
           }
 
           // Check PC Engine 128-bank (1MB) hardware limit (HuCard and SGX)
-          if (targetSystem !== "iso" && targetSystem !== "cd" && bankNum > 127 && bankNum < 200) {
+          if (targetSystem !== "iso" && targetSystem !== "cd" && targetSystem !== "scd" && bankNum > 127 && bankNum < 200) {
             throw new Error(
               `CRITICAL BUILD ERROR: ROM bank index out of range ($${bankHex} / ${bankNum} > 127). ` +
               `PC Engine standard ROMs are limited to 128 banks (1 Megabyte).`
@@ -155,9 +172,9 @@ export const makeBuild = async ({
         }
       }
 
-      // Check for illegal bank overlap: background banks must never contain non-background assets
+      // Check for illegal bank overlap: dedicated background CHR banks must never contain non-background assets
       for (const [bNum, symbols] of bankSymbols.entries()) {
-        const hasBg = symbols.some(s => s.name.startsWith("_bg_file_"));
+        const hasBg = symbols.some(s => s.name.startsWith("_bg_file_") && s.name.endsWith("_chr"));
         const hasOtherAsset = symbols.some(s =>
           s.name.startsWith("_ui_frame_") ||
           s.name.startsWith("_col_data_") ||
@@ -194,15 +211,42 @@ export const makeBuild = async ({
   const defaultOutputIso = Path.join(buildRoot, "main.iso");
   const defaultOutputCue = Path.join(buildRoot, "main.cue");
 
-  const defaultExt = targetSystem === "iso" || targetSystem === "cd" ? "iso" : targetSystem === "sgx" ? "sgx" : "pce";
+  const defaultExt = targetSystem === "iso" || targetSystem === "cd" || targetSystem === "scd" ? "iso" : targetSystem === "sgx" ? "sgx" : "pce";
   const targetOutputRom = Path.join(romDir, romFilename || `game.${defaultExt}`);
 
-  if (targetSystem === "iso" || targetSystem === "cd") {
+  if (targetSystem === "iso" || targetSystem === "cd" || targetSystem === "scd") {
     if (fs.existsSync(defaultOutputIso)) {
       await fs.move(defaultOutputIso, targetOutputRom, { overwrite: true });
     }
     const targetOutputCue = Path.join(romDir, (romFilename || "game").replace(/\.[^/.]+$/, "") + ".cue");
-    if (fs.existsSync(defaultOutputCue)) {
+
+    // Copy any CD-DA audio tracks from buildRoot/audio to romDir
+    const audioDir = Path.join(buildRoot, "audio");
+    const audioTracks: string[] = [];
+    if (fs.existsSync(audioDir)) {
+      const wavFiles = (await fs.readdir(audioDir))
+        .filter((f: string) => f.toLowerCase().endsWith(".wav"))
+        .sort();
+      for (const wav of wavFiles) {
+        const srcWav = Path.join(audioDir, wav);
+        const destWav = Path.join(romDir, wav);
+        await fs.copy(srcWav, destWav, { overwrite: true });
+        audioTracks.push(wav);
+      }
+    }
+
+    if (audioTracks.length > 0 && fs.existsSync(targetOutputRom)) {
+      // Generate multi-track CUE sheet for PC Engine CD-DA audio playback
+      const isoBase = Path.basename(targetOutputRom);
+      let cueContent = `FILE "${isoBase}" BINARY\n  TRACK 01 MODE1/2048\n    INDEX 01 00:00:00\n`;
+      let trackNum = 2;
+      for (const trackFile of audioTracks) {
+        const trackStr = trackNum < 10 ? `0${trackNum}` : `${trackNum}`;
+        cueContent += `FILE "${trackFile}" WAVE\n  TRACK ${trackStr} AUDIO\n    PREGAP 00:02:00\n    INDEX 01 00:00:00\n`;
+        trackNum++;
+      }
+      await fs.writeFile(targetOutputCue, cueContent, "utf8");
+    } else if (fs.existsSync(defaultOutputCue)) {
       await fs.move(defaultOutputCue, targetOutputCue, { overwrite: true });
     } else if (fs.existsSync(targetOutputRom)) {
       // Auto-generate standard single-track data CUE sheet for PC Engine emulators

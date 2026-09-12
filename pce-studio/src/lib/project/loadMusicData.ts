@@ -15,7 +15,7 @@ const loadMusicData =
     const resource = await getAssetResource(MusicResource, filename);
     const fileStat = await statAsync(filename, { bigint: true });
     const inode = fileStat.ino.toString();
-    const name = file.replace(/(.mod|.uge)$/i, "");
+    const name = file.replace(/(.mod|.uge|.wav)$/i, "");
     return {
       _resourceType: "music",
       id: uuidv4(),
@@ -26,18 +26,22 @@ const loadMusicData =
       _v: Date.now(),
       ...resource,
       filename: file,
-      type: file.endsWith(".uge") ? "uge" : "mod",
+      type: file.toLowerCase().endsWith(".uge")
+        ? "uge"
+        : file.toLowerCase().endsWith(".wav")
+        ? "wav"
+        : "mod",
       inode,
     };
   };
 
 const loadAllMusicData = async (projectRoot: string) => {
-  const musicPaths = await glob("assets/music/**/@(*.mod|*.MOD|*.uge|*.UGE)", {
+  const musicPaths = await glob("assets/music/**/@(*.mod|*.MOD|*.uge|*.UGE|*.wav|*.WAV)", {
     cwd: projectRoot,
     absolute: true,
   });
   const pluginPaths = await glob(
-    "plugins/*/**/music/**/@(*.mod|*.MOD|*.uge|*.UGE)",
+    "plugins/*/**/music/**/@(*.mod|*.MOD|*.uge|*.UGE|*.wav|*.WAV)",
     {
       cwd: projectRoot,
       absolute: true,

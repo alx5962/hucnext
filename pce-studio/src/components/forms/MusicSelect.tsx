@@ -74,14 +74,32 @@ const MusicSelectComponent = ({
   ...selectProps
 }: MusicSelectProps) => {
   const tracks = useAppSelector((state) => musicSelectors.selectAll(state));
+  const targetSystem = useAppSelector(
+    (state) => state.project.present.settings.targetSystem || "pce"
+  );
+  const isSuperCD =
+    targetSystem === "iso" || targetSystem === "cd" || targetSystem === "scd";
+
+  const availableTracks = useMemo(() => {
+    return tracks.filter((track) => {
+      if (
+        !isSuperCD &&
+        (track.type === "wav" || track.filename.toLowerCase().endsWith(".wav"))
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [tracks, isSuperCD]);
+
   const [options, setOptions] = useState<OptGroup[]>([]);
 
   useEffect(() => {
-    const plugins = uniq(tracks.map((s) => s.plugin || "")).sort();
+    const plugins = uniq(availableTracks.map((s) => s.plugin || "")).sort();
     setOptions(
       plugins.map((pluginKey) => ({
         label: pluginKey,
-        options: tracks
+        options: availableTracks
           .filter((track) => (track.plugin || "") === pluginKey)
           .map((track) => ({
             label: track.filename,
@@ -89,7 +107,7 @@ const MusicSelectComponent = ({
           })),
       })),
     );
-  }, [tracks]);
+  }, [availableTracks]);
 
   const currentValue = useMemo(
     () => findSelectOption(options, value) || options[0]?.options[0],

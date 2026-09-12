@@ -5,5 +5,7 @@ void pce_sound_init(void);
 void pce_sound_play(unsigned int* song);
 void pce_sound_stop(void);
 void pce_sound_update(void);
+void pce_music_play_track(int track_num, unsigned int *song);
+void pce_music_stop(void);
 
 #endif /* PCE_SOUND_H */

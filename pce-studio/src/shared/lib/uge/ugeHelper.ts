@@ -939,6 +939,7 @@ export const exportToAsm = (
   song: Song,
   trackName: string,
   bankNum: number,
+  offset = 0x6000,
 ): string => {
   type InstrumentType = "duty" | "wave" | "noise";
 
@@ -1145,7 +1146,7 @@ export const exportToAsm = (
 ; Banked into dedicated asset bank ${bankNum} (mapped to MPR3 $6000)
     .data
     .bank ${bankNum}
-    .org $6000
+    .org $${offset.toString(16)}
 
 _${trackName}_order_cnt:
     .db ${song.sequence.length * 2}
@@ -1219,3 +1220,19 @@ const subpatternFromNoiseMacro = function (
   subpattern[wrapPoint - 1].jump = wrapPoint;
   return subpattern;
 };
+
+export const getSongByteSize = (song: Song, trackName = "song"): number => {
+  const draft = exportToAsm(song, trackName, 0, 0x6000);
+  const parts = draft.split(".bank CONST_BANK");
+  let bytes = 0;
+  for (const line of parts[0].split("\n")) {
+    const t = line.trim();
+    if (t.startsWith(".db ")) {
+      bytes += t.slice(4).split(",").length;
+    } else if (t.startsWith(".dw ")) {
+      bytes += t.slice(4).split(",").length * 2;
+    }
+  }
+  return bytes + 16;
+};
+

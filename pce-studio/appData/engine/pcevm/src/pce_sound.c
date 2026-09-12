@@ -385,6 +385,23 @@ void pce_sound_stop(void) {
   pce_sound_init();
 }
 
+void pce_music_play_track(int track_num, unsigned int *song) {
+#ifdef CDDA_AUDIO
+  /* Track 1 is Data (ISO). Audio tracks start at Track 2 */
+  /* CDPLAY_REPEAT (mode 1) enables continuous hardware CD track looping */
+  cd_playtrk(track_num + 2, track_num + 3, 1);
+#else
+  pce_sound_play(song);
+#endif
+}
+
+void pce_music_stop(void) {
+#ifdef CDDA_AUDIO
+  cd_pause();
+#endif
+  pce_sound_stop();
+}
+
 void process_row_channel_cur(void) {
   if (!g_r_ptr)
     return;
@@ -627,6 +644,8 @@ void pce_sound_update(void) {
         tma #3
         sta _g_old_bank
         lda _g_pce_song_bank
+        clc
+        adc #_bank_base
         tam #3
 #endasm
       }
@@ -647,6 +666,8 @@ void pce_sound_update(void) {
     tma #3
     sta _g_old_bank
     lda _g_pce_song_bank
+    clc
+    adc #_bank_base
     tam #3
 #endasm
   }
