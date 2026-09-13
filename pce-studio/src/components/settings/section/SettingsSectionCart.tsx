@@ -10,7 +10,10 @@ import { SettingRowInput, SettingRowLabel } from "ui/form/SettingRow";
 import { Select } from "ui/form/Select";
 import { CheckboxField } from "ui/form/CheckboxField";
 import settingsActions from "store/features/settings/settingsActions";
-import { TargetSystem } from "store/features/settings/settingsState";
+import {
+  CDAudioFormat,
+  TargetSystem,
+} from "store/features/settings/settingsState";
 import { useAppDispatch, useAppSelector } from "store/hooks";
 
 interface SettingsSectionCartProps {
@@ -19,6 +22,11 @@ interface SettingsSectionCartProps {
 
 interface TargetSystemOption {
   value: TargetSystem;
+  label: string;
+}
+
+interface CDAudioFormatOption {
+  value: CDAudioFormat;
   label: string;
 }
 
@@ -42,11 +50,26 @@ export const SettingsSectionCart = ({
     },
   ];
 
+  const cdAudioFormatOptions: CDAudioFormatOption[] = [
+    {
+      value: "wav",
+      label: l10n("FIELD_CD_AUDIO_FORMAT_WAV"),
+    },
+    {
+      value: "bin",
+      label: l10n("FIELD_CD_AUDIO_FORMAT_BIN"),
+    },
+  ];
+
   const rawTargetSystem = useAppSelector(
     (state) => (state.project.present.settings as any).targetSystem,
   );
   const targetSystem: TargetSystem =
     rawTargetSystem === "cd" ? "iso" : (rawTargetSystem as TargetSystem) || "pce";
+
+  const cdAudioFormat: CDAudioFormat = useAppSelector(
+    (state) => (state.project.present.settings as any).cdAudioFormat || "wav",
+  );
 
   const sf2Enabled = useAppSelector(
     (state) => Boolean((state.project.present.settings as any).sf2Enabled),
@@ -55,6 +78,13 @@ export const SettingsSectionCart = ({
   const onChangeTargetSystem = useCallback(
     (targetSystem: TargetSystem) => {
       dispatch(settingsActions.editSettings({ targetSystem } as any));
+    },
+    [dispatch],
+  );
+
+  const onChangeCDAudioFormat = useCallback(
+    (cdAudioFormat: CDAudioFormat) => {
+      dispatch(settingsActions.editSettings({ cdAudioFormat } as any));
     },
     [dispatch],
   );
@@ -75,6 +105,7 @@ export const SettingsSectionCart = ({
       settingsActions.editSettings({
         targetSystem: "pce",
         sf2Enabled: false,
+        cdAudioFormat: "wav",
       } as any),
     );
   }, [dispatch]);
@@ -113,6 +144,8 @@ export const SettingsSectionCart = ({
         "SF2",
         "Street Fighter",
         "Mapper",
+        "WAV",
+        "BIN",
       ]}
     >
       <CardAnchor id="settingsTargetSystem" />
@@ -144,6 +177,46 @@ export const SettingsSectionCart = ({
           </div>
         </SettingRowInput>
       </SearchableSettingRow>
+
+      {isCDTarget && (
+        <SearchableSettingRow
+          searchTerm={searchTerm}
+          searchMatches={[
+            l10n("FIELD_CD_AUDIO_FORMAT"),
+            "WAV",
+            "BIN",
+            "CD-DA",
+            "Audio",
+            "Track",
+          ]}
+        >
+          <SettingRowLabel>{l10n("FIELD_CD_AUDIO_FORMAT")}</SettingRowLabel>
+          <SettingRowInput>
+            <Select
+              value={
+                cdAudioFormatOptions.find(
+                  (option) => option.value === cdAudioFormat,
+                ) || cdAudioFormatOptions[0]
+              }
+              options={cdAudioFormatOptions}
+              onChange={(newValue: SingleValue<CDAudioFormatOption>) => {
+                if (newValue) {
+                  onChangeCDAudioFormat(newValue.value);
+                }
+              }}
+            />
+            <div style={{ marginTop: 8 }}>
+              <Alert variant="info">
+                <p>
+                  {cdAudioFormat === "bin"
+                    ? l10n("FIELD_CD_AUDIO_FORMAT_INFO_BIN")
+                    : l10n("FIELD_CD_AUDIO_FORMAT_INFO_WAV")}
+                </p>
+              </Alert>
+            </div>
+          </SettingRowInput>
+        </SearchableSettingRow>
+      )}
 
       <SearchableSettingRow
         searchTerm={searchTerm}

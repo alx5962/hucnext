@@ -19,6 +19,56 @@ export type MakeOptions = {
 
 export const cancelBuildCommandsInProgress = () => { };
 
+export const convertWavToRawBin = (wavBuffer: Buffer): Buffer => {
+  let offset = 12;
+  let channels = 2;
+  let bitsPerSample = 16;
+  let dataOffset = -1;
+  let dataSize = 0;
+
+  while (offset + 8 <= wavBuffer.length) {
+    const chunkId = wavBuffer.toString("ascii", offset, offset + 4);
+    const chunkSize = wavBuffer.readUInt32LE(offset + 4);
+    if (chunkId === "fmt ") {
+      channels = wavBuffer.readUInt16LE(offset + 10);
+      bitsPerSample = wavBuffer.readUInt16LE(offset + 22);
+    } else if (chunkId === "data") {
+      dataOffset = offset + 8;
+      dataSize = Math.min(chunkSize, wavBuffer.length - dataOffset);
+      break;
+    }
+    offset += 8 + chunkSize;
+    if (chunkSize % 2 !== 0) offset++;
+  }
+
+  if (dataOffset === -1) {
+    dataOffset = Math.min(44, wavBuffer.length);
+    dataSize = wavBuffer.length - dataOffset;
+  }
+
+  let pcmData = wavBuffer.subarray(dataOffset, dataOffset + dataSize);
+
+  // If mono 16-bit, duplicate to stereo
+  if (channels === 1 && bitsPerSample === 16) {
+    const stereoBuffer = Buffer.alloc(pcmData.length * 2);
+    for (let i = 0; i < pcmData.length; i += 2) {
+      const sample = pcmData.readInt16LE(i);
+      stereoBuffer.writeInt16LE(sample, i * 2);
+      stereoBuffer.writeInt16LE(sample, i * 2 + 2);
+    }
+    pcmData = stereoBuffer;
+  }
+
+  // Sector-align to 2352 bytes (standard Red Book CD-DA sector size)
+  const remainder = pcmData.length % 2352;
+  if (remainder !== 0) {
+    const padBytes = 2352 - remainder;
+    pcmData = Buffer.concat([pcmData, Buffer.alloc(padBytes)]);
+  }
+
+  return pcmData;
+};
+
 export const makeBuild = async ({
   buildRoot,
   romFilename,
@@ -238,6 +288,8 @@ export const makeBuild = async ({
     const targetOutputCue = Path.join(romDir, (romFilename || "game").replace(/\.[^/.]+$/, "") + ".cue");
 
     // Copy any CD-DA audio tracks from buildRoot/audio to romDir
+    const cdAudioFormat = (data?.settings?.cdAudioFormat || "wav").toLowerCase();
+    const isBinAudio = cdAudioFormat === "bin";
     const audioDir = Path.join(buildRoot, "audio");
     const audioTracks: string[] = [];
     if (fs.existsSync(audioDir)) {
@@ -246,9 +298,18 @@ export const makeBuild = async ({
         .sort();
       for (const wav of wavFiles) {
         const srcWav = Path.join(audioDir, wav);
-        const destWav = Path.join(romDir, wav);
-        await fs.copy(srcWav, destWav, { overwrite: true });
-        audioTracks.push(wav);
+        if (isBinAudio) {
+          const binName = wav.replace(/\.wav$/i, ".bin");
+          const destBin = Path.join(romDir, binName);
+          const wavBuf = await fs.readFile(srcWav);
+          const rawBin = convertWavToRawBin(wavBuf);
+          await fs.writeFile(destBin, rawBin);
+          audioTracks.push(binName);
+        } else {
+          const destWav = Path.join(romDir, wav);
+          await fs.copy(srcWav, destWav, { overwrite: true });
+          audioTracks.push(wav);
+        }
       }
     }
 
@@ -259,7 +320,8 @@ export const makeBuild = async ({
       let trackNum = 2;
       for (const trackFile of audioTracks) {
         const trackStr = trackNum < 10 ? `0${trackNum}` : `${trackNum}`;
-        cueContent += `FILE "${trackFile}" WAVE\n  TRACK ${trackStr} AUDIO\n    PREGAP 00:02:00\n    INDEX 01 00:00:00\n`;
+        const fileType = isBinAudio ? "BINARY" : "WAVE";
+        cueContent += `FILE "${trackFile}" ${fileType}\n  TRACK ${trackStr} AUDIO\n    PREGAP 00:02:00\n    INDEX 01 00:00:00\n`;
         trackNum++;
       }
       await fs.writeFile(targetOutputCue, cueContent, "utf8");

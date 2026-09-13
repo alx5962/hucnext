@@ -338,6 +338,7 @@ export const defaultProjectSettings: Settings = {
   defaultPlayerSprites: {},
   targetSystem: "pce",
   sf2Enabled: false,
+  cdAudioFormat: "wav",
   cartType: "mbc5",
   batterylessEnabled: false,
   favoriteEvents: ["EVENT_TEXT", "EVENT_SWITCH_SCENE"],

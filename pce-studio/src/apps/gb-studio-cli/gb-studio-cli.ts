@@ -122,7 +122,10 @@ const main = async (
       if (await pathExists(tmpRomDir)) {
         const files = await readdir(tmpRomDir);
         for (const file of files) {
-          if (file.toLowerCase().endsWith(".wav")) {
+          if (
+            file.toLowerCase().endsWith(".wav") ||
+            file.toLowerCase().endsWith(".bin")
+          ) {
             await copy(Path.join(tmpRomDir, file), Path.join(destDir, file), { overwrite: true });
           }
         }

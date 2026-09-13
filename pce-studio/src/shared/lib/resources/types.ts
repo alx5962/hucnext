@@ -817,6 +817,13 @@ export const CartType = Type.Union([
 
 export type CartType = Static<typeof CartType>;
 
+export const CDAudioFormat = Type.Union([
+  Type.Literal("wav"),
+  Type.Literal("bin"),
+]);
+
+export type CDAudioFormat = Static<typeof CDAudioFormat>;
+
 export const ScriptEditorCtxType = Type.Union([
   Type.Literal("entity"),
   Type.Literal("script"),
@@ -947,6 +954,7 @@ export const SettingsResource = Type.Object({
   defaultPlayerSprites: Type.Record(Type.String(), Type.String()),
   targetSystem: Type.Optional(TargetSystem),
   sf2Enabled: Type.Optional(Type.Boolean()),
+  cdAudioFormat: Type.Optional(CDAudioFormat),
   cartType: Type.Optional(Type.String()),
   batterylessEnabled: Type.Optional(Type.Boolean()),
   favoriteEvents: Type.Array(Type.String()),

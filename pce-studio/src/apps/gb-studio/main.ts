@@ -1635,12 +1635,15 @@ ipcMain.handle(
           await copy(tmpCuePath, projectCuePath, { overwrite: true });
         }
 
-        // Copy companion CD-DA audio tracks (.wav) to project build/rom
+        // Copy companion CD-DA audio tracks (.wav / .bin) to project build/rom
         const tmpRomDir = Path.dirname(tmpRomPath);
         if (await pathExists(tmpRomDir)) {
           const files = await readdir(tmpRomDir);
           for (const file of files) {
-            if (file.toLowerCase().endsWith(".wav")) {
+            if (
+              file.toLowerCase().endsWith(".wav") ||
+              file.toLowerCase().endsWith(".bin")
+            ) {
               await copy(Path.join(tmpRomDir, file), Path.join(projectRomDir, file), {
                 overwrite: true,
               });
@@ -1651,7 +1654,10 @@ ipcMain.handle(
         if (await pathExists(tmpAudioDir)) {
           const audioFiles = await readdir(tmpAudioDir);
           for (const file of audioFiles) {
-            if (file.toLowerCase().endsWith(".wav")) {
+            if (
+              file.toLowerCase().endsWith(".wav") ||
+              file.toLowerCase().endsWith(".bin")
+            ) {
               await copy(
                 Path.join(tmpAudioDir, file),
                 Path.join(projectRomDir, file),

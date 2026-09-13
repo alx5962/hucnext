@@ -10,6 +10,7 @@ import { normalizeTilemapLayersSize } from "shared/lib/tiles/sceneTilemapData";
 
 export type ColorModeSetting = "mono" | "mixed" | "color";
 export type TargetSystem = "pce" | "sgx" | "iso" | "cd";
+export type CDAudioFormat = "wav" | "bin";
 export type CartType = "mbc5" | "mbc3";
 export type BreakpointData = {
   scriptEventId: string;
