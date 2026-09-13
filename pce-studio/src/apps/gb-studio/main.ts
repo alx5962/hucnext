@@ -17,6 +17,7 @@ import {
   ensureDir,
   pathExists,
   readFile,
+  readdir,
   remove,
   stat,
   statSync,
@@ -1622,12 +1623,42 @@ ipcMain.handle(
         await copy(tmpRomPath, projectRomPath, { overwrite: true });
       }
 
-      // If CD-ROM target, also copy companion .cue sheet
-      if (targetSystem === "iso" || targetSystem === "cd") {
+      // If CD-ROM target, also copy companion .cue sheet and CD-DA audio tracks (.wav)
+      const isCD =
+        targetSystem === "iso" ||
+        targetSystem === "cd" ||
+        targetSystem === "scd";
+      if (isCD) {
         const tmpCuePath = tmpRomPath.replace(/\.iso$/i, ".cue");
         const projectCuePath = projectRomPath.replace(/\.iso$/i, ".cue");
         if (await pathExists(tmpCuePath)) {
           await copy(tmpCuePath, projectCuePath, { overwrite: true });
+        }
+
+        // Copy companion CD-DA audio tracks (.wav) to project build/rom
+        const tmpRomDir = Path.dirname(tmpRomPath);
+        if (await pathExists(tmpRomDir)) {
+          const files = await readdir(tmpRomDir);
+          for (const file of files) {
+            if (file.toLowerCase().endsWith(".wav")) {
+              await copy(Path.join(tmpRomDir, file), Path.join(projectRomDir, file), {
+                overwrite: true,
+              });
+            }
+          }
+        }
+        const tmpAudioDir = Path.join(outputRoot, "audio");
+        if (await pathExists(tmpAudioDir)) {
+          const audioFiles = await readdir(tmpAudioDir);
+          for (const file of audioFiles) {
+            if (file.toLowerCase().endsWith(".wav")) {
+              await copy(
+                Path.join(tmpAudioDir, file),
+                Path.join(projectRomDir, file),
+                { overwrite: true },
+              );
+            }
+          }
         }
       }
 
@@ -1661,7 +1692,12 @@ ipcMain.handle(
         const romToLaunch = (await pathExists(projectRomPath))
           ? projectRomPath
           : tmpRomPath;
-        shell.openPath(romToLaunch);
+        const finalRomToLaunch = isCD
+          ? (await pathExists(romToLaunch.replace(/\.iso$/i, ".cue"))
+              ? romToLaunch.replace(/\.iso$/i, ".cue")
+              : romToLaunch)
+          : romToLaunch;
+        shell.openPath(finalRomToLaunch);
       }
 
       const usageData = await romUsage({

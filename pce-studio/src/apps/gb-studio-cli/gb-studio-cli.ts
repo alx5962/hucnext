@@ -1,4 +1,4 @@
-import { copy } from "fs-extra";
+import { copy, pathExists, readdir } from "fs-extra";
 import Path from "path";
 import os from "os";
 import { rimraf as rmdir } from "rimraf";
@@ -109,6 +109,25 @@ const main = async (
   } else if (command === "make:rom") {
     const romTmpPath = Path.join(tmpBuildDir, "build", "rom", romFilename);
     await copy(romTmpPath, destination);
+    const isIso = romFilename.toLowerCase().endsWith(".iso");
+    if (isIso) {
+      const tmpRomDir = Path.join(tmpBuildDir, "build", "rom");
+      const destDir = Path.extname(destination) ? Path.dirname(destination) : destination;
+      const cueName = romFilename.replace(/\.iso$/i, ".cue");
+      const tmpCuePath = Path.join(tmpRomDir, cueName);
+      if (await pathExists(tmpCuePath)) {
+        const destCuePath = Path.extname(destination) ? destination.replace(/\.iso$/i, ".cue") : Path.join(destDir, cueName);
+        await copy(tmpCuePath, destCuePath, { overwrite: true });
+      }
+      if (await pathExists(tmpRomDir)) {
+        const files = await readdir(tmpRomDir);
+        for (const file of files) {
+          if (file.toLowerCase().endsWith(".wav")) {
+            await copy(Path.join(tmpRomDir, file), Path.join(destDir, file), { overwrite: true });
+          }
+        }
+      }
+    }
   } else if (command === "make:pocket") {
     const romTmpPath = Path.join(tmpBuildDir, "build", "rom", romFilename);
     await copy(romTmpPath, destination);

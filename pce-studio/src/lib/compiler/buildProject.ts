@@ -3681,7 +3681,7 @@ main() {
 
   const makeBuildModule = require("./makeBuild");
   const makeBuildFn = makeBuildModule.default || makeBuildModule.makeBuild || makeBuildModule;
-  const defaultExt = targetSystem === "iso" || targetSystem === "cd" ? "iso" : targetSystem === "sgx" ? "sgx" : "pce";
+  const defaultExt = targetSystem === "iso" || targetSystem === "cd" || targetSystem === "scd" ? "iso" : targetSystem === "sgx" ? "sgx" : "pce";
   const defaultRomName = (projectData.name || pathModule.basename(projDir) || "game").toLowerCase().replace(/[^a-z0-9_-]/g, "");
   const romFilename = (typeof outputBuildDir === "object" && outputBuildDir?.romFilename)
     ? outputBuildDir.romFilename
