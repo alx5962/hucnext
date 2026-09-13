@@ -2369,6 +2369,18 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         if (propName === "direction") return `g_actor_dir[${propTarget}]`;
         if (propName === "frame") return `g_actor_anim_frame[${propTarget}]`;
       }
+      if (valArg.type === "constant") {
+        const cList = projectData?.constants || projectData?.variables?.constants;
+        if (Array.isArray(cList)) {
+          const found = cList.find((c: any) => c.id === valArg.value || c.symbol === valArg.value);
+          if (found && typeof found.value === "number") return String(found.value);
+        } else if (cList && typeof cList === "object") {
+          const found = cList[valArg.value];
+          if (found && typeof found.value === "number") return String(found.value);
+        }
+        const n = Number(valArg.value);
+        return isNaN(n) ? "0" : String(n);
+      }
       if (valArg.value !== undefined) return parseValueExpr(valArg.value, currentActorNum, scene);
     }
     return "0";
@@ -2741,6 +2753,74 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             const varIdx = parseVarIndex(evt.args?.variable);
             stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) - 1);\n        return ${stepIndex + 1};\n`;
             stepIndex++;
+          } else if (evt.command === "EVENT_SWITCH") {
+            const varIdx = parseVarIndex(evt.args?.variable);
+            let choicesCount = Number(evt.args?.choices);
+            if (isNaN(choicesCount) || choicesCount <= 0) {
+              choicesCount = 0;
+              for (let i = 0; i < 16; i++) {
+                if ((evt.children && evt.children[`true${i}`]) || (evt.args && evt.args[`value${i}`] !== undefined)) {
+                  choicesCount = i + 1;
+                }
+              }
+              if (choicesCount === 0) choicesCount = 2;
+            }
+            choicesCount = Math.min(16, choicesCount);
+
+            const branchStep = stepIndex;
+            stepIndex++;
+
+            const casesInfo: { valExpr: string; startStep: number }[] = [];
+            const caseEndJumpSteps: number[] = [];
+
+            for (let cIdx = 0; cIdx < choicesCount; cIdx++) {
+              const caseEvts = (evt.children && Array.isArray(evt.children[`true${cIdx}`]))
+                ? evt.children[`true${cIdx}`]
+                : [];
+              const rawVal = evt.args?.[`value${cIdx}`];
+              const valExpr = (rawVal !== undefined)
+                ? parseValueExpr(rawVal, currentActorNum, scene)
+                : String(cIdx + 1);
+
+              let caseStartStep = -1;
+              if (caseEvts.length > 0) {
+                caseStartStep = stepIndex;
+                processEventList(caseEvts, isLastEvent);
+                caseEndJumpSteps.push(stepIndex);
+                stepIndex++;
+              }
+              casesInfo.push({ valExpr, startStep: caseStartStep });
+            }
+
+            let falseStart = -1;
+            const falseList = evt.args?.__disableElse
+              ? []
+              : ((evt.children?.false && Array.isArray(evt.children.false))
+                ? evt.children.false
+                : (evt.false && Array.isArray(evt.false) ? evt.false : []));
+
+            if (falseList.length > 0) {
+              falseStart = stepIndex;
+              processEventList(falseList, isLastEvent);
+            }
+
+            const afterStep = stepIndex;
+            const exitTarget = isLastEvent ? (isUpdateScript ? 0 : -1) : afterStep;
+
+            for (const jumpStep of caseEndJumpSteps) {
+              stepCases += `      case ${jumpStep}:\n        return ${exitTarget};\n`;
+            }
+
+            let branchCode = `      case ${branchStep}:\n`;
+            for (const c of casesInfo) {
+              const target = c.startStep >= 0 ? c.startStep : exitTarget;
+              branchCode += `        if (vm_get_var(${varIdx}) == ${c.valExpr}) return ${target};\n`;
+            }
+            const defaultTarget = falseStart >= 0 ? falseStart : exitTarget;
+            branchCode += `        return ${defaultTarget};\n`;
+
+            stepCases += branchCode;
+            continue;
           } else if (
             evt.command === "EVENT_IF" ||
             evt.command === "EVENT_IF_TRUE" ||
