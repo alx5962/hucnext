@@ -6166,6 +6166,7 @@ void update_pointnclick(void) {
   unsigned int input, pressed;
   int dx, dy, new_x, new_y, max_x, max_y;
   int hit_trigger, hit_actor, is_hover, i, adx, ady;
+  int target_sc, target_px, target_py;
 
   input = pce_sys_read_joy(0);
   pressed = input & ~g_last_input;
@@ -6283,12 +6284,13 @@ void update_pointnclick(void) {
           g_last_input = pce_sys_read_joy(0);
         }
       } else if (hit_trigger >= 0) {
-        if (g_triggers[hit_trigger].target_scene > 0) {
-          load_scene(g_triggers[hit_trigger].target_scene,
-                     g_triggers[hit_trigger].target_x,
-                     g_triggers[hit_trigger].target_y);
-        } else if (g_triggers[hit_trigger].target_x >= 0 && g_triggers[hit_trigger].target_y >= 0) {
-          actor_set_pos(0, g_triggers[hit_trigger].target_x, g_triggers[hit_trigger].target_y);
+        target_sc = TRIG_TARGET_SCENE(hit_trigger);
+        target_px = TRIG_TARGET_X(hit_trigger);
+        target_py = TRIG_TARGET_Y(hit_trigger);
+        if (target_sc > 0) {
+          load_scene(target_sc, target_px, target_py);
+        } else if (target_px >= 0 && target_py >= 0) {
+          actor_set_pos(0, target_px, target_py);
         } else {
           interact_trigger(g_current_scene, hit_trigger);
         }

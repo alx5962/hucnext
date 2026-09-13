@@ -2072,6 +2072,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   let triggerDefines = "";
   if (triggerRows.length > 0) {
     triggerDefines = `#define HAS_TRIGGER_TABLE 1\n#define TRIGGER_COUNT ${triggerRows.length}\nconst int g_trigger_table[] = {\n${triggerRows.join(",\n")}\n};\n`;
+  } else {
+    triggerDefines = `#define TRIGGER_COUNT 0\nconst int g_trigger_table[] = { 0 };\n`;
   }
 
   // Look for music tracks (.uge and .wav files) and build symbol mapping BEFORE processing scene steps
