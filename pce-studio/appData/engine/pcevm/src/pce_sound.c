@@ -72,9 +72,9 @@ const unsigned short g_pce_note_freq[72] = {
     27,  25,  24,  22,  21,  20,  19,  18,  17,  16,  15,  14
 };
 
-/* Vibrato sine table (16 steps) */
-const char g_vibrato_table[16] = {
-    0, 6, 11, 15, 16, 15, 11, 6, 0, -6, -11, -15, -16, -15, -11, -6
+/* Vibrato sine table (16 steps magnitude) */
+const unsigned char g_vibrato_table[16] = {
+    0, 6, 11, 15, 16, 15, 11, 6, 0, 6, 11, 15, 16, 15, 11, 6
 };
 
 /* Duty waveforms: 12.5%, 25%, 50%, 75% DC-centered (midpoint 16, 4 * 32 = 128 bytes) */
@@ -203,6 +203,7 @@ void trigger_note_core_current(void) {
   g_t_pce_ch = (g_t_track < 3) ? g_t_track : 4;
   g_ch_note[g_t_track] = g_t_note;
   g_ch_period[g_t_track] = get_track_note_freq(g_t_track, g_t_note);
+  g_fx_vib_phase[g_t_track] = 0;
 
   g_duty_instrs = (unsigned char *)(g_pce_song[6]);
   g_wave_instrs = (unsigned char *)(g_pce_song[7]);
@@ -544,8 +545,16 @@ void process_tick_effects(unsigned char tick) {
       g_eff_speed = (g_eff_param >> 4) & 0x0F;
       g_eff_depth = g_eff_param & 0x0F;
       g_fx_vib_phase[g_eff_t] = (g_fx_vib_phase[g_eff_t] + g_eff_speed) & 0x0F;
-      g_eff_vib_val = g_vibrato_table[g_fx_vib_phase[g_eff_t]];
-      g_eff_freq = (short)g_ch_period[g_eff_t] + ((g_eff_vib_val * g_eff_depth) / 8);
+      g_eff_arpmode = ((unsigned short)(g_vibrato_table[g_fx_vib_phase[g_eff_t]]) * g_eff_depth) >> 3;
+      if (g_fx_vib_phase[g_eff_t] < 8) {
+        g_eff_freq = g_ch_period[g_eff_t] + g_eff_arpmode;
+      } else {
+        if (g_ch_period[g_eff_t] > g_eff_arpmode) {
+          g_eff_freq = g_ch_period[g_eff_t] - g_eff_arpmode;
+        } else {
+          g_eff_freq = 1;
+        }
+      }
       if (g_eff_freq > 0 && g_eff_freq < 4096) {
         hw_set_ch(g_eff_pce_ch);
         hw_set_freq(g_eff_freq);
