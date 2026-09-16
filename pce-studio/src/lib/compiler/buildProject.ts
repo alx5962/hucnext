@@ -3300,7 +3300,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         if (updateResult.stepCount > 0) {
           updateResult.casesCode += `      case ${updateResult.stepCount}:\n        return 0;\n`;
           actorUpdateStepHelpers.push(`int run_scene_${scNum}_actor_${actorNum}_update_step(int step) {\n  switch (step) {\n${updateResult.casesCode}    default:\n      return 0;\n  }\n}\n\n`);
-          actorUpdateCases.push(`    case ${actorNum}:\n      if (g_actor_wait_timer[${actorNum}] > 0) {\n        g_actor_wait_timer[${actorNum}]--;\n      } else {\n        g_actor_update_step[${actorNum}] = run_scene_${scNum}_actor_${actorNum}_update_step(g_actor_update_step[${actorNum}]);\n      }\n      break;\n`);
+          const boundsCheck = scActor.persistent ? "" : `      if (!actor_is_in_bounds(${actorNum})) break;\n`;
+          actorUpdateCases.push(`    case ${actorNum}:\n${boundsCheck}      if (g_actor_wait_timer[${actorNum}] > 0) {\n        g_actor_wait_timer[${actorNum}]--;\n      } else {\n        g_actor_update_step[${actorNum}] = run_scene_${scNum}_actor_${actorNum}_update_step(g_actor_update_step[${actorNum}]);\n      }\n      break;\n`);
         }
       }
     });

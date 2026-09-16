@@ -263,11 +263,11 @@
               "actorId": "$self$",
               "x": {
                 "type": "number",
-                "value": 2
+                "value": 1
               },
               "y": {
                 "type": "number",
-                "value": 0
+                "value": 1
               },
               "useCollisions": true,
               "verticalFirst": false,
