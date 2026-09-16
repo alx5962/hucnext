@@ -2632,6 +2632,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             const dy = parseCoordExpr(evt.args?.y, 0, currentActorNum, units);
             stepCases += `      case ${stepIndex}:\n        if (!actor_move_rel_step(${targetNum}, ${dx}, ${dy})) return ${stepIndex};\n        return ${stepIndex + 1};\n`;
             stepIndex++;
+          } else if (evt.command === "EVENT_ACTOR_SET_POSITION") {
+            const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
+            const units = evt.args?.units === "pixels" ? "pixels" : "tiles";
+            const px = parseCoordExpr(evt.args?.x, 0, currentActorNum, units);
+            const py = parseCoordExpr(evt.args?.y, 0, currentActorNum, units);
+            stepCases += `      case ${stepIndex}:\n        actor_set_pos(${targetNum}, ${px}, ${py});\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
           } else if (evt.command === "EVENT_ACTOR_SET_DIRECTION" || evt.command === "EVENT_ACTOR_SET_DIRECTION_TO_VALUE") {
             const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
             const dVal = (typeof evt.args?.direction === "object" && evt.args?.direction !== null && evt.args?.direction?.value !== undefined) ? evt.args.direction.value : evt.args?.direction;

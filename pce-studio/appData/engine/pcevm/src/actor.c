@@ -205,6 +205,15 @@ void actor_set_pos(int id, int x, int y) {
   if (id >= 0 && id < g_actor_count) {
     g_actor_x[id] = x;
     g_actor_y[id] = y;
+    /* Sync platformer sub-pixel state when teleporting the player,
+       otherwise update_platform() re-derives position from stale
+       g_plat_sub_y on the next frame and gravity overrides the new pos. */
+    if (id == 0) {
+      g_plat_sub_x = x * 8;
+      g_plat_sub_y = y * 8;
+      g_plat_vy = 0;
+      g_plat_on_ground = 0;
+    }
   }
 }
 

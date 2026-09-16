@@ -6,29 +6,22 @@
   "prefabId": "",
   "name": "",
   "x": 55,
-  "y": 16,
+  "y": 17,
   "width": 5,
-  "height": 2,
+  "height": 3,
   "prefabScriptOverrides": {},
   "script": [
-    {
-      "command": "EVENT_PLATFORMER_STATE_SET",
-      "args": {
-        "state": "blank"
-      },
-      "id": "253b873e-076b-4ce2-982a-dd2eaee32dd2"
-    },
     {
       "command": "EVENT_ACTOR_SET_POSITION",
       "args": {
         "actorId": "$self$",
         "x": {
           "type": "number",
-          "value": 51
+          "value": 49
         },
         "y": {
           "type": "number",
-          "value": 8
+          "value": 4
         },
         "__collapse": false
       },

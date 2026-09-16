@@ -60,6 +60,9 @@
     "POINTNCLICK": "a827b612-578f-4cb9-a2bf-fd54b197b83f",
     "LOGO": "ac1e8ef4-ffe6-47cd-b16f-9af5da77ec26"
   },
+  "targetSystem": "pce",
+  "sf2Enabled": false,
+  "cdAudioFormat": "wav",
   "cartType": "mbc5",
   "batterylessEnabled": false,
   "customColorsWhite": "E8F8E0",

@@ -8,16 +8,9 @@
   "x": 96,
   "y": 16,
   "width": 5,
-  "height": 2,
+  "height": 3,
   "prefabScriptOverrides": {},
   "script": [
-    {
-      "command": "EVENT_PLATFORMER_STATE_SET",
-      "args": {
-        "state": "blank"
-      },
-      "id": "e4bbea2c-40ac-4234-87bf-00619dca8a67"
-    },
     {
       "command": "EVENT_ACTOR_SET_POSITION",
       "args": {
