@@ -2715,6 +2715,49 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             const cancelB = evt.args?.cancelOnB !== false ? 1 : 0;
             stepCases += `      case ${stepIndex}:\n        show_menu(${varIdx}, ${items}, "${opt1}", "${opt2}", "${opt3}", "${opt4}", ${cancelB});\n        return ${stepIndex + 1};\n`;
             stepIndex++;
+          } else if (evt.command === "EVENT_VARIABLE_MATH") {
+            const varIdx = parseVarIndex(evt.args?.vectorX ?? evt.args?.variable);
+            const op = String(evt.args?.operation || "set");
+            const other = String(evt.args?.other || "val");
+
+            let rhsExpr = "0";
+            if (other === "rnd") {
+              const min = Number(evt.args?.minValue) || 0;
+              const max = Number(evt.args?.maxValue) || 0;
+              const minVal = Math.min(min, max);
+              const maxVal = Math.max(min, max);
+              const range = Math.max(1, maxVal - minVal + 1);
+              rhsExpr = `(${minVal} + (rand() % ${range}))`;
+            } else if (other === "var") {
+              const otherIdx = parseVarIndex(evt.args?.vectorY ?? evt.args?.variable);
+              rhsExpr = `vm_get_var(${otherIdx})`;
+            } else if (other === "true") {
+              rhsExpr = "1";
+            } else if (other === "false") {
+              rhsExpr = "0";
+            } else {
+              rhsExpr = parseValueExpr(evt.args?.value, currentActorNum, scene);
+            }
+
+            let resExpr = rhsExpr;
+            if (op === "add") {
+              resExpr = `(vm_get_var(${varIdx}) + ${rhsExpr})`;
+            } else if (op === "sub") {
+              resExpr = `(vm_get_var(${varIdx}) - ${rhsExpr})`;
+            } else if (op === "mul") {
+              resExpr = `(vm_get_var(${varIdx}) * ${rhsExpr})`;
+            } else if (op === "div") {
+              resExpr = `((${rhsExpr} != 0) ? (vm_get_var(${varIdx}) / ${rhsExpr}) : 0)`;
+            } else if (op === "mod") {
+              resExpr = `((${rhsExpr} != 0) ? (vm_get_var(${varIdx}) % ${rhsExpr}) : 0)`;
+            }
+
+            if (evt.args?.clamp) {
+              resExpr = `((${resExpr} < 0) ? 0 : ((${resExpr} > 255) ? 255 : (${resExpr})))`;
+            }
+
+            stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, ${resExpr});\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
           } else if (
             evt.command === "EVENT_SET_VALUE" ||
             evt.command === "EVENT_VARIABLE_SET_TO_VALUE" ||
