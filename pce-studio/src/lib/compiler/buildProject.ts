@@ -2423,6 +2423,11 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       if (cond.type === "false") return "(0)";
     }
 
+    if (evt.command === "EVENT_IF_FLAGS_COMPARE") {
+      const mask = parseNumber(evt.args?.flag ?? evt.args?.mask, 0);
+      return `((vm_get_var(${varIdx}) & ${mask}) != 0)`;
+    }
+
     if (evt.args?.operator) {
       const op = evt.args.operator;
       const rhs = parseValueExpr(evt.args.value ?? evt.args.otherVariable);
@@ -2513,7 +2518,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             continue;
           }
 
-          if (evt.command === "EVENT_TEXT" || evt.command === "EVENT_TEXT_DIALOGUE" || evt.command === "EVENT_DISPLAY_TEXT") {
+          if (
+            evt.command === "EVENT_TEXT" ||
+            evt.command === "EVENT_TEXT_DIALOGUE" ||
+            evt.command === "EVENT_DISPLAY_TEXT" ||
+            evt.command === "EVENT_TEXT_DRAW"
+          ) {
             let textVal = "";
             if (typeof evt.args?.text === "string") {
               textVal = evt.args.text;
@@ -2632,12 +2642,22 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             const dy = parseCoordExpr(evt.args?.y, 0, currentActorNum, units);
             stepCases += `      case ${stepIndex}:\n        if (!actor_move_rel_step(${targetNum}, ${dx}, ${dy})) return ${stepIndex};\n        return ${stepIndex + 1};\n`;
             stepIndex++;
-          } else if (evt.command === "EVENT_ACTOR_SET_POSITION") {
+          } else if (
+            evt.command === "EVENT_ACTOR_SET_POSITION" ||
+            evt.command === "EVENT_ACTOR_SET_POSITION_TO_VALUE"
+          ) {
             const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
             const units = evt.args?.units === "pixels" ? "pixels" : "tiles";
             const px = parseCoordExpr(evt.args?.x, 0, currentActorNum, units);
             const py = parseCoordExpr(evt.args?.y, 0, currentActorNum, units);
             stepCases += `      case ${stepIndex}:\n        actor_set_pos(${targetNum}, ${px}, ${py});\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
+          } else if (evt.command === "EVENT_ACTOR_SET_POSITION_RELATIVE") {
+            const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
+            const units = evt.args?.units === "pixels" ? "pixels" : "tiles";
+            const dx = parseCoordExpr(evt.args?.x, 0, currentActorNum, units);
+            const dy = parseCoordExpr(evt.args?.y, 0, currentActorNum, units);
+            stepCases += `      case ${stepIndex}:\n        actor_set_pos(${targetNum}, g_actor_x[${targetNum}] + (${dx}), g_actor_y[${targetNum}] + (${dy}));\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_ACTOR_SET_DIRECTION" || evt.command === "EVENT_ACTOR_SET_DIRECTION_TO_VALUE") {
             const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
@@ -2691,7 +2711,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           } else if (
             evt.command === "EVENT_TEXT" ||
             evt.command === "EVENT_TEXT_DIALOGUE" ||
-            evt.command === "EVENT_SHOW_TEXT"
+            evt.command === "EVENT_SHOW_TEXT" ||
+            evt.command === "EVENT_TEXT_DRAW"
           ) {
             const rawText = Array.isArray(evt.args?.text)
               ? evt.args.text.join("\n")
@@ -2803,6 +2824,26 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             const varIdx = parseVarIndex(evt.args?.variable);
             stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) - 1);\n        return ${stepIndex + 1};\n`;
             stepIndex++;
+          } else if (evt.command === "EVENT_SET_RANDOM_VALUE") {
+            const varIdx = parseVarIndex(evt.args?.variable);
+            const minVal = Number(evt.args?.minValue) || 0;
+            const maxVal = Number(evt.args?.maxValue ?? 255) || 255;
+            const range = Math.max(1, maxVal - minVal + 1);
+            stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, (${minVal} + (rand() % ${range})));\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
+          } else if (evt.command === "EVENT_ADD_FLAGS" || evt.command === "EVENT_SET_FLAGS") {
+            const varIdx = parseVarIndex(evt.args?.variable);
+            const mask = parseNumber(evt.args?.flag ?? evt.args?.mask, 0);
+            stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) | ${mask});\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
+          } else if (evt.command === "EVENT_CLEAR_FLAGS") {
+            const varIdx = parseVarIndex(evt.args?.variable);
+            const mask = parseNumber(evt.args?.flag ?? evt.args?.mask, 0);
+            stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) & ~${mask});\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
+          } else if (evt.command === "EVENT_RNG_SEED") {
+            stepCases += `      case ${stepIndex}:\n        srand(g_wait_timer + pce_sys_read_joy(0));\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
           } else if (evt.command === "EVENT_SWITCH") {
             const varIdx = parseVarIndex(evt.args?.variable);
             let choicesCount = Number(evt.args?.choices);
@@ -2883,7 +2924,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             evt.command === "EVENT_IF_VARIABLE_COMPARE" ||
             evt.command === "EVENT_IF_EXPRESSION" ||
             evt.command === "EVENT_IF_ENGINE_FIELD" ||
-            evt.command === "EVENT_IF_ENGINE_FIELD_COMPARE"
+            evt.command === "EVENT_IF_ENGINE_FIELD_COMPARE" ||
+            evt.command === "EVENT_IF_FLAGS_COMPARE"
           ) {
             const condExpr = parseConditionExpr(evt);
 
@@ -2987,7 +3029,11 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             stepCases += `      case ${loopEnd}:\n        return ${loopStart};\n`;
             stepIndex++;
             continue;
-          } else if (evt.command === "EVENT_LOOP_BREAK" || evt.command === "EVENT_BREAK") {
+          } else if (
+            evt.command === "EVENT_LOOP_BREAK" ||
+            evt.command === "EVENT_BREAK" ||
+            evt.command === "EVENT_STOP"
+          ) {
             stepCases += `      case ${stepIndex}:\n        return -1;\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_SAVE_DATA" || evt.command === "EVENT_DATA_SAVE") {
@@ -3217,25 +3263,51 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             evt.command === "EVENT_ACTOR_INVOKE" ||
             evt.command === "EVENT_ACTOR_START_UPDATE" ||
             evt.command === "EVENT_ACTOR_STOP_UPDATE" ||
-            evt.command === "EVENT_ADD_FLAGS" ||
             evt.command === "EVENT_ADVENTURE_STATE_SET" ||
             evt.command === "EVENT_CALL_CUSTOM_EVENT" ||
             evt.command === "EVENT_CAMERA_LOCK" ||
             evt.command === "EVENT_CAMERA_PROPERTY_SET" ||
             evt.command === "EVENT_CAMERA_SET_BOUNDS" ||
             evt.command === "EVENT_CAMERA_SET_LOCK" ||
-            evt.command === "EVENT_CLEAR_DATA" ||
-            evt.command === "EVENT_CLEAR_FLAGS" ||
             evt.command === "EVENT_CODE" ||
             evt.command === "EVENT_COMMENT" ||
-            evt.command === "EVENT_COPY_VALUE" ||
             evt.command === "EVENT_DATA_TABLE" ||
-            evt.command === "EVENT_DEC_VALUE" ||
             evt.command === "EVENT_ENGINE_FIELD_SET" ||
             evt.command === "EVENT_ENGINE_FIELD_STORE" ||
             evt.command === "EVENT_FADE_IN" ||
             evt.command === "EVENT_FADE_OUT" ||
-            evt.command === "EVENT_FADE_SETTINGS"
+            evt.command === "EVENT_FADE_SETTINGS" ||
+            evt.command === "EVENT_REMOVE_ADVENTURE_CALLBACK_SCRIPT" ||
+            evt.command === "EVENT_REMOVE_PLATFORMER_CALLBACK_SCRIPT" ||
+            evt.command === "EVENT_REPLACE_TILE_XY" ||
+            evt.command === "EVENT_REPLACE_TILE_XY_SEQUENCE" ||
+            evt.command === "EVENT_SCENE_POP_ALL_STATE" ||
+            evt.command === "EVENT_SCENE_POP_STATE" ||
+            evt.command === "EVENT_SCENE_PUSH_STATE" ||
+            evt.command === "EVENT_SCENE_RESET_STATE" ||
+            evt.command === "EVENT_SCENE_UPDATE_PAUSE" ||
+            evt.command === "EVENT_SCENE_UPDATE_RESUME" ||
+            evt.command === "EVENT_SCRIPT_LOCK" ||
+            evt.command === "EVENT_SCRIPT_UNLOCK" ||
+            evt.command === "EVENT_SET_ADVENTURE_CALLBACK_SCRIPT" ||
+            evt.command === "EVENT_SET_DIALOGUE_FRAME" ||
+            evt.command === "EVENT_SET_FONT" ||
+            evt.command === "EVENT_SET_MUSIC_ROUTINE" ||
+            evt.command === "EVENT_SET_PLATFORMER_CALLBACK_SCRIPT" ||
+            evt.command === "EVENT_SET_TIMER_SCRIPT" ||
+            evt.command === "EVENT_SOUND_PLAY_BEEP" ||
+            evt.command === "EVENT_SOUND_PLAY_CRASH" ||
+            evt.command === "EVENT_SOUND_PLAY_EFFECT" ||
+            evt.command === "EVENT_SOUND_PLAY_TONE" ||
+            evt.command === "EVENT_TEXT_REMOVE_SOUND_EFFECT" ||
+            evt.command === "EVENT_TEXT_SET_ANIMATION_SPEED" ||
+            evt.command === "EVENT_TEXT_SET_SOUND_EFFECT" ||
+            evt.command === "EVENT_THREAD_START" ||
+            evt.command === "EVENT_THREAD_STOP" ||
+            evt.command === "EVENT_TIMER_DISABLE" ||
+            evt.command === "EVENT_TIMER_RESTART" ||
+            evt.command === "EVENT_VARIABLE_MATH_EVALUATE" ||
+            evt.command === "EVENT_WEAPON_ATTACK"
           ) {
             stepCases += `      case ${stepIndex}:\n        return ${stepIndex + 1};\n`;
             stepIndex++;
