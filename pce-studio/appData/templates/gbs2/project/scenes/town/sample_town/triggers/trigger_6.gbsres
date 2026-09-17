@@ -6,7 +6,7 @@
   "_index": 5,
   "symbol": "trigger_43",
   "x": 24,
-  "y": 9,
+  "y": 8,
   "width": 2,
   "height": 1,
   "prefabScriptOverrides": {},
@@ -22,7 +22,7 @@
         },
         "y": {
           "type": "number",
-          "value": 15
+          "value": 21
         },
         "direction": "up",
         "fadeSpeed": "2"
