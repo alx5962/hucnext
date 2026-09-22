@@ -1888,7 +1888,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           actBBoxTop = Math.max(0, actBBoxBottom - sprObj.boundsHeight + 1);
         }
 
-        actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum}_${actorNum} 1\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_SPRITE_SIZE ${sprSizeConst}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_PARTS ${partCount}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_NUM_FRAMES ${numFrames}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_ANIM_SPEED ${animSpeedVal}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_LEFT ${actBBoxLeft}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_RIGHT ${actBBoxRight}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_TOP ${actBBoxTop}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_BOTTOM ${actBBoxBottom}\n${textDef}${hiddenDef}${interactDefs}`;
+        const isPinnedDef = scActor.isPinned ? `#define ACTOR_SCENE_${sceneNum}_${actorNum}_PINNED 1\n` : "";
+
+        actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum}_${actorNum} 1\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_SPRITE_SIZE ${sprSizeConst}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_PARTS ${partCount}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_NUM_FRAMES ${numFrames}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_ANIM_SPEED ${animSpeedVal}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_LEFT ${actBBoxLeft}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_RIGHT ${actBBoxRight}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_TOP ${actBBoxTop}\n#define ACTOR_SCENE_${sceneNum}_${actorNum}_BBOX_BOTTOM ${actBBoxBottom}\n${textDef}${hiddenDef}${isPinnedDef}${interactDefs}`;
 
         if (aIdx === 0) {
           actorDefines += `#define HAS_ACTOR_SCENE_${sceneNum} 1\n#define ACTOR_SCENE_${sceneNum}_X ${actX}\n#define ACTOR_SCENE_${sceneNum}_Y ${actY}\n#define ACTOR_SCENE_${sceneNum}_VRAM_SIZE ${vramSizeHex}\n#define ACTOR_SCENE_${sceneNum}_SPRITE_SIZE ${sprSizeConst}\n`;
@@ -3652,6 +3654,11 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       helperCode += `  g_actor_size[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_SPRITE_SIZE;\n  g_actor_bbox_left[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_LEFT;\n  g_actor_bbox_right[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_RIGHT;\n  g_actor_bbox_top[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_TOP;\n  g_actor_bbox_bottom[${actorNum}] = ACTOR_SCENE_${scNum}_${actorNum}_BBOX_BOTTOM;\n  actor_set_pos(${actorNum}, ACTOR_SCENE_${scNum}_${actorNum}_X, ACTOR_SCENE_${scNum}_${actorNum}_Y);\n  actor_set_dir(${actorNum}, ${dirSlot});\n`;
       helperCode += `  #ifdef ACTOR_SCENE_${scNum}_${actorNum}_HIDDEN\n`;
       helperCode += `  actor_hide(${actorNum});\n`;
+      helperCode += `  #endif\n`;
+      helperCode += `  #ifdef ACTOR_SCENE_${scNum}_${actorNum}_PINNED\n`;
+      helperCode += `  g_actor_pinned[${actorNum}] = 1;\n`;
+      helperCode += `  #else\n`;
+      helperCode += `  g_actor_pinned[${actorNum}] = 0;\n`;
       helperCode += `  #endif\n`;
       helperCode += `  #endif\n`;
 

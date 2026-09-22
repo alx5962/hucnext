@@ -31,6 +31,7 @@ void actor_init(void) {
     g_actor_base_tile_id[i] = 0;
     g_actor_move_speed[i] = 1;
     g_actor_collisions_disabled[i] = 0;
+    g_actor_pinned[i] = 0;
     g_actor_sprite_handle[i] = i;
     g_actor_bbox_left[i] = 0;
     g_actor_bbox_right[i] = 15;
@@ -72,6 +73,11 @@ int actor_is_in_bounds(int id) {
     return 1;
   if (id < 0 || id >= g_actor_count || !g_actor_active[id] || g_actor_hidden[id])
     return 0;
+
+  if (g_actor_pinned[id]) {
+    /* Pinned actors are fixed to the screen, always in bounds */
+    return 1;
+  }
 
   screen_x = g_actor_x[id] - g_cam_x;
   screen_y = g_actor_y[id] - g_cam_y;
@@ -128,8 +134,14 @@ void actor_update_all(void) {
       continue;
     }
 
-    screen_x = g_actor_x[i] - g_cam_x;
-    screen_y = g_actor_y[i] - g_cam_y;
+    /* Pinned actors are positioned in screen space directly, no camera offset */
+    if (g_actor_pinned[i]) {
+      screen_x = g_actor_x[i];
+      screen_y = g_actor_y[i];
+    } else {
+      screen_x = g_actor_x[i] - g_cam_x;
+      screen_y = g_actor_y[i] - g_cam_y;
+    }
 
     flip = (i > 0 && g_actor_dir[i] == 1) ? FLIP_X : NO_FLIP;
     spr_h = (g_actor_size[i] == SZ_16x32 || g_actor_size[i] == SZ_32x32)

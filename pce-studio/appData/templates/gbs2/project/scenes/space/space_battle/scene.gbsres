@@ -32,7 +32,8 @@
       "command": "EVENT_CALL_CUSTOM_EVENT",
       "args": {
         "customEventId": "a02c8ee7-1478-4317-80d7-1c3fc9704e8d",
-        "__name": "Init Weapons"
+        "__name": "Init Weapons",
+        "__collapse": false
       },
       "children": {
         "script": [

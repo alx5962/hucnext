@@ -76,6 +76,7 @@ int g_actor_frame_vram_size[PCE_MAX_ACTORS];
 int g_actor_base_tile_id[PCE_MAX_ACTORS];
 int g_actor_move_speed[PCE_MAX_ACTORS];
 int g_actor_collisions_disabled[PCE_MAX_ACTORS];
+int g_actor_pinned[PCE_MAX_ACTORS];
 int g_actor_sprite_handle[PCE_MAX_ACTORS];
 int g_actor_bbox_left[PCE_MAX_ACTORS];
 int g_actor_bbox_right[PCE_MAX_ACTORS];
