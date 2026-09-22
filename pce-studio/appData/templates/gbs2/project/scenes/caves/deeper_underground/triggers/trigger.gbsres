@@ -5,10 +5,10 @@
   "symbol": "trigger_39",
   "prefabId": "",
   "name": "",
-  "x": 21,
-  "y": 30,
+  "x": 5,
+  "y": 0,
   "width": 2,
-  "height": 2,
+  "height": 1,
   "prefabScriptOverrides": {},
   "script": [
     {
