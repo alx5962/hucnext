@@ -6119,37 +6119,26 @@ void update_adventure(void) {
 
 void update_shmup(void) {
   unsigned int input;
-  int dx, dy, new_x, new_y;
+  int dy, new_y;
 
   g_shmup_scroll_x += SHMUP_SCROLL_SPEED;
   g_cam_x = g_shmup_scroll_x;
 
+  /* Player X is locked to the scroll - advance world position in lockstep */
+  if (g_actor_count > 0 && g_actor_active[0]) {
+    g_actor_x[0] += SHMUP_SCROLL_SPEED;
+  }
+
   input = pce_sys_read_joy(0);
   check_actor_interaction(input);
   if (g_actor_count > 0 && g_actor_active[0]) {
-    dx = 0;
     dy = 0;
-    if (input & JOY_LEFT) {
-      dx -= SHMUP_PLAYER_SPEED;
-      g_actor_dir[0] = 1;
-    }
-    if (input & JOY_RIGHT) {
-      dx += SHMUP_PLAYER_SPEED;
-      g_actor_dir[0] = 0;
-    }
     if (input & JOY_UP)
       dy -= SHMUP_PLAYER_SPEED;
     if (input & JOY_DOWN)
       dy += SHMUP_PLAYER_SPEED;
 
-    update_player_anim(dx != 0 || dy != 0);
-
-    new_x = g_actor_x[0] + dx;
-    if (new_x >= g_cam_x && new_x <= g_cam_x + PCE_SCREEN_WIDTH_PX - 16) {
-      if (!collision_check_box(new_x, g_actor_y[0])) {
-        g_actor_x[0] = new_x;
-      }
-    }
+    update_player_anim(dy != 0);
 
     new_y = g_actor_y[0] + dy;
     if (new_y >= 0 && new_y <= PCE_SCREEN_HEIGHT_PX - 16) {
