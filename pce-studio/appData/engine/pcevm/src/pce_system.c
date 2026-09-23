@@ -3,13 +3,13 @@
 void pce_sys_init(void) {
     set_screen_size(SCR_SIZE_32x32);
     
-    // Set default visible background & text palette (White backdrop, dark pixels)
-    set_color(0, 0x01CE); // Light cyan/blue background
-    set_color(1, 0x0000); // Black foreground
-    set_color(2, 0x0038); // Red
-    set_color(3, 0x01C0); // Green
+    // Clear initial palette colors to black
+    set_color(0, 0x0000);
+    set_color(1, 0x0000);
+    set_color(2, 0x0000);
+    set_color(3, 0x0000);
 
-    disp_on();
+    disp_off();
 }
 
 int pce_sys_vsync(void) {

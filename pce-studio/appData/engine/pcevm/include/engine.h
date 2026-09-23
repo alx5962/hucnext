@@ -11,6 +11,9 @@
 #include "include/vm.h"
 #include "include/projectile.h"
 #include "include/pce_sound.h"
+#include "include/fade.h"
+
+int scene_has_autofade(int scene_num);
 
 int g_current_scene = 1;
 int g_current_scene_type = 0;

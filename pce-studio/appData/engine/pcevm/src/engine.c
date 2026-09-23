@@ -5148,6 +5148,7 @@ void load_scene_part8(int scene_num) {
 
 void load_scene(int scene_num, int player_x, int player_y) {
   int i;
+  disp_off();
   hide_dialogue();
   g_current_scene = scene_num;
 
@@ -5243,6 +5244,16 @@ void load_scene(int scene_num, int player_x, int player_y) {
   set_font_color(1, 2);
   set_color(241, 0x000);
   set_color(242, 0x1FF);
+
+  vsync();
+  fade_backup_palette();
+  if (scene_has_autofade(scene_num)) {
+    g_fade_step = 7;
+    fade_apply(7);
+  } else {
+    g_fade_step = 0;
+  }
+  disp_on();
 
   load_scene_music(scene_num);
 }
@@ -6390,8 +6401,12 @@ void engine_update(void) {
     }
   }
 
+  fade_update();
+
   if (g_script_step >= 0) {
-    if (g_wait_timer > 0) {
+    if (g_fade_active) {
+      /* Waiting for screen fade to complete */
+    } else if (g_wait_timer > 0) {
       g_wait_timer--;
     } else if (g_await_input_mask != 0) {
       unsigned int joy_in;
@@ -6410,49 +6425,51 @@ void engine_update(void) {
     }
   }
 
-  if (0) {
-  }
+  if (!g_fade_active) {
+    if (0) {
+    }
 #ifdef HAS_SCENE_TYPE_PLATFORM
-  else if (g_current_scene_type == SCENE_TYPE_PLATFORM) {
-    update_platform();
-  }
+    else if (g_current_scene_type == SCENE_TYPE_PLATFORM) {
+      update_platform();
+    }
 #endif
 #ifdef HAS_SCENE_TYPE_ADVENTURE
-  else if (g_current_scene_type == SCENE_TYPE_ADVENTURE) {
-    update_adventure();
-  }
+    else if (g_current_scene_type == SCENE_TYPE_ADVENTURE) {
+      update_adventure();
+    }
 #endif
 #ifdef HAS_SCENE_TYPE_SHMUP
-  else if (g_current_scene_type == SCENE_TYPE_SHMUP) {
-    update_shmup();
-  }
+    else if (g_current_scene_type == SCENE_TYPE_SHMUP) {
+      update_shmup();
+    }
 #endif
 #ifdef HAS_SCENE_TYPE_POINTNCLICK
-  else if (g_current_scene_type == SCENE_TYPE_POINTNCLICK) {
-    update_pointnclick();
-  }
+    else if (g_current_scene_type == SCENE_TYPE_POINTNCLICK) {
+      update_pointnclick();
+    }
 #endif
 #ifdef HAS_SCENE_TYPE_LOGO
-  else if (g_current_scene_type == SCENE_TYPE_LOGO) {
-    update_logo();
-  }
+    else if (g_current_scene_type == SCENE_TYPE_LOGO) {
+      update_logo();
+    }
 #endif
 #ifdef HAS_SCENE_TYPE_TOPDOWN
-  else if (g_current_scene_type == SCENE_TYPE_TOPDOWN) {
-    update_topdown();
-  }
+    else if (g_current_scene_type == SCENE_TYPE_TOPDOWN) {
+      update_topdown();
+    }
 #endif
-  else {
+    else {
 #ifdef HAS_SCENE_TYPE_TOPDOWN
-    update_topdown();
+      update_topdown();
 #endif
-  }
+    }
 
-  update_scene_actors(g_current_scene);
+    update_scene_actors(g_current_scene);
 
 #ifdef HAS_PROJECTILES
-  projectile_update_all();
+    projectile_update_all();
 #endif
+  }
 }
 
 int engine_render(void) {

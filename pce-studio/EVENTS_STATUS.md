@@ -2,7 +2,7 @@
 
 This document catalogs all **193** events and category tags for the PCE-Studio engine compiler ([`src/lib/compiler/buildProject.ts`](file:///c:/workspace/git/hucnext/pce-studio/src/lib/compiler/buildProject.ts)).
 
-Every script event from the catalog is now recognized by the compiler: **77** events compile into active PCE/HuC C engine calls and state transitions, and **82** events are explicitly handled as step no-ops (`case step: return step + 1;`), with **0 unhandled/dropped** events.
+Every script event from the catalog is now recognized by the compiler: **79** events compile into active PCE/HuC C engine calls and state transitions, and **80** events are explicitly handled as step no-ops (`case step: return step + 1;`), with **0 unhandled/dropped** events.
 
 ---
 
@@ -10,17 +10,17 @@ Every script event from the catalog is now recognized by the compiler: **77** ev
 
 | Category | Count | Compiler Behavior | Engine Impact |
 | :--- | :---: | :--- | :--- |
-| **Implemented (Active)** | **77** | Emits functional C code (`case step:` state machine) | Executes gameplay actions (movement, math, flags, dialogue, music, camera, vars, projectiles, etc.) |
-| **Explicit No-Op (Stubbed)** | **82** | Matched in compiler, emits `case step: return step + 1;` | Consumes a step cycle, safely advances execution (no missing step crashes, traverses children) |
+| **Implemented (Active)** | **79** | Emits functional C code (`case step:` state machine) | Executes gameplay actions (movement, math, flags, dialogue, music, camera, vars, projectiles, screen fades, etc.) |
+| **Explicit No-Op (Stubbed)** | **80** | Matched in compiler, emits `case step: return step + 1;` | Consumes a step cycle, safely advances execution (no missing step crashes, traverses children) |
 | **Unhandled (Dropped)** | **0** | None | **All 159 script events are now handled** |
 | **UI Group Tags** | **34** | Category metadata tags (`EVENT_GROUP_*`) | Used by the UI event picker palette only; not runnable script events |
 | **Total Items Analyzed** | **193** | | |
 
 ---
 
-## 1. Implemented Events (81 Active Events)
+## 1. Implemented Events (79 Active Events)
 
-These 81 events compile directly into PCE/HuC C engine functions and state transitions.
+These 79 events compile directly into PCE/HuC C engine functions and state transitions.
 
 | Event Command | PCE Engine Mapping / Generated C Logic |
 | :--- | :--- |
@@ -58,6 +58,8 @@ These 81 events compile directly into PCE/HuC C engine functions and state trans
 | `EVENT_COPY_VALUE` | `vm_set_var(target, vm_get_var(source));` |
 | `EVENT_DEC_VALUE` | `vm_set_var(var, vm_get_var(var) - 1);` |
 | `EVENT_DIALOGUE_CLOSE_NONMODAL` | `hide_dialogue();` |
+| `EVENT_FADE_IN` | `fade_in(speed);` (smooth 8-step hardware VCE palette fade-in, pauses script execution until complete) |
+| `EVENT_FADE_OUT` | `fade_out(speed);` (smooth 8-step hardware VCE palette fade-out to black, pauses script execution until complete) |
 | `EVENT_HIDE_SPRITES` | `actor_hide_all();` |
 | `EVENT_IF` | Emits conditional jump: `if (cond) return trueStep; else return falseStep;` |
 | `EVENT_IF_ACTOR_DISTANCE_FROM_ACTOR` | `actor_distance_check(act1, act2, dist, op)` conditional jump |
@@ -133,8 +135,6 @@ These 78 events are caught by explicit `else if (evt.command === ...)` clauses i
 | `EVENT_DATA_TABLE` | Data | Data table lookup stubbed |
 | `EVENT_ENGINE_FIELD_SET` | Engine | Engine fields stubbed |
 | `EVENT_ENGINE_FIELD_STORE` | Engine | Engine fields stubbed |
-| `EVENT_FADE_IN` | Screen | Palette fade-in stubbed |
-| `EVENT_FADE_OUT` | Screen | Palette fade-out stubbed |
 | `EVENT_FADE_SETTINGS` | Screen | Fade speed settings stubbed |
 | `EVENT_IDLE` | Flow | Idle yield stubbed |
 | `EVENT_IF_ACTOR_AT_POSITION` | Actor | Actor coordinate check stubbed |
@@ -293,8 +293,8 @@ These items are UI taxonomy categories used in the GB Studio / PCE Studio event 
 | 51 | `EVENT_DIALOGUE_CLOSE_NONMODAL` | Dialogue | **Implemented** (`hide_dialogue`) |
 | 52 | `EVENT_ENGINE_FIELD_SET` | Engine | **Explicit No-Op** (`return step + 1`) |
 | 53 | `EVENT_ENGINE_FIELD_STORE` | Engine | **Explicit No-Op** (`return step + 1`) |
-| 54 | `EVENT_FADE_IN` | Screen | **Explicit No-Op** (`return step + 1`) |
-| 55 | `EVENT_FADE_OUT` | Screen | **Explicit No-Op** (`return step + 1`) |
+| 54 | `EVENT_FADE_IN` | Screen | **Implemented** (`fade_in`) |
+| 55 | `EVENT_FADE_OUT` | Screen | **Implemented** (`fade_out`) |
 | 56 | `EVENT_FADE_SETTINGS` | Screen | **Explicit No-Op** (`return step + 1`) |
 | 57 | `EVENT_GROUP` | UI | **UI Group Tag** |
 | 58 | `EVENT_GROUP_ACTIONS` | UI | **UI Group Tag** |

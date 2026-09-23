@@ -2600,6 +2600,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   let sceneInputCheckHelpers = "";
   let sceneInputCheckCases = "";
   let sceneStartupCases = "";
+  let sceneAutofadeCases = "";
   let sceneActorScriptCases = "";
   let sceneActorUpdateHelpers = "";
   let sceneActorUpdateCases = "";
@@ -2614,6 +2615,33 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       ...(Array.isArray(scene.script) ? scene.script : []),
       ...(Array.isArray(scene.startScript) ? scene.startScript : [])
     ];
+
+    if (scene.autoFadeSpeed !== null && scene.autoFadeSpeed !== undefined) {
+      const hasManualFadeIn = events.some((e: any) => e && (e.command === "EVENT_FADE_IN" || e.command === "EVENT_FADE_IN_MANUAL"));
+      if (!hasManualFadeIn) {
+        const interactiveIndex = events.findIndex((e: any) =>
+          e && (
+            e.command === "EVENT_TEXT" ||
+            e.command === "EVENT_TEXT_DIALOGUE" ||
+            e.command === "EVENT_DISPLAY_TEXT" ||
+            e.command === "EVENT_WAIT" ||
+            e.command === "EVENT_ACTOR_MOVE_TO" ||
+            e.command === "EVENT_CHOICE" ||
+            e.command === "EVENT_MENU" ||
+            e.command === "EVENT_AWAIT_INPUT"
+          )
+        );
+        const autoFadeEvt = {
+          command: "EVENT_FADE_IN",
+          args: { speed: scene.autoFadeSpeed }
+        };
+        if (interactiveIndex !== -1) {
+          events.splice(interactiveIndex, 0, autoFadeEvt);
+        } else {
+          events.push(autoFadeEvt);
+        }
+      }
+    }
 
     const findTargetNum = (actArg: string | undefined, defaultActor: number = 0): number => {
       if (!actArg || actArg === "$self$" || (actArg === "0" && defaultActor > 0)) return defaultActor;
@@ -3433,6 +3461,22 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
             stepCases += `      case ${stepIndex}:\n        g_actor_update_step[${targetNum}] = -1;\n        return ${stepIndex + 1};\n`;
             stepIndex++;
+          } else if (evt.command === "EVENT_FADE_IN") {
+            let speed = 2;
+            if (evt.args?.speed !== undefined && evt.args?.speed !== null) {
+              speed = Number(evt.args.speed);
+              if (isNaN(speed)) speed = 2;
+            }
+            stepCases += `      case ${stepIndex}:\n        fade_in(${speed});\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
+          } else if (evt.command === "EVENT_FADE_OUT") {
+            let speed = 2;
+            if (evt.args?.speed !== undefined && evt.args?.speed !== null) {
+              speed = Number(evt.args.speed);
+              if (isNaN(speed)) speed = 2;
+            }
+            stepCases += `      case ${stepIndex}:\n        fade_out(${speed});\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
           } else if (
             evt.command === "EVENT_ACTOR_EFFECTS" ||
             evt.command === "EVENT_ACTOR_MOVE_CANCEL" ||
@@ -3452,8 +3496,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             evt.command === "EVENT_DATA_TABLE" ||
             evt.command === "EVENT_ENGINE_FIELD_SET" ||
             evt.command === "EVENT_ENGINE_FIELD_STORE" ||
-            evt.command === "EVENT_FADE_IN" ||
-            evt.command === "EVENT_FADE_OUT" ||
             evt.command === "EVENT_FADE_SETTINGS" ||
             evt.command === "EVENT_REMOVE_ADVENTURE_CALLBACK_SCRIPT" ||
             evt.command === "EVENT_REMOVE_PLATFORMER_CALLBACK_SCRIPT" ||
@@ -3690,6 +3732,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     });
 
     sceneStartupCases += `  if (scene_num == ${scNum}) return ${hasStartup ? 1 : 0};\n`;
+    const hasAutofade = scene.autoFadeSpeed !== null && scene.autoFadeSpeed !== undefined;
+    sceneAutofadeCases += `  if (scene_num == ${scNum}) return ${hasAutofade ? 1 : 0};\n`;
 
     // 5. Scene step dispatcher: isolated dispatcher per scene
     let sceneStepBody = "";
@@ -3974,6 +4018,10 @@ int scene_has_startup_script(int scene_num) {
 ${sceneStartupCases}  return 0;
 }
 
+int scene_has_autofade(int scene_num) {
+${sceneAutofadeCases}  return 0;
+}
+
 int scene_has_actor_script(int scene_num, int actor_num) {
 ${sceneActorScriptCases}  return 0;
 }
@@ -4136,6 +4184,7 @@ ${musicIncludes}
 #include "src/trigger.c"
 #include "src/vm.c"
 #include "src/projectile.c"
+#include "src/fade.c"
 
 ${sceneInitFunctionC}
 
