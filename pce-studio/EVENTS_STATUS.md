@@ -18,9 +18,9 @@ Every script event from the catalog is now recognized by the compiler: **77** ev
 
 ---
 
-## 1. Implemented Events (77 Active Events)
+## 1. Implemented Events (81 Active Events)
 
-These 77 events compile directly into PCE/HuC C engine functions and state transitions.
+These 81 events compile directly into PCE/HuC C engine functions and state transitions.
 
 | Event Command | PCE Engine Mapping / Generated C Logic |
 | :--- | :--- |
@@ -34,6 +34,7 @@ These 77 events compile directly into PCE/HuC C engine functions and state trans
 | `EVENT_ACTOR_MOVE_TO` | `actor_move_step(target, px, py)` |
 | `EVENT_ACTOR_MOVE_TO_VALUE` | `actor_move_step(target, px, py)` |
 | `EVENT_ACTOR_PUSH` | `actor_push(target, g_actor_dir[0], slide)` |
+| `EVENT_ACTOR_SET_ANIMATE` | `actor_set_animate(target, animate);` |
 | `EVENT_ACTOR_SET_ANIMATION_SPEED` | `actor_set_anim_speed(target, spd);` |
 | `EVENT_ACTOR_SET_DIRECTION` | `actor_set_dir(target, dir);` (0=Right, 1=Left, 2=Up, 3=Down) |
 | `EVENT_ACTOR_SET_DIRECTION_TO_VALUE` | `actor_set_dir(target, dir);` |
@@ -43,6 +44,7 @@ These 77 events compile directly into PCE/HuC C engine functions and state trans
 | `EVENT_ACTOR_SET_POSITION` | `actor_set_pos(target, px, py);` |
 | `EVENT_ACTOR_SET_POSITION_RELATIVE` | `actor_set_pos(target, g_actor_x[target] + dx, g_actor_y[target] + dy);` |
 | `EVENT_ACTOR_SET_POSITION_TO_VALUE` | `actor_set_pos(target, px, py);` |
+| `EVENT_ACTOR_SET_SPRITE` | `actor_set_sprite(target, vramAddr, numFrames, animSpeed, sprSize, palSlot);` |
 | `EVENT_ACTOR_SET_STATE` | `player_set_state(target, state);` |
 | `EVENT_ACTOR_SHOW` | `actor_show(target); actor_activate(target);` |
 | `EVENT_ADD_FLAGS` | `vm_set_var(var, vm_get_var(var) \| mask);` |
@@ -94,6 +96,8 @@ These 77 events compile directly into PCE/HuC C engine functions and state trans
 | `EVENT_SET_TRUE` | `vm_set_var(var, 1);` |
 | `EVENT_SET_VALUE` | `vm_set_var(var, valExpr);` |
 | `EVENT_SHOW_SPRITES` | `actor_show_all();` |
+| `EVENT_SOUND_PLAY_CRASH` | `pce_sound_play_sfx(SFX_CRASH);` (PSG channel 5 noise generator) |
+| `EVENT_SOUND_PLAY_EFFECT` | `pce_sound_play_sfx(SFX_CRASH);` (PSG channel 5 noise generator) |
 | `EVENT_STOP` | `return -1;` (aborts current script sequence) |
 | `EVENT_SWITCH` | Multi-branch jump table (`if (vm_get_var == valN) return targetN;`) |
 | `EVENT_SWITCH_SCENE` | `load_scene(targetScene, targetX, targetY); return -1;` |
@@ -104,9 +108,9 @@ These 77 events compile directly into PCE/HuC C engine functions and state trans
 
 ---
 
-## 2. Explicit No-Op Events (82 Stubbed Events)
+## 2. Explicit No-Op Events (78 Stubbed Events)
 
-These 82 events are caught by explicit `else if (evt.command === ...)` clauses in [`buildProject.ts`](file:///c:/workspace/git/hucnext/pce-studio/src/lib/compiler/buildProject.ts). They emit `case step: return step + 1;` so that they never crash the compiler, safely advance the state machine, and properly traverse any child/nested event trees.
+These 78 events are caught by explicit `else if (evt.command === ...)` clauses in [`buildProject.ts`](file:///c:/workspace/git/hucnext/pce-studio/src/lib/compiler/buildProject.ts). They emit `case step: return step + 1;` so that they never crash the compiler, safely advance the state machine, and properly traverse any child/nested event trees.
 
 | Event Command | Category | Reason / Engine Note |
 | :--- | :--- | :--- |
@@ -115,9 +119,7 @@ These 82 events are caught by explicit `else if (evt.command === ...)` clauses i
 | `EVENT_ACTOR_GET_POSITION` | Actor | Accessible via expression properties |
 | `EVENT_ACTOR_INVOKE` | Actor | Cross-actor script invocation not implemented in PCE VM |
 | `EVENT_ACTOR_MOVE_CANCEL` | Actor | Mid-movement cancellation stubbed |
-| `EVENT_ACTOR_SET_ANIMATE` | Actor | Animation lock/unlock stubbed |
 | `EVENT_ACTOR_SET_COLLISION_BOX` | Actor | Dynamic collision box resizing stubbed |
-| `EVENT_ACTOR_SET_SPRITE` | Actor | Dynamic actor sprite swapping stubbed |
 | `EVENT_ACTOR_START_UPDATE` | Actor | Update thread control stubbed |
 | `EVENT_ACTOR_STOP_UPDATE` | Actor | Update thread control stubbed |
 | `EVENT_ADVENTURE_STATE_SET` | Mode | Adventure mode state field stubbed |
@@ -180,8 +182,6 @@ These 82 events are caught by explicit `else if (evt.command === ...)` clauses i
 | `EVENT_SET_PLATFORMER_CALLBACK_SCRIPT` | Mode | Platformer callback hook stubbed |
 | `EVENT_SET_TIMER_SCRIPT` | Timer | Background recurring timer stubbed |
 | `EVENT_SOUND_PLAY_BEEP` | Audio | PSG square wave beep stubbed |
-| `EVENT_SOUND_PLAY_CRASH` | Audio | PSG noise crash stubbed |
-| `EVENT_SOUND_PLAY_EFFECT` | Audio | PSG sound effect stubbed |
 | `EVENT_SOUND_PLAY_TONE` | Audio | PSG tone generator stubbed |
 | `EVENT_TEXT_REMOVE_SOUND_EFFECT` | Dialogue | Dialogue typewriter SFX stubbed |
 | `EVENT_TEXT_SET_ANIMATION_SPEED` | Dialogue | Typewriter text speed stubbed |

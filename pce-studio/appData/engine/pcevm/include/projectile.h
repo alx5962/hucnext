@@ -13,7 +13,7 @@
 #endif
 
 #ifndef PROJ_VRAM_ADDR
-#define PROJ_VRAM_ADDR 0x7000
+#define PROJ_VRAM_ADDR 0x7C00
 #endif
 
 #ifndef PROJ_PALETTE

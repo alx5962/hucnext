@@ -275,6 +275,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
                   if (aJson) sceneActors.push(aJson);
                 } catch (e) { }
               }
+              // Sort actors by _index to ensure correct slot assignment regardless of filesystem order
+              sceneActors.sort((a, b) => {
+                const idxA = a._index !== undefined ? Number(a._index) : 999;
+                const idxB = b._index !== undefined ? Number(b._index) : 999;
+                return idxA - idxB;
+              });
               json.actors = sceneActors;
             }
             const triggersDir = pathModule.join(scFolder, "triggers");
@@ -287,6 +293,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
                   if (tJson) sceneTriggers.push(tJson);
                 } catch (e) { }
               }
+              // Sort triggers by _index to ensure correct slot assignment regardless of filesystem order
+              sceneTriggers.sort((a, b) => {
+                const idxA = a._index !== undefined ? Number(a._index) : 999;
+                const idxB = b._index !== undefined ? Number(b._index) : 999;
+                return idxA - idxB;
+              });
               json.triggers = sceneTriggers;
             }
             scenesFromGbsres.push(json);
@@ -512,7 +524,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     return "SCR_SIZE_128x64";
   };
 
-  const sceneDimensions: { width: number; height: number; scrSize: string }[] = [];
+  const sceneDimensions: { width: number; height: number; scrSize: string; logicalWidth: number; logicalHeight: number }[] = [];
   const usedSceneTypes = new Set<string>();
 
   allScenes.forEach((scene: any, idx: number) => {
@@ -551,22 +563,27 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       }
     }
 
-    scHeight = Math.min(64, scHeight);
-    if (scHeight <= 32) {
-      scWidth = Math.min(128, scWidth);
+    const logicalWidth = scWidth;
+    const logicalHeight = scHeight;
+
+    let batWidth = scWidth;
+    let batHeight = scHeight;
+    batHeight = Math.min(64, batHeight);
+    if (batHeight <= 32) {
+      batWidth = Math.min(128, batWidth);
     } else {
-      scWidth = Math.min(64, scWidth);
+      batWidth = Math.min(64, batWidth);
     }
 
-    const scrSize = getPceScreenSize(scWidth, scHeight);
-    sceneDimensions.push({ width: scWidth, height: scHeight, scrSize });
+    const scrSize = getPceScreenSize(batWidth, batHeight);
+    sceneDimensions.push({ width: batWidth, height: batHeight, scrSize, logicalWidth, logicalHeight });
 
     const scType: string = (scene.type || "TOPDOWN").toUpperCase().replace(/[^A-Z]/g, "");
     usedSceneTypes.add(scType);
     const scTypeNum = SCENE_TYPE_MAP[scType] ?? SCENE_TYPE_MAP["TOPDOWN"];
     sceneTypeDefineList.push(`#define SCENE_${scNum}_TYPE ${scTypeNum}`);
-    sceneTypeDefineList.push(`#define SCENE_${scNum}_WIDTH ${scWidth}`);
-    sceneTypeDefineList.push(`#define SCENE_${scNum}_HEIGHT ${scHeight}`);
+    sceneTypeDefineList.push(`#define SCENE_${scNum}_WIDTH ${logicalWidth}`);
+    sceneTypeDefineList.push(`#define SCENE_${scNum}_HEIGHT ${logicalHeight}`);
     sceneTypeDefineList.push(`#define SCENE_${scNum}_SCR_SIZE ${scrSize}`);
     sceneTypeDefineList.push(`#define HAS_SCENE_${scNum} 1`);
   });
@@ -909,10 +926,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
     const origW = Number(scene.width) || dim.width;
     const origH = Number(scene.height) || dim.height;
-    let colBytes = new Uint8Array(dim.width * dim.height);
-    for (let y = 0; y < dim.height; y++) {
-      for (let x = 0; x < dim.width; x++) {
-        const dstIdx = y * dim.width + x;
+    const colW = dim.logicalWidth || dim.width;
+    const colH = dim.logicalHeight || dim.height;
+    let colBytes = new Uint8Array(colW * colH);
+    for (let y = 0; y < colH; y++) {
+      for (let x = 0; x < colW; x++) {
+        const dstIdx = y * colW + x;
         const srcIdx = y * origW + x;
         if (srcIdx < rawCollisions.length) {
           colBytes[dstIdx] = rawCollisions[srcIdx] ? 1 : 0;
@@ -945,10 +964,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   }
 
   const parseNumber = (val: any, fallback: number) => {
-    if (typeof val === "number" && !isNaN(val)) return Math.floor(val);
-    if (typeof val === "object" && val !== null && typeof val.value === "number" && !isNaN(val.value)) return Math.floor(val.value);
-    if (typeof val === "object" && val !== null && typeof val.x === "number" && !isNaN(val.x)) return Math.floor(val.x);
-    if (typeof val === "string" && !isNaN(Number(val))) return Math.floor(Number(val));
+    if (typeof val === "number" && !isNaN(val)) return val > 0 && val < 1 ? 1 : Math.floor(val);
+    if (typeof val === "object" && val !== null && typeof val.value === "number" && !isNaN(val.value)) return val.value > 0 && val.value < 1 ? 1 : Math.floor(val.value);
+    if (typeof val === "object" && val !== null && typeof val.x === "number" && !isNaN(val.x)) return val.x > 0 && val.x < 1 ? 1 : Math.floor(val.x);
+    if (typeof val === "string" && !isNaN(Number(val))) {
+      const n = Number(val);
+      return n > 0 && n < 1 ? 1 : Math.floor(n);
+    }
     return fallback;
   };
 
@@ -1489,7 +1511,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
   });
 
-  // Second pass: build the dispatcher — each case is now a single helper call
+  // Second pass: build the dispatcher - each case is now a single helper call
   allScenes.forEach((scene: any, sceneIdx: number) => {
     const scNum = sceneIdx + 1;
     let sheetId = scene.playerSpriteSheetId;
@@ -1908,6 +1930,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   // Compile Projectile Sprites
   let projDirectives = "";
   const projectileSpriteIds = new Set<string>();
+  const projectileSpriteMap = new Map<string, { vramHex: string; palSlot: number; sizeConst: string; idx: number }>();
+  const compiledProjectileList: { vramHex: string; palSlot: number; sizeConst: string; idx: number }[] = [];
   const collectProjSprites = (events: any[]) => {
     if (!Array.isArray(events)) return;
     for (const evt of events) {
@@ -1977,6 +2001,24 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       const alloc = bankManager.allocatePacked(projBytes, 1, `proj_${projIdx}`);
       projDirectives += `\n#asm\n .data\n .bank ${alloc.bank}\n .org $${alloc.offset.toString(16)}\n#endasm\n`;
       projDirectives += `#incspr(proj_spr_${projIdx}, "${relPcxF}", 0, 0, ${w16}, ${h16})\n#incpal(proj_pal_${projIdx}, "${relPcxF}", 0, 1)\n`;
+
+      const vramAddr = 0x7C00 + (projIdx * 0x40);
+      const vramHex = `0x${vramAddr.toString(16).toUpperCase()}`;
+      const palSlot = 15 - (projIdx % 8);
+      let sprSizeConst = "SZ_16x16";
+      if (w16 === 1 && h16 === 2) sprSizeConst = "SZ_16x32";
+      else if (w16 === 2 && h16 === 1) sprSizeConst = "SZ_32x16";
+      else if (w16 === 2 && h16 === 2) sprSizeConst = "SZ_32x32";
+      else if (w16 === 2 && h16 === 4) sprSizeConst = "SZ_32x64";
+      else if (w16 === 1 && h16 === 4) sprSizeConst = "SZ_16x64";
+
+      const projMeta = { vramHex, palSlot, sizeConst: sprSizeConst, idx: projIdx };
+      projectileSpriteMap.set(String(sprId), projMeta);
+      if (sprObj.id) projectileSpriteMap.set(String(sprObj.id), projMeta);
+      if (sprObj.name) projectileSpriteMap.set(String(sprObj.name), projMeta);
+      if (sprObj.filename) projectileSpriteMap.set(String(sprObj.filename), projMeta);
+      compiledProjectileList.push(projMeta);
+
       if (projIdx === 0) {
         projDirectives += `#define HAS_PROJECTILES 1\n#define proj_spr_default proj_spr_0\n#define proj_pal_default proj_pal_0\n`;
       }
@@ -1984,6 +2026,115 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     }
     if (projDirectives) {
       projDirectives += `\n#asm\n .code\n#endasm\n`;
+    }
+  }
+
+  // Compile Dynamic Sprites (e.g. EVENT_ACTOR_SET_SPRITE)
+  let dynamicSprDirectives = "";
+  const dynamicSpriteIds = new Set<string>();
+  const dynamicSpriteMap = new Map<string, { vramHex: string; palSlot: number; sizeConst: string; numFrames: number; animSpeed: number }>();
+  const compiledDynamicList: { vramHex: string; palSlot: number; sizeConst: string; numFrames: number; animSpeed: number; idx: number }[] = [];
+
+  const collectDynamicSprites = (events: any[]) => {
+    if (!Array.isArray(events)) return;
+    for (const evt of events) {
+      if (!evt || typeof evt !== "object") continue;
+      if (evt.command === "EVENT_ACTOR_SET_SPRITE" && evt.args?.spriteSheetId) {
+        dynamicSpriteIds.add(String(evt.args.spriteSheetId));
+      }
+      if (evt.children && typeof evt.children === "object") {
+        Object.values(evt.children).forEach((cList: any) => {
+          if (Array.isArray(cList)) collectDynamicSprites(cList);
+        });
+      }
+      if (evt.true && Array.isArray(evt.true)) collectDynamicSprites(evt.true);
+      if (evt.false && Array.isArray(evt.false)) collectDynamicSprites(evt.false);
+    }
+  };
+
+  allScenes.forEach((scene: any) => {
+    collectDynamicSprites(scene.script);
+    collectDynamicSprites(scene.startScript);
+    (scene.actors || []).forEach((act: any) => {
+      collectDynamicSprites(act.script);
+      collectDynamicSprites(act.startScript);
+      collectDynamicSprites(act.updateScript);
+      collectDynamicSprites(act.hit1Script);
+      collectDynamicSprites(act.hit2Script);
+      collectDynamicSprites(act.hit3Script);
+    });
+    (scene.triggers || []).forEach((tr: any) => {
+      collectDynamicSprites(tr.script);
+      collectDynamicSprites(tr.leaveScript);
+    });
+  });
+  if (projectData.customEvents && Array.isArray(projectData.customEvents)) {
+    for (const ce of projectData.customEvents) {
+      if (ce.script) collectDynamicSprites(ce.script);
+    }
+  }
+
+  if (dynamicSpriteIds.size > 0) {
+    let dynIdx = 0;
+    for (const sprId of Array.from(dynamicSpriteIds)) {
+      let sprObj = allSprites.find((s: any) => s.id === sprId);
+      if (!sprObj) continue;
+      let sprFilename = sprObj.filename || `${sprObj.name || "sprite"}.png`;
+      if (!sprFilename.endsWith(".png")) sprFilename += ".png";
+      const srcPng = pathModule.join(projectSpritesDir, sprFilename);
+      if (!fs.existsSync(srcPng)) continue;
+
+      const sharedPal = buildPngPalette(srcPng);
+      const canvasW = sprObj.canvasWidth || 16;
+      const canvasH = sprObj.canvasHeight || 16;
+      const w16 = Math.max(1, Math.min(2, Math.ceil(canvasW / 16)));
+      let h16 = Math.max(1, Math.min(4, Math.ceil(canvasH / 16)));
+      if (h16 === 3) h16 = 4;
+      const padWidthTo = (h16 >= 2 ? 2 : w16) * 16;
+
+      let dynAnimFrames: any[] = [];
+      if (sprObj?.states?.[0]?.animations?.[0]?.frames) {
+        dynAnimFrames = sprObj.states[0].animations[0].frames;
+      }
+      const rawNumFrames = dynAnimFrames.length > 0 ? dynAnimFrames.length : Math.max(1, Math.floor((sprObj.width || canvasW) / canvasW));
+      const numFrames = Math.max(1, Math.min(4, rawNumFrames));
+
+      for (let f = 0; f < numFrames; f++) {
+        const destPcxF = pathModule.join(destSpritesDir, sprFilename.replace(/\.png$/i, `_dyn_${dynIdx}_f${f}.pcx`));
+        const cropX = f * canvasW;
+        convertPngToPcx(srcPng, destPcxF, { cropX, cropY: 0, cropW: canvasW, cropH: h16 * 16, padWidthTo, flipX: false, sharedPalette: sharedPal.palette, sharedColorMap: sharedPal.colorMap });
+
+        const relPcxF = `assets/sprites/${pathModule.relative(pathModule.join(outputAssetsDir, "sprites"), destPcxF).replace(/\\/g, "/")}`;
+        const frameBytes = (w16 * h16 * 128) + (f === 0 ? 32 : 0);
+        const alloc = bankManager.allocatePacked(frameBytes, 1, `dyn_${dynIdx}_f${f}`);
+        dynamicSprDirectives += `\n#asm\n .data\n .bank ${alloc.bank}\n .org $${alloc.offset.toString(16)}\n#endasm\n`;
+        dynamicSprDirectives += `#incspr(dyn_spr_${dynIdx}_f${f}, "${relPcxF}", 0, 0, ${w16}, ${h16})\n`;
+        if (f === 0) {
+          dynamicSprDirectives += `#incpal(dyn_pal_${dynIdx}, "${relPcxF}", 0, 1)\n`;
+        }
+      }
+
+      const vramAddr = 0x7800 + (dynIdx * 0x100);
+      const vramHex = `0x${vramAddr.toString(16).toUpperCase()}`;
+      const palSlot = 14 - (dynIdx % 8);
+      let sprSizeConst = "SZ_16x16";
+      if (w16 === 1 && h16 === 2) sprSizeConst = "SZ_16x32";
+      else if (w16 === 2 && h16 === 1) sprSizeConst = "SZ_32x16";
+      else if (w16 === 2 && h16 === 2) sprSizeConst = "SZ_32x32";
+      else if (w16 === 2 && h16 === 4) sprSizeConst = "SZ_32x64";
+      else if (w16 === 1 && h16 === 4) sprSizeConst = "SZ_16x64";
+
+      const animSpeedVal = (typeof sprObj.animSpeed === "number" && sprObj.animSpeed > 0) ? sprObj.animSpeed : 4;
+      const dynMeta = { vramHex, palSlot, sizeConst: sprSizeConst, numFrames, animSpeed: animSpeedVal, idx: dynIdx };
+      dynamicSpriteMap.set(String(sprId), dynMeta);
+      if (sprObj.id) dynamicSpriteMap.set(String(sprObj.id), dynMeta);
+      if (sprObj.name) dynamicSpriteMap.set(String(sprObj.name), dynMeta);
+      if (sprObj.filename) dynamicSpriteMap.set(String(sprObj.filename), dynMeta);
+      compiledDynamicList.push(dynMeta);
+      dynIdx++;
+    }
+    if (dynamicSprDirectives) {
+      dynamicSprDirectives += `\n#asm\n .code\n#endasm\n`;
     }
   }
 
@@ -2452,6 +2603,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   let sceneActorScriptCases = "";
   let sceneActorUpdateHelpers = "";
   let sceneActorUpdateCases = "";
+  let sceneActorHitHelpers = "";
+  let sceneActorHitDispatchCases = "";
+  let scenePlayerHitDispatchCases = "";
 
   allScenes.forEach((scene: any, idx: number) => {
     const scNum = idx + 1;
@@ -2462,7 +2616,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     ];
 
     const findTargetNum = (actArg: string | undefined, defaultActor: number = 0): number => {
-      if (!actArg || actArg === "$self$") return defaultActor;
+      if (!actArg || actArg === "$self$" || (actArg === "0" && defaultActor > 0)) return defaultActor;
       if (actArg === "player") return 0;
       const targetIdx = (scene.actors || []).findIndex((a: any) => a.id === actArg);
       if (targetIdx !== -1) return targetIdx + 1;
@@ -2498,7 +2652,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       return String(fallbackTiles * 8);
     };
 
-    const compileEventSequence = (evts: any[], isStartupContext = false, currentActorNum = 0, isUpdateScript = false) => {
+    const compileEventSequence = (evts: any[], isStartupContext = false, currentActorNum = 0, isUpdateScript = false, isHitScript = false) => {
       let stepIndex = 0;
       let stepCases = "";
 
@@ -2541,8 +2695,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             let seconds = 1;
             if (typeof evt.args?.time === "number") seconds = evt.args.time;
             else if (typeof evt.args?.time === "object" && evt.args?.time?.value !== undefined) seconds = Number(evt.args.time.value);
+            else if (typeof evt.args?.frames === "number") seconds = evt.args.frames / 60;
+            else if (typeof evt.args?.frames === "object" && evt.args?.frames?.value !== undefined) seconds = Number(evt.args.frames.value) / 60;
             const frames = Math.max(1, Math.round(seconds * 60));
-            if (isUpdateScript && currentActorNum > 0) {
+            if (isHitScript && currentActorNum > 0) {
+              stepCases += `      case ${stepIndex}:\n        g_actor_hit_wait_timer[${currentActorNum}] = ${frames};\n        return ${stepIndex + 1};\n`;
+            } else if (isUpdateScript && currentActorNum > 0) {
               stepCases += `      case ${stepIndex}:\n        g_actor_wait_timer[${currentActorNum}] = ${frames};\n        return ${stepIndex + 1};\n`;
             } else {
               stepCases += `      case ${stepIndex}:\n        g_wait_timer = ${frames};\n        return ${stepIndex + 1};\n`;
@@ -2685,6 +2843,20 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
             const frm = parseNumber(evt.args?.frame, 0);
             stepCases += `      case ${stepIndex}:\n        actor_set_frame(${targetNum}, ${frm});\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
+          } else if (evt.command === "EVENT_ACTOR_SET_ANIMATE") {
+            const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
+            const animFlag = (evt.args?.animate === false) ? 0 : 1;
+            stepCases += `      case ${stepIndex}:\n        actor_set_animate(${targetNum}, ${animFlag});\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
+          } else if (evt.command === "EVENT_ACTOR_SET_SPRITE") {
+            const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
+            const sprSheetId = String(evt.args?.spriteSheetId || "");
+            const dynInfo = dynamicSpriteMap.get(sprSheetId) || (compiledDynamicList[0] ? { vramHex: compiledDynamicList[0].vramHex, palSlot: compiledDynamicList[0].palSlot, sizeConst: compiledDynamicList[0].sizeConst, numFrames: compiledDynamicList[0].numFrames, animSpeed: compiledDynamicList[0].animSpeed } : { vramHex: "0x7800", palSlot: 14, sizeConst: "SZ_16x16", numFrames: 4, animSpeed: 4 });
+            stepCases += `      case ${stepIndex}:\n        actor_set_sprite(${targetNum}, ${dynInfo.vramHex}, ${dynInfo.numFrames}, ${dynInfo.animSpeed}, ${dynInfo.sizeConst}, ${dynInfo.palSlot});\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
+          } else if (evt.command === "EVENT_SOUND_PLAY_EFFECT" || evt.command === "EVENT_SOUND_PLAY_CRASH") {
+            stepCases += `      case ${stepIndex}:\n        pce_sound_play_sfx(SFX_CRASH);\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_ACTOR_EMOTE") {
             const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
@@ -3230,7 +3402,10 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             else if (typeof evt.args?.lifeTime === "object" && evt.args?.lifeTime?.value !== undefined) lifeSec = Number(evt.args.lifeTime.value);
             const lifeFrames = Math.max(5, Math.round(lifeSec * 60));
 
-            stepCases += `      case ${stepIndex}:\n        projectile_launch(g_actor_x[${targetNum}] + (${offX}), g_actor_y[${targetNum}] + (${offY}), ${vx}, ${vy}, ${lifeFrames}, ${targetNum}, PROJ_VRAM_ADDR, PROJ_PALETTE, SZ_16x16);\n        return ${stepIndex + 1};\n`;
+            const projSprId = String(evt.args?.spriteSheetId || "");
+            const projInfo = projectileSpriteMap.get(projSprId) || (compiledProjectileList[0] ? { vramHex: compiledProjectileList[0].vramHex, palSlot: compiledProjectileList[0].palSlot, sizeConst: compiledProjectileList[0].sizeConst } : { vramHex: "0x7C00", palSlot: 15, sizeConst: "SZ_16x16" });
+
+            stepCases += `      case ${stepIndex}:\n        projectile_launch(g_actor_x[${targetNum}] + (${offX}), g_actor_y[${targetNum}] + (${offY}), ${vx}, ${vy}, ${lifeFrames}, ${targetNum}, ${projInfo.vramHex}, ${projInfo.palSlot}, ${projInfo.sizeConst});\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (
             evt.command === "EVENT_ACTOR_SET_STATE" ||
@@ -3254,17 +3429,18 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             const maskHex = `0x${mask.toString(16).toUpperCase().padStart(2, "0")}`;
             stepCases += `      case ${stepIndex}:\n        g_input_script_disabled_mask |= ${maskHex};\n        return ${stepIndex + 1};\n`;
             stepIndex++;
+          } else if (evt.command === "EVENT_ACTOR_STOP_UPDATE") {
+            const targetNum = findTargetNum(evt.args?.actorId, currentActorNum);
+            stepCases += `      case ${stepIndex}:\n        g_actor_update_step[${targetNum}] = -1;\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
           } else if (
             evt.command === "EVENT_ACTOR_EFFECTS" ||
             evt.command === "EVENT_ACTOR_MOVE_CANCEL" ||
             evt.command === "EVENT_ACTOR_GET_DIRECTION" ||
             evt.command === "EVENT_ACTOR_GET_POSITION" ||
-            evt.command === "EVENT_ACTOR_SET_ANIMATE" ||
-            evt.command === "EVENT_ACTOR_SET_SPRITE" ||
             evt.command === "EVENT_ACTOR_SET_COLLISION_BOX" ||
             evt.command === "EVENT_ACTOR_INVOKE" ||
             evt.command === "EVENT_ACTOR_START_UPDATE" ||
-            evt.command === "EVENT_ACTOR_STOP_UPDATE" ||
             evt.command === "EVENT_ADVENTURE_STATE_SET" ||
             evt.command === "EVENT_CALL_CUSTOM_EVENT" ||
             evt.command === "EVENT_CAMERA_LOCK" ||
@@ -3298,8 +3474,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             evt.command === "EVENT_SET_PLATFORMER_CALLBACK_SCRIPT" ||
             evt.command === "EVENT_SET_TIMER_SCRIPT" ||
             evt.command === "EVENT_SOUND_PLAY_BEEP" ||
-            evt.command === "EVENT_SOUND_PLAY_CRASH" ||
-            evt.command === "EVENT_SOUND_PLAY_EFFECT" ||
             evt.command === "EVENT_SOUND_PLAY_TONE" ||
             evt.command === "EVENT_TEXT_REMOVE_SOUND_EFFECT" ||
             evt.command === "EVENT_TEXT_SET_ANIMATION_SPEED" ||
@@ -3336,6 +3510,21 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     if (hasStartup) {
       startupResult.casesCode += `      case ${startupResult.stepCount}:\n        return -1;\n`;
       sceneStartupStepHelper = `int run_scene_${scNum}_startup_step(int step) {\n  switch (step) {\n${startupResult.casesCode}    default:\n      return -1;\n  }\n}\n\n`;
+    }
+
+    // 1b. Player Hit script: compiled into isolated run_scene_X_player_hit_step
+    let scenePlayerHitStepHelper = "";
+    const rawPlayerHit = (Array.isArray(scene.playerHit1Script) && scene.playerHit1Script.length > 0)
+      ? scene.playerHit1Script
+      : ((Array.isArray(scene.playerHitScript) && scene.playerHitScript.length > 0) ? scene.playerHitScript : []);
+    const hasPlayerHit = rawPlayerHit.length > 0;
+    if (hasPlayerHit) {
+      const playerHitResult = compileEventSequence(rawPlayerHit, false, 0);
+      if (playerHitResult.stepCount > 0) {
+        playerHitResult.casesCode += `      case ${playerHitResult.stepCount}:\n        return -1;\n`;
+        scenePlayerHitStepHelper = `int run_scene_${scNum}_player_hit_step(int step) {\n  switch (step) {\n${playerHitResult.casesCode}    default:\n      return -1;\n  }\n}\n\n`;
+        scenePlayerHitDispatchCases += `  if (scene_num == ${scNum}) {\n    g_script_scene = ${scNum};\n    g_script_type = 5;\n    g_script_target = 0;\n    g_script_step = 0;\n    g_script_step = run_scene_step(${scNum}, 0);\n    return 1;\n  }\n`;
+      }
     }
 
     // 2. Input scripts: each compiled into isolated run_scene_X_input_Z_step
@@ -3389,6 +3578,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     const actorDispatchCases: string[] = [];
     const actorUpdateStepHelpers: string[] = [];
     const actorUpdateCases: string[] = [];
+    const actorHitStepHelpers: string[] = [];
+    const actorHitDispatchCases: string[] = [];
     const actorHasScriptNums: number[] = [];
 
     (scene.actors || []).forEach((scActor: any, aIdx: number) => {
@@ -3419,14 +3610,42 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
         }
       }
 
-      if (scActor.updateScript && Array.isArray(scActor.updateScript) && scActor.updateScript.length > 0) {
-        const updateResult = compileEventSequence(scActor.updateScript, false, actorNum, true);
+      const rawHit = (Array.isArray(scActor.hit1Script) && scActor.hit1Script.length > 0)
+        ? scActor.hit1Script
+        : ((Array.isArray(scActor.hitScript) && scActor.hitScript.length > 0) ? scActor.hitScript : []);
+      let hasHitScript = false;
+      if (rawHit.length > 0) {
+        const hitResult = compileEventSequence(rawHit, false, actorNum, false, true);
+        if (hitResult.stepCount > 0) {
+          hasHitScript = true;
+          hitResult.casesCode += `      case ${hitResult.stepCount}:\n        actor_hide(${actorNum});\n        actor_deactivate(${actorNum});\n        return -1;\n`;
+          actorHitStepHelpers.push(`int run_scene_${scNum}_actor_${actorNum}_hit_step(int step) {\n  switch (step) {\n${hitResult.casesCode}    default:\n      actor_hide(${actorNum});\n      actor_deactivate(${actorNum});\n      return -1;\n  }\n}\n\n`);
+          actorHitDispatchCases.push(`    case ${actorNum}:\n      g_actor_is_hit[${actorNum}] = 1;\n      g_actor_hit_step[${actorNum}] = 0;\n      g_actor_hit_wait_timer[${actorNum}] = 0;\n      g_actor_hit_step[${actorNum}] = run_scene_${scNum}_actor_${actorNum}_hit_step(0);\n      return 1;\n`);
+        }
+      }
+
+      const rawUpdate = (scActor.updateScript && Array.isArray(scActor.updateScript) && scActor.updateScript.length > 0) ? scActor.updateScript : [];
+      let hasUpdateScript = false;
+      if (rawUpdate.length > 0) {
+        const updateResult = compileEventSequence(rawUpdate, false, actorNum, true);
         if (updateResult.stepCount > 0) {
+          hasUpdateScript = true;
           updateResult.casesCode += `      case ${updateResult.stepCount}:\n        return 0;\n`;
           actorUpdateStepHelpers.push(`int run_scene_${scNum}_actor_${actorNum}_update_step(int step) {\n  switch (step) {\n${updateResult.casesCode}    default:\n      return 0;\n  }\n}\n\n`);
-          const boundsCheck = scActor.persistent ? "" : `      if (!actor_is_in_bounds(${actorNum})) break;\n`;
-          actorUpdateCases.push(`    case ${actorNum}:\n${boundsCheck}      if (g_actor_wait_timer[${actorNum}] > 0) {\n        g_actor_wait_timer[${actorNum}]--;\n      } else {\n        g_actor_update_step[${actorNum}] = run_scene_${scNum}_actor_${actorNum}_update_step(g_actor_update_step[${actorNum}]);\n      }\n      break;\n`);
         }
+      }
+
+      if (hasHitScript || hasUpdateScript) {
+        const boundsCheck = scActor.persistent ? "" : `      if (!actor_is_in_bounds(${actorNum})) break;\n`;
+        let caseCode = `    case ${actorNum}:\n`;
+        if (hasHitScript) {
+          caseCode += `      if (g_actor_is_hit[${actorNum}]) {\n        if (g_actor_hit_wait_timer[${actorNum}] > 0) {\n          g_actor_hit_wait_timer[${actorNum}]--;\n        } else {\n          g_actor_hit_step[${actorNum}] = run_scene_${scNum}_actor_${actorNum}_hit_step(g_actor_hit_step[${actorNum}]);\n          if (g_actor_hit_step[${actorNum}] < 0) {\n            g_actor_is_hit[${actorNum}] = 0;\n            actor_hide(${actorNum});\n            actor_deactivate(${actorNum});\n          }\n        }\n        break;\n      }\n`;
+        }
+        if (hasUpdateScript) {
+          caseCode += `${boundsCheck}      if (g_actor_update_step[${actorNum}] >= 0) {\n        if (g_actor_wait_timer[${actorNum}] > 0) {\n          g_actor_wait_timer[${actorNum}]--;\n        } else {\n          g_actor_update_step[${actorNum}] = run_scene_${scNum}_actor_${actorNum}_update_step(g_actor_update_step[${actorNum}]);\n        }\n      }\n`;
+        }
+        caseCode += `      break;\n`;
+        actorUpdateCases.push(caseCode);
       }
     });
 
@@ -3438,6 +3657,11 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     if (actorUpdateCases.length > 0) {
       sceneActorUpdateHelpers += `${actorUpdateStepHelpers.join("")}void update_scene_${scNum}_actors(void) {\n  int a;\n  for (a = 1; a < g_actor_count; a++) {\n    if (!g_actor_active[a] || g_actor_hidden[a]) continue;\n    switch (a) {\n${actorUpdateCases.join("")}      default:\n        break;\n    }\n  }\n}\n\n`;
       sceneActorUpdateCases += `  if (scene_num == ${scNum}) { update_scene_${scNum}_actors(); return; }\n`;
+    }
+
+    if (actorHitDispatchCases.length > 0) {
+      sceneActorHitHelpers += `${actorHitStepHelpers.join("")}int trigger_scene_${scNum}_actor_hit(int actor_num) {\n  switch (actor_num) {\n${actorHitDispatchCases.join("")}    default:\n      return 0;\n  }\n}\n\n`;
+      sceneActorHitDispatchCases += `  if (scene_num == ${scNum}) return trigger_scene_${scNum}_actor_hit(actor_num);\n`;
     }
 
     // 4. Triggers: each compiled into isolated run_scene_X_trigger_Y_step
@@ -3487,11 +3711,15 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     if (inputDispatchCases.length > 0) {
       sceneStepBody += `  if (g_script_type == 3) {\n    switch (g_script_target) {\n${inputDispatchCases.join("")}      default:\n        return -1;\n    }\n  }\n`;
     }
+    if (scenePlayerHitStepHelper) {
+      sceneStepBody += `  if (g_script_type == 5) {\n    return run_scene_${scNum}_player_hit_step(step);\n  }\n`;
+    }
     sceneStepBody += `  return -1;\n`;
 
     const sceneStepFunction = `int run_scene_${scNum}_step(int step) {\n${sceneStepBody}}\n\n`;
 
     sceneStepHelpers += sceneStartupStepHelper;
+    if (scenePlayerHitStepHelper) sceneStepHelpers += scenePlayerHitStepHelper;
     if (actorStepHelpers.length > 0) sceneStepHelpers += actorStepHelpers.join("");
     if (triggerStepHelpers.length > 0) sceneStepHelpers += triggerStepHelpers.join("");
     if (triggerLeaveStepHelpers.length > 0) sceneStepHelpers += triggerLeaveStepHelpers.join("");
@@ -3543,7 +3771,9 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     const bgFile = sceneBgFilenames[idx];
     const key = `${bgFile}|${dim.width}|${dim.height}`;
     const symPrefix = bgSymbolMap.get(key) || `bg_file_0`;
-    sceneBackgroundCases += `    case ${scNum}:\n      g_current_scene_type = SCENE_${scNum}_TYPE;\n      g_collision_width = SCENE_${scNum}_WIDTH;\n      g_collision_height = SCENE_${scNum}_HEIGHT;\n      set_screen_size(SCENE_${scNum}_SCR_SIZE);\n      camera_set_bounds(SCENE_${scNum}_WIDTH, SCENE_${scNum}_HEIGHT);\n${parallaxCode}      load_background(${symPrefix}_chr, ${symPrefix}_pal, ${symPrefix}_bat, ${dim.width}, ${dim.height});\n      set_map_data(scene_${scNum}_collisions, ${dim.width}, ${dim.height});\n      break;\n`;
+    const colW = dim.logicalWidth || dim.width;
+    const colH = dim.logicalHeight || dim.height;
+    sceneBackgroundCases += `    case ${scNum}:\n      g_current_scene_type = SCENE_${scNum}_TYPE;\n      g_collision_width = SCENE_${scNum}_WIDTH;\n      g_collision_height = SCENE_${scNum}_HEIGHT;\n      set_screen_size(SCENE_${scNum}_SCR_SIZE);\n      camera_set_bounds(SCENE_${scNum}_WIDTH, SCENE_${scNum}_HEIGHT);\n${parallaxCode}      load_background(${symPrefix}_chr, ${symPrefix}_pal, ${symPrefix}_bat, ${dim.width}, ${dim.height});\n      set_map_data(scene_${scNum}_collisions, ${colW}, ${colH});\n      break;\n`;
   });
 
   // Build one helper per scene for actor loading, then a tiny dispatcher.
@@ -3554,7 +3784,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
   allScenes.forEach((scene: any, idx: number) => {
     const scNum = idx + 1;
     const sceneActors = scene.actors || [];
-    if (sceneActors.length === 0) {
+    if (sceneActors.length === 0 && compiledProjectileList.length === 0) {
       sceneActorCases += `    case ${scNum}:\n      g_actor_count = 1;\n      break;\n`;
       return;
     }
@@ -3566,15 +3796,23 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     helperCode += `  actor_hide(0);\n`;
     helperCode += `  #endif\n`;
     helperCode += `  #ifdef HAS_PROJECTILES\n`;
-    helperCode += `  load_vram(0x7000, proj_spr_default, 0x40);\n`;
-    helperCode += `  load_palette(31, proj_pal_default, 1);\n`;
+    for (const p of compiledProjectileList) {
+      helperCode += `  load_vram(${p.vramHex}, proj_spr_${p.idx}, 0x40);\n`;
+      helperCode += `  load_palette(${16 + p.palSlot}, proj_pal_${p.idx}, 1);\n`;
+    }
     helperCode += `  #endif\n`;
+    for (const d of compiledDynamicList) {
+      for (let f = 0; f < d.numFrames; f++) {
+        const off = f === 0 ? "" : ` + ${f} * 0x40`;
+        helperCode += `  load_vram(${d.vramHex}${off}, dyn_spr_${d.idx}_f${f}, 0x40);\n`;
+      }
+      helperCode += `  load_palette(${16 + d.palSlot}, dyn_pal_${d.idx}, 1);\n`;
+    }
 
     let currentVram = 0x5800;
     sceneActors.forEach((scActor: any, aIdx: number) => {
       const actorNum = aIdx + 1;
       const palIdx = 1 + (aIdx % 15);
-      const vramHex = `0x${currentVram.toString(16).toUpperCase()}`;
 
       const dir = scActor?.direction?.toLowerCase() || "down";
       let dirSlot = 3;
@@ -3617,6 +3855,17 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       else if (origW16 === 2 && origH16 === 2) vramSizeHex = "0x100";
       else if (origW16 === 2 && origH16 === 4) vramSizeHex = "0x200";
       else if (origW16 === 1 && origH16 === 4) vramSizeHex = "0x200";
+
+      let align = 0x40;
+      if (origH16 === 4) {
+        align = 0x200;
+      } else if (origH16 === 2 || origW16 === 2 || isMultiPart) {
+        align = 0x100;
+      }
+      if ((currentVram % align) !== 0) {
+        currentVram = Math.ceil(currentVram / align) * align;
+      }
+      const vramHex = `0x${currentVram.toString(16).toUpperCase()}`;
 
       let maxAllowedFrames = 4;
       if (vramSizeHex === "0x40") maxAllowedFrames = 8;
@@ -3662,7 +3911,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       helperCode += `  #endif\n`;
       helperCode += `  #endif\n`;
 
-      const vramInc = isMultiPart ? (numFrames * 2 * parseInt(vramSizeHex, 16)) : Math.max(0x200, numFrames * parseInt(vramSizeHex, 16));
+      const actualVramSize = numFrames * parseInt(vramSizeHex, 16);
+      const vramInc = isMultiPart ? (numFrames * 2 * parseInt(vramSizeHex, 16)) : Math.max(0x80, actualVramSize);
       currentVram += vramInc;
     });
 
@@ -3683,6 +3933,8 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 #define HAS_SCENE_MUSIC 1
 #define HAS_SCENE_PLAYER_SPRITE 1
 #define HAS_SCENE_ACTORS 1
+#define HAS_TRIGGER_ACTOR_HIT 1
+#define HAS_TRIGGER_PLAYER_HIT 1
 
 #ifndef SCRIPT_TYPE_STARTUP
 #define SCRIPT_TYPE_STARTUP 0
@@ -3690,6 +3942,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 #define SCRIPT_TYPE_TRIGGER 2
 #define SCRIPT_TYPE_INPUT 3
 #define SCRIPT_TYPE_TRIGGER_LEAVE 4
+#define SCRIPT_TYPE_PLAYER_HIT 5
 #endif
 
 int run_scene_step(int scene_num, int step);
@@ -3697,6 +3950,7 @@ int run_scene_step(int scene_num, int step);
 ${sceneStepHelpers}
 ${sceneInputCheckHelpers}
 ${sceneActorUpdateHelpers}
+${sceneActorHitHelpers}
 int run_scene_step(int scene_num, int step) {
   int prev_sc;
   int res_step;
@@ -3754,6 +4008,16 @@ int interact_trigger_leave(int scene_num, int trigger_num) {
 
 void update_scene_actors(int scene_num) {
 ${sceneActorUpdateCases}}
+
+int trigger_actor_hit(int scene_num, int actor_num) {
+${sceneActorHitDispatchCases}  return 0;
+}
+
+int trigger_player_hit(int scene_num, int hit_group) {
+  (void)hit_group;
+${scenePlayerHitDispatchCases}  camera_shake(15, 5);
+  return 0;
+}
 
 void load_scene_music(int scene_num) {
   switch (scene_num) {
@@ -3847,6 +4111,7 @@ ${playerDirectives}
 
 ${actorDirectives}
 ${projDirectives}
+${dynamicSprDirectives}
 
 #define START_SCENE_NUM ${startSceneNum}
 #define PLAYER_START_X ${playerStartX}

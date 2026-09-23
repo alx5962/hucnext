@@ -51,7 +51,7 @@
 #endif
 
 void pce_sys_init(void);
-void pce_sys_vsync(void);
+int pce_sys_vsync(void);
 unsigned int pce_sys_read_joy(int index);
 
 #endif /* PCE_SYSTEM_H */

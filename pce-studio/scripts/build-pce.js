@@ -2,8 +2,8 @@ const { execSync } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 
-const projDir = "C:\\Users\\alx59\\Documents\\PCEtest1";
-const buildDir = path.resolve(__dirname, "../build_tmp");
+const projDir = process.env.PCE_PROJECT_DIR || process.argv[2] || "C:\\Users\\alx59\\Documents\\PCEtest1";
+const buildDir = process.env.PCE_BUILD_DIR || path.resolve(__dirname, "../build_tmp");
 
 const code = `
 import { buildProject } from "../src/lib/compiler/buildProject";

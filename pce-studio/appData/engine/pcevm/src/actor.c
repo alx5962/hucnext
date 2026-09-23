@@ -39,9 +39,13 @@ void actor_init(void) {
     g_actor_bbox_bottom[i] = 15;
     g_actor_update_step[i] = 0;
     g_actor_wait_timer[i] = 0;
+    g_actor_is_hit[i] = 0;
+    g_actor_hit_step[i] = 0;
+    g_actor_hit_wait_timer[i] = 0;
     g_actor_target_x[i] = 0;
     g_actor_target_y[i] = 0;
     g_actor_target_active[i] = 0;
+    g_actor_in_bounds[i] = 0;
   }
 }
 
@@ -64,28 +68,36 @@ int actor_spawn(int x, int y, int tile_id, int palette, int size) {
   g_actor_num_frames[id] = 1;
   g_actor_anim_frame[id] = 0;
   g_actor_anim_timer[id] = 0;
+  g_actor_is_hit[id] = 0;
+  g_actor_hit_step[id] = 0;
+  g_actor_hit_wait_timer[id] = 0;
   return id;
 }
 
+void actor_update_bounds(void) {
+  int i, screen_x, screen_y;
+  g_actor_in_bounds[0] = 1;
+  for (i = 1; i < g_actor_count; i++) {
+    if (!g_actor_active[i] || g_actor_hidden[i]) {
+      g_actor_in_bounds[i] = 0;
+      continue;
+    }
+    if (g_actor_pinned[i]) {
+      g_actor_in_bounds[i] = 1;
+      continue;
+    }
+    screen_x = g_actor_x[i] - g_cam_x;
+    screen_y = g_actor_y[i] - g_cam_y;
+    g_actor_in_bounds[i] = (screen_x >= -64 && screen_x <= 256 && screen_y >= -64 && screen_y <= 224) ? 1 : 0;
+  }
+}
+
 int actor_is_in_bounds(int id) {
-  int screen_x, screen_y;
   if (id == 0)
     return 1;
-  if (id < 0 || id >= g_actor_count || !g_actor_active[id] || g_actor_hidden[id])
+  if (id < 0 || id >= g_actor_count)
     return 0;
-
-  if (g_actor_pinned[id]) {
-    /* Pinned actors are fixed to the screen, always in bounds */
-    return 1;
-  }
-
-  screen_x = g_actor_x[id] - g_cam_x;
-  screen_y = g_actor_y[id] - g_cam_y;
-
-  if (screen_x < -64 || screen_x > 256 || screen_y < -64 || screen_y > 224)
-    return 0;
-
-  return 1;
+  return g_actor_in_bounds[id];
 }
 
 void actor_update_all(void) {
@@ -331,7 +343,7 @@ int actor_move_step(int id, int target_x, int target_y) {
       g_actor_dir[id] = DIR_LEFT;
     }
     new_x = g_actor_x[id] + step_x;
-    if (!g_actor_collisions_disabled[id] && collision_check_actor_walls(id, new_x, g_actor_y[id])) {
+    if (g_current_scene_type != SCENE_TYPE_SHMUP && !g_actor_collisions_disabled[id] && collision_check_actor_walls(id, new_x, g_actor_y[id])) {
       blocked = 1;
     } else {
       g_actor_x[id] = new_x;
@@ -347,7 +359,7 @@ int actor_move_step(int id, int target_x, int target_y) {
       g_actor_dir[id] = DIR_UP;
     }
     new_y = g_actor_y[id] + step_y;
-    if (!g_actor_collisions_disabled[id] && collision_check_actor_walls(id, g_actor_x[id], new_y)) {
+    if (g_current_scene_type != SCENE_TYPE_SHMUP && !g_actor_collisions_disabled[id] && collision_check_actor_walls(id, g_actor_x[id], new_y)) {
       if (dx == 0 || blocked) return 1;
     } else {
       g_actor_y[id] = new_y;
@@ -403,6 +415,34 @@ void actor_set_frame(int id, int frame) {
       g_actor_tile_id[id] =
           g_actor_base_tile_id[id] +
           (frame * frame_step);
+    }
+  }
+}
+
+void actor_set_animate(int id, int animate) {
+  if (id >= 0 && id < PCE_MAX_ACTORS) {
+    if (!animate) {
+      g_actor_num_frames[id] = 1;
+      g_actor_anim_frame[id] = 0;
+      g_actor_anim_timer[id] = 0;
+      g_actor_tile_id[id] = g_actor_base_tile_id[id];
+    }
+  }
+}
+
+void actor_set_sprite(int id, int tile_id, int num_frames, int anim_speed, int spr_size, int pal) {
+  if (id >= 0 && id < PCE_MAX_ACTORS) {
+    g_actor_base_tile_id[id] = tile_id;
+    g_actor_tile_id[id] = tile_id;
+    g_actor_num_frames[id] = num_frames;
+    g_actor_anim_speed[id] = (anim_speed > 0) ? anim_speed : 15;
+    g_actor_anim_frame[id] = 0;
+    g_actor_anim_timer[id] = 0;
+    g_actor_size[id] = (unsigned char)spr_size;
+    g_actor_parts[id] = 1;
+    g_actor_frame_vram_size[id] = (spr_size == SZ_16x16) ? 0x40 : 0x100;
+    if (pal >= 0) {
+      g_actor_palette[id] = pal;
     }
   }
 }

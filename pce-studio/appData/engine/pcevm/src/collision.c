@@ -39,23 +39,25 @@ int collision_check_box(int x, int y) {
     if (tx2 != tx1 && ty2 != ty1 && collision_check_tile(tx2, ty2) != COLLISION_NONE) return 1;
 
     /* Solid actor collisions (prevents player from walking over actors) */
-    for (i = 1; i < g_actor_count; i++) {
-        if (g_actor_active[i] && !g_actor_hidden[i] && !g_actor_collisions_disabled[i]) {
-            adx = x - g_actor_x[i];
-            if (adx < -48 || adx > 48) continue;
-            ady = y - g_actor_y[i];
-            if (ady < -48 || ady > 48) continue;
+    if (g_current_scene_type != SCENE_TYPE_SHMUP) {
+        for (i = 1; i < g_actor_count; i++) {
+            if (g_actor_active[i] && !g_actor_hidden[i] && !g_actor_collisions_disabled[i]) {
+                adx = x - g_actor_x[i];
+                if (adx < -48 || adx > 48) continue;
+                ady = y - g_actor_y[i];
+                if (ady < -48 || ady > 48) continue;
 
-            if (!actor_is_in_bounds(i))
-                continue;
+                if (!actor_is_in_bounds(i))
+                    continue;
 
-            act_l = g_actor_x[i] + g_actor_bbox_left[i];
-            act_r = g_actor_x[i] + g_actor_bbox_right[i];
-            act_t = g_actor_y[i] + g_actor_bbox_top[i];
-            act_b = g_actor_y[i] + g_actor_bbox_bottom[i];
+                act_l = g_actor_x[i] + g_actor_bbox_left[i];
+                act_r = g_actor_x[i] + g_actor_bbox_right[i];
+                act_t = g_actor_y[i] + g_actor_bbox_top[i];
+                act_b = g_actor_y[i] + g_actor_bbox_bottom[i];
 
-            if (x_right >= act_l && x_left <= act_r && y_bottom >= act_t && y_top <= act_b) {
-                return 1;
+                if (x_right >= act_l && x_left <= act_r && y_bottom >= act_t && y_top <= act_b) {
+                    return 1;
+                }
             }
         }
     }
@@ -141,6 +143,7 @@ int collision_check_actor_walls(int id, int x, int y) {
     int tx_start, tx_end, ty_start, ty_end, tx, ty;
 
     if (id < 0 || id >= PCE_MAX_ACTORS) return 1;
+    if (g_current_scene_type == SCENE_TYPE_SHMUP) return 0;
 
     x_left = x + g_actor_bbox_left[id];
     x_right = x + g_actor_bbox_right[id];

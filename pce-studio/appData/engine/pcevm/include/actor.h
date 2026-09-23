@@ -58,15 +58,20 @@ void actor_move_to(int id, int target_x, int target_y);
 void actor_set_move_speed(int id, int speed);
 void actor_set_anim_speed(int id, int speed);
 void actor_set_frame(int id, int frame);
+void actor_set_animate(int id, int animate);
+void actor_set_sprite(int id, int tile_id, int num_frames, int anim_speed, int spr_size, int pal);
 void actor_emote(int id, int emote_id);
 void actor_push(int id, int dir, int slide);
 void actor_effects(int id, int effect_id);
 void actor_hide_all(void);
 void actor_show_all(void);
+void actor_update_bounds(void);
 int actor_is_in_bounds(int id);
 int actor_distance_check(int a1, int a2, int dist_tiles, int op);
 int actor_move_step(int id, int target_x, int target_y);
 int actor_move_rel_step(int id, int dx, int dy);
+int trigger_actor_hit(int scene_num, int actor_num);
+int trigger_player_hit(int scene_num, int hit_group);
 
 #endif
 

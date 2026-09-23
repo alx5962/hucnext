@@ -103,8 +103,10 @@ void projectile_update_all(void) {
           ah = 16;
           if (px + pw > ax && px < ax + aw && py + ph > ay && py < ay + ah) {
             hit = 1;
-            actor_hide(a);
-            actor_deactivate(a);
+            if (!trigger_actor_hit(g_current_scene, a)) {
+              actor_hide(a);
+              actor_deactivate(a);
+            }
             break;
           }
         }
@@ -118,7 +120,7 @@ void projectile_update_all(void) {
         ah = 16;
         if (px + pw > ax && px < ax + aw && py + ph > ay && py < ay + ah) {
           hit = 1;
-          camera_shake(15, 5);
+          trigger_player_hit(g_current_scene, 1);
         }
       }
     }

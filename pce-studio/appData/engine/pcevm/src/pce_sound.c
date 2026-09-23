@@ -1,3 +1,5 @@
+#include "include/pce_sound.h"
+
 unsigned char g_psg_reg_ch;
 unsigned char g_psg_reg_val;
 unsigned short g_psg_reg_freq;
@@ -114,6 +116,11 @@ unsigned char g_ch_len_cnt[4];
 unsigned char g_ch_active[4];
 unsigned char g_ch_duty[2];
 unsigned char g_ch_wave_idx;
+
+/* Sound Effect state on PSG Channel 5 */
+unsigned char g_sfx_type;
+unsigned char g_sfx_timer;
+unsigned char g_sfx_vol;
 
 /* Effect states per channel */
 unsigned char g_fx_type[4];
@@ -355,6 +362,9 @@ void pce_sound_init(void) {
   g_pce_tick_cnt = 0;
   g_ticks_per_row = 6;
   g_has_jump = 0;
+  g_sfx_type = 0;
+  g_sfx_timer = 0;
+  g_sfx_vol = 0;
 
   for (g_t_i = 0; g_t_i < 32; g_t_i++) {
     g_wave_buf[g_t_i] = g_duty_table[2 * 32 + g_t_i];
@@ -588,6 +598,25 @@ void process_tick_effects(unsigned char tick) {
 }
 
 void pce_sound_update(void) {
+  /* Update hardware noise sound effect on PSG channel 5 */
+  if (g_sfx_timer > 0) {
+    g_sfx_timer--;
+    if (g_sfx_timer == 0) {
+      hw_set_ch(5);
+      hw_set_ctrl(0x00);
+      hw_set_noise(0x00);
+      g_sfx_type = 0;
+      g_sfx_vol = 0;
+    } else {
+      g_sfx_vol = (g_sfx_timer >> 1);
+      if (g_sfx_vol > 15) {
+        g_sfx_vol = 15;
+      }
+      hw_set_ch(5);
+      hw_set_ctrl(g_sfx_vol);
+    }
+  }
+
   if (!g_pce_music_playing || !g_pce_song)
     return;
 
@@ -733,6 +762,18 @@ void pce_sound_update(void) {
     lda _g_old_bank
     tam #3
 #endasm
+  }
+}
+
+void pce_sound_play_sfx(int sfx_id) {
+  if (sfx_id == SFX_CRASH) {
+    g_sfx_type = SFX_CRASH;
+    g_sfx_timer = 30;
+    g_sfx_vol = 15;
+    hw_set_ch(5);
+    hw_set_pan(0xFF);
+    hw_set_noise(0x80 | 0x08);
+    hw_set_ctrl(0x0F);
   }
 }
 

@@ -59,6 +59,23 @@ void update_scene_actors(int scene_num) {
 }
 #endif
 
+#ifndef HAS_TRIGGER_ACTOR_HIT
+int trigger_actor_hit(int scene_num, int actor_num) {
+  (void)scene_num;
+  (void)actor_num;
+  return 0;
+}
+#endif
+
+#ifndef HAS_TRIGGER_PLAYER_HIT
+int trigger_player_hit(int scene_num, int hit_group) {
+  (void)scene_num;
+  (void)hit_group;
+  camera_shake(15, 5);
+  return 0;
+}
+#endif
+
 
 #ifndef HAS_SCENE_BACKGROUND
 void load_scene_background(int scene_num) { (void)scene_num; }
@@ -6120,13 +6137,41 @@ void update_adventure(void) {
 void update_shmup(void) {
   unsigned int input;
   int dy, new_y;
+  int a, adx, ady;
+  int max_scroll_x, max_player_x, chk_x;
 
-  g_shmup_scroll_x += SHMUP_SCROLL_SPEED;
+  if (g_collision_width > 0) {
+    max_scroll_x = (g_collision_width * 8) - PCE_SCREEN_WIDTH_PX;
+    if (max_scroll_x < 0) {
+      max_scroll_x = 0;
+    }
+    max_player_x = (g_collision_width * 8) - 1 - g_player_bbox_right;
+    if (max_player_x < 0) {
+      max_player_x = 0;
+    }
+  } else {
+    max_scroll_x = 0;
+    max_player_x = 0;
+  }
+
+  if (g_shmup_scroll_x < max_scroll_x) {
+    g_shmup_scroll_x += SHMUP_SCROLL_SPEED;
+    if (g_shmup_scroll_x > max_scroll_x) {
+      g_shmup_scroll_x = max_scroll_x;
+    }
+  } else {
+    g_shmup_scroll_x = max_scroll_x;
+  }
   g_cam_x = g_shmup_scroll_x;
 
-  /* Player X is locked to the scroll - advance world position in lockstep */
+  /* Player advances forward through the scene towards triggers / level exit */
   if (g_actor_count > 0 && g_actor_active[0]) {
-    g_actor_x[0] += SHMUP_SCROLL_SPEED;
+    if (g_actor_x[0] < max_player_x) {
+      g_actor_x[0] += SHMUP_SCROLL_SPEED;
+      if (g_actor_x[0] > max_player_x) {
+        g_actor_x[0] = max_player_x;
+      }
+    }
   }
 
   input = pce_sys_read_joy(0);
@@ -6142,12 +6187,38 @@ void update_shmup(void) {
 
     new_y = g_actor_y[0] + dy;
     if (new_y >= 0 && new_y <= PCE_SCREEN_HEIGHT_PX - 16) {
-      if (!collision_check_box(g_actor_x[0], new_y)) {
+      chk_x = g_actor_x[0];
+      if (chk_x > max_player_x) {
+        chk_x = max_player_x;
+      }
+      if (g_collision_width <= 0 || !collision_check_box(chk_x, new_y)) {
         g_actor_y[0] = new_y;
       }
     }
 
     trigger_check(g_actor_x[0], g_actor_y[0]);
+    if (g_current_scene_type != SCENE_TYPE_SHMUP) {
+      return;
+    }
+
+    /* Player-Enemy touch collision */
+    if (!g_actor_hidden[0] && g_player_invuln_timer == 0) {
+      for (a = 1; a < g_actor_count; a++) {
+        if (g_actor_active[a] && !g_actor_hidden[a] && !g_actor_collisions_disabled[a] && actor_is_in_bounds(a)) {
+          adx = g_actor_x[0] - g_actor_x[a];
+          ady = g_actor_y[0] - g_actor_y[a];
+          if (adx > -14 && adx < 14 && ady > -14 && ady < 14) {
+            g_player_invuln_timer = 60;
+            if (scene_has_actor_script(g_current_scene, a)) {
+              interact_actor(g_current_scene, a);
+            } else {
+              trigger_player_hit(g_current_scene, 1);
+            }
+            break;
+          }
+        }
+      }
+    }
   }
 }
 
@@ -6295,8 +6366,13 @@ void update_logo(void) {
 }
 
 void engine_update(void) {
+  actor_update_bounds();
   vm_step();
   pce_sound_update();
+
+  if (g_player_invuln_timer > 0) {
+    g_player_invuln_timer--;
+  }
 
   if (g_dialogue_cooldown > 0) {
     g_dialogue_cooldown--;
@@ -6379,13 +6455,16 @@ void engine_update(void) {
 #endif
 }
 
-void engine_render(void) {
+int engine_render(void) {
+  int elapsed;
   camera_apply();
+  actor_update_bounds();
   actor_update_all();
 #ifdef HAS_PROJECTILES
   projectile_render_all();
 #endif
-  pce_sys_vsync();
+  elapsed = pce_sys_vsync();
+  return elapsed;
 }
 
 #define SAVE_HEADER_MAGIC 0x5043
@@ -6506,9 +6585,14 @@ int clear_game_data(int slot) {
 }
 
 void engine_run(void) {
+  int elapsed;
   engine_init();
   for (;;) {
     engine_update();
-    engine_render();
+    elapsed = engine_render();
+    while (elapsed > 1) {
+      pce_sound_update();
+      elapsed--;
+    }
   }
 }

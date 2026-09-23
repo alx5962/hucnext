@@ -10,6 +10,7 @@
 #include "include/trigger.h"
 #include "include/vm.h"
 #include "include/projectile.h"
+#include "include/pce_sound.h"
 
 int g_current_scene = 1;
 int g_current_scene_type = 0;
@@ -93,9 +94,16 @@ int g_actor_wait_timer[PCE_MAX_ACTORS];
 int g_actor_target_x[PCE_MAX_ACTORS];
 int g_actor_target_y[PCE_MAX_ACTORS];
 int g_actor_target_active[PCE_MAX_ACTORS];
+int g_actor_is_hit[PCE_MAX_ACTORS];
+int g_actor_hit_step[PCE_MAX_ACTORS];
+int g_actor_hit_wait_timer[PCE_MAX_ACTORS];
+int g_player_invuln_timer;
+int g_actor_in_bounds[PCE_MAX_ACTORS];
 
 void player_set_state(int actor_num, int state);
 void update_scene_actors(int scene_num);
+int trigger_actor_hit(int scene_num, int actor_num);
+int trigger_player_hit(int scene_num, int hit_group);
 
 /* Global camera state */
 int g_cam_x;

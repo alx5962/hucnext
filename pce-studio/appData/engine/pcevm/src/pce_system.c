@@ -12,9 +12,11 @@ void pce_sys_init(void) {
     disp_on();
 }
 
-void pce_sys_vsync(void) {
-    vsync();
+int pce_sys_vsync(void) {
+    int elapsed;
     satb_update();
+    elapsed = vsync();
+    return (elapsed > 0) ? elapsed : 1;
 }
 
 unsigned int pce_sys_read_joy(int index) {
