@@ -6,12 +6,77 @@
 #include "include/fade.h"
 
 #asm
-_fade_table_g:
-  .db $00, $20, $40, $60, $80, $A0, $C0, $E0
-_fade_table_r:
+_fade_lut_b:
+  ; Level 0 (step 7 - black)
+  .db 0, 0, 0, 0, 0, 0, 0, 0
+  ; Level 1 (step 6 - 14%)
+  .db 0, 0, 0, 1, 1, 1, 1, 1
+  ; Level 2 (step 5 - 28%)
+  .db 0, 0, 1, 1, 1, 1, 2, 2
+  ; Level 3 (step 4 - 43%)
+  .db 0, 0, 1, 1, 2, 2, 3, 3
+  ; Level 4 (step 3 - 57%)
+  .db 0, 1, 1, 2, 2, 3, 3, 4
+  ; Level 5 (step 2 - 71%)
+  .db 0, 1, 1, 2, 3, 4, 4, 5
+  ; Level 6 (step 1 - 86%)
+  .db 0, 1, 2, 3, 3, 4, 5, 6
+  ; Level 7 (step 0 - 100%)
+  .db 0, 1, 2, 3, 4, 5, 6, 7
+
+_fade_lut_r:
+  ; Level 0 (step 7 - black)
+  .db $00, $00, $00, $00, $00, $00, $00, $00
+  ; Level 1 (step 6 - 14%)
+  .db $00, $00, $00, $08, $08, $08, $08, $08
+  ; Level 2 (step 5 - 28%)
+  .db $00, $00, $08, $08, $08, $08, $10, $10
+  ; Level 3 (step 4 - 43%)
+  .db $00, $00, $08, $08, $10, $10, $18, $18
+  ; Level 4 (step 3 - 57%)
+  .db $00, $08, $08, $10, $10, $18, $18, $20
+  ; Level 5 (step 2 - 71%)
+  .db $00, $08, $08, $10, $18, $20, $20, $28
+  ; Level 6 (step 1 - 86%)
+  .db $00, $08, $10, $18, $18, $20, $28, $30
+  ; Level 7 (step 0 - 100%)
   .db $00, $08, $10, $18, $20, $28, $30, $38
-_fade_table_b:
-  .db $00, $01, $02, $03, $04, $05, $06, $07
+
+_fade_lut_g_lo:
+  ; Level 0 (step 7 - black)
+  .db $00, $00, $00, $00, $00, $00, $00, $00
+  ; Level 1 (step 6 - 14%)
+  .db $00, $00, $00, $40, $40, $40, $40, $40
+  ; Level 2 (step 5 - 28%)
+  .db $00, $00, $40, $40, $40, $40, $80, $80
+  ; Level 3 (step 4 - 43%)
+  .db $00, $00, $40, $40, $80, $80, $C0, $C0
+  ; Level 4 (step 3 - 57%)
+  .db $00, $40, $40, $80, $80, $C0, $C0, $00
+  ; Level 5 (step 2 - 71%)
+  .db $00, $40, $40, $80, $C0, $00, $00, $40
+  ; Level 6 (step 1 - 86%)
+  .db $00, $40, $80, $C0, $C0, $00, $40, $80
+  ; Level 7 (step 0 - 100%)
+  .db $00, $40, $80, $C0, $00, $40, $80, $C0
+
+_fade_lut_g_hi:
+  ; Level 0 (step 7 - black)
+  .db 0, 0, 0, 0, 0, 0, 0, 0
+  ; Level 1 (step 6 - 14%)
+  .db 0, 0, 0, 0, 0, 0, 0, 0
+  ; Level 2 (step 5 - 28%)
+  .db 0, 0, 0, 0, 0, 0, 0, 0
+  ; Level 3 (step 4 - 43%)
+  .db 0, 0, 0, 0, 0, 0, 0, 0
+  ; Level 4 (step 3 - 57%)
+  .db 0, 0, 0, 0, 0, 0, 0, 1
+  ; Level 5 (step 2 - 71%)
+  .db 0, 0, 0, 0, 0, 1, 1, 1
+  ; Level 6 (step 1 - 86%)
+  .db 0, 0, 0, 0, 0, 1, 1, 1
+  ; Level 7 (step 0 - 100%)
+  .db 0, 0, 0, 0, 1, 1, 1, 1
 #endasm
 
 void fade_init(void) {
@@ -65,62 +130,85 @@ void fade_apply(int step) {
   __lbra .fa_done
 
 .fa_do_fade:
+  ; Calculate level offset: (7 - g_fade_step) * 8
+  lda #7
+  sec
+  sbc _g_fade_step
+  asl a
+  asl a
+  asl a
+  sta <__dl
+
   ; 4 pages of 128 colors (256 bytes) each = 512 colors (1024 bytes)
   stw #_g_scene_palette, <__si
   lda #4
-  sta <__cl
+  sta <__dh
 
 .fa_page_loop:
   cly
 .fa_color_loop:
-  ; --- GREEN ---
-  iny
+  ; Read low byte
   lda [<__si], y
-  lsr a
-  dey
-  lda [<__si], y
-  and #%11000000
-  ror a
-  sec
-  sbc _fade_table_g, x
-  bcs .fa_g_ok
-  cla
-.fa_g_ok:
-  asl a
   sta <__temp
-  cla
-  rol a
+  iny
+  ; Read high byte
+  lda [<__si], y
+  iny
+  phy
+
+  ; --- GREEN ---
+  ; Original Green = ((high_byte & 1) << 2) | (low_byte >> 6)
+  and #$01
+  asl a
+  asl a
+  sta <__ch
+  lda <__temp
+  lsr a
+  lsr a
+  lsr a
+  lsr a
+  lsr a
+  lsr a
+  ora <__ch
+  ora <__dl
+  tay
+  lda _fade_lut_g_hi, y
+  pha
+  lda _fade_lut_g_lo, y
   sta <__ch
 
   ; --- RED ---
-  lda [<__si], y
-  and #%00111000
-  sec
-  sbc _fade_table_r, x
-  bcs .fa_r_ok
-  cla
-.fa_r_ok:
-  tsb <__temp
+  ; Original Red = (low_byte >> 3) & 7
+  lda <__temp
+  lsr a
+  lsr a
+  lsr a
+  and #$07
+  ora <__dl
+  tay
+  lda _fade_lut_r, y
+  ora <__ch
+  sta <__ch
 
   ; --- BLUE ---
-  lda [<__si], y
-  and #%00000111
-  sec
-  sbc _fade_table_b, x
-  bcs .fa_b_ok
-  cla
-.fa_b_ok:
-  ora <__temp
+  ; Original Blue = low_byte & 7
+  lda <__temp
+  and #$07
+  ora <__dl
+  tay
+  lda _fade_lut_b, y
+  ora <__ch
+
+  ; Write low byte then high byte to VCE
   sta color_data
-  lda <__ch
+  pla
   sta color_data+1
 
-  iny
-  iny
+  ply
   bne .fa_color_loop
 
   inc <__si+1
-  dec <__cl
+  dec <__dh
   bne .fa_page_loop
 
 .fa_done:
@@ -130,13 +218,13 @@ void fade_apply(int step) {
 int fade_speed_to_delay(int speed) {
   switch (speed) {
     case 0: return 0;
-    case 1: return 2;
-    case 2: return 3;
-    case 3: return 5;
-    case 4: return 8;
-    case 5: return 12;
-    case 6: return 16;
-    default: return 3;
+    case 1: return 0;  /* 1 frame per step: 7 frames total (~0.11s, snappy!) */
+    case 2: return 1;  /* 2 frames per step: 14 frames total (~0.23s, standard GBS) */
+    case 3: return 2;  /* 3 frames per step: 21 frames total (~0.35s) */
+    case 4: return 3;  /* 4 frames per step: 28 frames total (~0.46s) */
+    case 5: return 5;  /* 6 frames per step: 42 frames total */
+    case 6: return 7;  /* 8 frames per step: 56 frames total */
+    default: return 1;
   }
 }
 

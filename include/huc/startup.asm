@@ -962,7 +962,7 @@ vsync_hndl:
 		and	#$3F		; disable display
 		st0	#5		; update display control (bg/sp)
 		sta	video_data_l
-		bra	.l2
+		bra	.l1
 		; --
 	.else
 		; The CD-ROM version only acts if the display state has changed

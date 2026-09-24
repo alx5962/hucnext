@@ -1,15 +1,11 @@
 #include "include/pce_system.h"
+#include "include/fade.h"
 
 void pce_sys_init(void) {
     set_screen_size(SCR_SIZE_32x32);
-    
-    // Clear initial palette colors to black
-    set_color(0, 0x0000);
-    set_color(1, 0x0000);
-    set_color(2, 0x0000);
-    set_color(3, 0x0000);
-
     disp_off();
+    fade_init();
+    fade_apply(7);
 }
 
 int pce_sys_vsync(void) {

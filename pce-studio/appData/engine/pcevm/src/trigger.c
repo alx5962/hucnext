@@ -5,6 +5,7 @@
 
 static unsigned char g_trigger_cooldown = 0;
 void load_scene(int scene_num, int player_x, int player_y);
+void scene_transition(int scene_num, int player_x, int player_y, int speed);
 int interact_trigger(int scene_num, int trigger_num);
 int interact_trigger_leave(int scene_num, int trigger_num);
 
@@ -88,7 +89,7 @@ void trigger_check(int px, int py) {
       if (target_sc > 0) {
         g_inside_trigger = 0;
         g_current_trigger_hit = -1;
-        load_scene(target_sc, target_px, target_py);
+        scene_transition(target_sc, target_px, target_py, 2);
         return;
       } else if (target_px >= 0 && target_py >= 0) {
         actor_set_pos(0, target_px, target_py);

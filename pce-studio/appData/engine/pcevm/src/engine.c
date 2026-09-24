@@ -5149,6 +5149,8 @@ void load_scene_part8(int scene_num) {
 void load_scene(int scene_num, int player_x, int player_y) {
   int i;
   disp_off();
+  set_color(0, 0x000);
+  fade_apply(7);
   hide_dialogue();
   g_current_scene = scene_num;
 
@@ -5250,12 +5252,24 @@ void load_scene(int scene_num, int player_x, int player_y) {
   if (scene_has_autofade(scene_num)) {
     g_fade_step = 7;
     fade_apply(7);
+    set_color(0, 0x000);
   } else {
     g_fade_step = 0;
   }
   disp_on();
 
   load_scene_music(scene_num);
+}
+
+void scene_transition(int scene_num, int player_x, int player_y, int speed) {
+  if (speed > 0 && g_fade_step < 7) {
+    fade_out(speed);
+    while (g_fade_active) {
+      vsync();
+      fade_update();
+    }
+  }
+  load_scene(scene_num, player_x, player_y);
 }
 
 void engine_init(void) {
@@ -6359,7 +6373,7 @@ void update_pointnclick(void) {
         target_px = TRIG_TARGET_X(hit_trigger);
         target_py = TRIG_TARGET_Y(hit_trigger);
         if (target_sc > 0) {
-          load_scene(target_sc, target_px, target_py);
+          scene_transition(target_sc, target_px, target_py, 2);
         } else if (target_px >= 0 && target_py >= 0) {
           actor_set_pos(0, target_px, target_py);
         } else {

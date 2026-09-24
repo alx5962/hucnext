@@ -155,6 +155,7 @@ int load_game(int slot);
 int has_saved_data(int slot);
 int clear_game_data(int slot);
 void load_scene(int scene_num, int player_x, int player_y);
+void scene_transition(int scene_num, int player_x, int player_y, int speed);
 void load_scene_music(int scene_num);
 void load_scene_background(int scene_num);
 void load_scene_player_sprite(int scene_num);

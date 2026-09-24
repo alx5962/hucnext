@@ -25,7 +25,7 @@ async function main() {
 
   console.log("Running HuC compiler on generated main.c...");
   try {
-    execSync(\`"\${hucExe}" main.c\`, { cwd: buildDir, stdio: "inherit", env: { ...process.env, PCE_INCLUDE: includeDir } });
+    execSync(\`"\${hucExe}" -s main.c\`, { cwd: buildDir, stdio: "inherit", env: { ...process.env, PCE_INCLUDE: includeDir } });
   } catch (e) {
     if (!fs.existsSync(path.join(buildDir, "main.s"))) {
       throw e;

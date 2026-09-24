@@ -2765,8 +2765,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
             const targetX = parseCoord(evt.args?.x, 0);
             const targetY = parseCoord(evt.args?.y, 0) - (targetSprHeight16 * 16) + 8;
+            let fadeSpeed = 2;
+            if (evt.args?.fadeSpeed !== undefined && evt.args?.fadeSpeed !== null) {
+              fadeSpeed = Number(evt.args.fadeSpeed);
+              if (isNaN(fadeSpeed)) fadeSpeed = 2;
+            }
 
-            stepCases += `      case ${stepIndex}:\n        load_scene(${targetScene}, ${targetX}, ${targetY});\n        return -1;\n`;
+            stepCases += `      case ${stepIndex}:\n        scene_transition(${targetScene}, ${targetX}, ${targetY}, ${fadeSpeed});\n        return -1;\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_MUSIC_PLAY" || evt.command === "EVENT_PLAY_MUSIC") {
             const musicId = evt.args?.musicId || evt.args?.music;
