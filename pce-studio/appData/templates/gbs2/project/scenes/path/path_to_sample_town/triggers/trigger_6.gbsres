@@ -6,9 +6,9 @@
   "prefabId": "",
   "name": "",
   "x": 0,
-  "y": 9,
+  "y": 5,
   "width": 1,
-  "height": 5,
+  "height": 9,
   "prefabScriptOverrides": {},
   "script": [
     {

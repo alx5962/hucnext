@@ -55,6 +55,13 @@
       "id": "9144709c-bfe1-4b16-8446-c3db57c329ce"
     },
     {
+      "command": "EVENT_ACTOR_COLLISIONS_DISABLE",
+      "args": {
+        "actorId": "e63a0fb5-2d9e-4a85-9ba0-e711e6de6cdc"
+      },
+      "id": "fe62497d-d04f-4160-bf88-42f2be2a8678"
+    },
+    {
       "id": "a0f6f228-cf76-4e25-8f8a-f880cdc0d8b8",
       "command": "EVENT_CALL_CUSTOM_EVENT",
       "args": {
