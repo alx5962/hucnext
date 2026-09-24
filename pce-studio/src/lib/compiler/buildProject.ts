@@ -2480,14 +2480,26 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     return result;
   };
 
-  const parseVarIndex = (vArg: any): number => {
+  const parseVarIndex = (vArg: any, currentActorNum: number = 0): number => {
     if (typeof vArg === "number") return vArg & 0xFF;
     if (typeof vArg === "string") {
-      const num = parseInt(vArg.replace(/\D/g, ""), 10);
+      const s = vArg.trim();
+      // Temporary variables: T0 -> 254, T1 -> 255
+      if (s.startsWith("T") || s.startsWith("t")) {
+        const tNum = parseInt(s.slice(1), 10) || 0;
+        return (254 + (tNum & 1)) & 0xFF;
+      }
+      // Local variables: L0..L5 -> reserved range 200..253 offset by entity
+      if (s.startsWith("L") || s.startsWith("l")) {
+        const lNum = parseInt(s.slice(1), 10) || 0;
+        const base = 200 + ((currentActorNum * 6) % 54);
+        return (base + (lNum % 6)) & 0xFF;
+      }
+      const num = parseInt(s.replace(/\D/g, ""), 10);
       if (!isNaN(num)) return num & 0xFF;
     }
     if (typeof vArg === "object" && vArg !== null) {
-      if (vArg.value !== undefined) return parseVarIndex(vArg.value);
+      if (vArg.value !== undefined) return parseVarIndex(vArg.value, currentActorNum);
     }
     return 0;
   };
@@ -2506,7 +2518,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       if (valArg.type === "true") return "1";
       if (valArg.type === "false") return "0";
       if (valArg.type === "number") return String(typeof valArg.value === "number" ? valArg.value : (Number(valArg.value) || 0));
-      if (valArg.type === "variable") return `vm_get_var(${parseVarIndex(valArg.value)})`;
+      if (valArg.type === "variable") return `vm_get_var(${parseVarIndex(valArg.value, currentActorNum)})`;
       if (valArg.type === "property") {
         let propTarget = currentActorNum;
         if (valArg.target === "player") propTarget = 0;
@@ -2539,38 +2551,38 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
     return "0";
   };
 
-  const parseConditionExpr = (evt: any): string => {
+  const parseConditionExpr = (evt: any, currentActorNum: number = 0, scene?: any): string => {
     const cond = evt.args?.condition;
-    const varIdx = parseVarIndex(evt.args?.variable);
+    const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
     const isFalseCheck = (evt.command === "EVENT_IF_FALSE" || evt.command === "EVENT_IF_VARIABLE_FALSE");
 
     if (cond && typeof cond === "object") {
       if (cond.type === "variable") {
-        return `(vm_get_var(${parseVarIndex(cond.value)}) != 0)`;
+        return `(vm_get_var(${parseVarIndex(cond.value, currentActorNum)}) != 0)`;
       }
       if (cond.type === "not") {
         if (cond.value?.type === "variable") {
-          return `(vm_get_var(${parseVarIndex(cond.value.value)}) == 0)`;
+          return `(vm_get_var(${parseVarIndex(cond.value.value, currentActorNum)}) == 0)`;
         }
-        return `(!${parseValueExpr(cond.value)})`;
+        return `(!${parseValueExpr(cond.value, currentActorNum, scene)})`;
       }
       if (cond.type === "eq") {
-        return `(${parseValueExpr(cond.valueA)} == ${parseValueExpr(cond.valueB)})`;
+        return `(${parseValueExpr(cond.valueA, currentActorNum, scene)} == ${parseValueExpr(cond.valueB, currentActorNum, scene)})`;
       }
       if (cond.type === "ne") {
-        return `(${parseValueExpr(cond.valueA)} != ${parseValueExpr(cond.valueB)})`;
+        return `(${parseValueExpr(cond.valueA, currentActorNum, scene)} != ${parseValueExpr(cond.valueB, currentActorNum, scene)})`;
       }
       if (cond.type === "gt") {
-        return `(${parseValueExpr(cond.valueA)} > ${parseValueExpr(cond.valueB)})`;
+        return `(${parseValueExpr(cond.valueA, currentActorNum, scene)} > ${parseValueExpr(cond.valueB, currentActorNum, scene)})`;
       }
       if (cond.type === "gte") {
-        return `(${parseValueExpr(cond.valueA)} >= ${parseValueExpr(cond.valueB)})`;
+        return `(${parseValueExpr(cond.valueA, currentActorNum, scene)} >= ${parseValueExpr(cond.valueB, currentActorNum, scene)})`;
       }
       if (cond.type === "lt") {
-        return `(${parseValueExpr(cond.valueA)} < ${parseValueExpr(cond.valueB)})`;
+        return `(${parseValueExpr(cond.valueA, currentActorNum, scene)} < ${parseValueExpr(cond.valueB, currentActorNum, scene)})`;
       }
       if (cond.type === "lte") {
-        return `(${parseValueExpr(cond.valueA)} <= ${parseValueExpr(cond.valueB)})`;
+        return `(${parseValueExpr(cond.valueA, currentActorNum, scene)} <= ${parseValueExpr(cond.valueB, currentActorNum, scene)})`;
       }
       if (cond.type === "true") return "(1)";
       if (cond.type === "false") return "(0)";
@@ -2583,7 +2595,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
 
     if (evt.args?.operator) {
       const op = evt.args.operator;
-      const rhs = parseValueExpr(evt.args.value ?? evt.args.otherVariable);
+      const rhs = parseValueExpr(evt.args.value ?? evt.args.otherVariable, currentActorNum, scene);
       if (op === "==" || op === "eq") return `(vm_get_var(${varIdx}) == ${rhs})`;
       if (op === "!=" || op === "ne") return `(vm_get_var(${varIdx}) != ${rhs})`;
       if (op === ">" || op === "gt") return `(vm_get_var(${varIdx}) > ${rhs})`;
@@ -2666,7 +2678,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
           return String(units === "pixels" ? Math.floor(num) : Math.floor(num) * 8);
         }
         if (valArg.type === "variable") {
-          const vIdx = parseVarIndex(valArg.value);
+          const vIdx = parseVarIndex(valArg.value, currentActorNum);
           return units === "pixels" ? `vm_get_var(${vIdx})` : `(vm_get_var(${vIdx}) * 8)`;
         }
         if (valArg.type === "property") {
@@ -2928,13 +2940,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             stepCases += `      case ${stepIndex}:\n        show_dialogue("${cleanText}");\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_CHOICE") {
-            const varIdx = parseVarIndex(evt.args?.variable);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
             const trueText = formatDialogueTextForC(String(evt.args?.trueText || "Yes")).replace(/\\n/g, " ");
             const falseText = formatDialogueTextForC(String(evt.args?.falseText || "No")).replace(/\\n/g, " ");
             stepCases += `      case ${stepIndex}:\n        show_choice(${varIdx}, "${trueText}", "${falseText}");\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_MENU") {
-            const varIdx = parseVarIndex(evt.args?.variable);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
             const items = Math.max(2, Math.min(4, Number(evt.args?.items) || 2));
             const opt1 = formatDialogueTextForC(String(evt.args?.option1 || "Option 1")).replace(/\\n/g, " ");
             const opt2 = formatDialogueTextForC(String(evt.args?.option2 || "Option 2")).replace(/\\n/g, " ");
@@ -2944,7 +2956,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             stepCases += `      case ${stepIndex}:\n        show_menu(${varIdx}, ${items}, "${opt1}", "${opt2}", "${opt3}", "${opt4}", ${cancelB});\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_VARIABLE_MATH") {
-            const varIdx = parseVarIndex(evt.args?.vectorX ?? evt.args?.variable);
+            const varIdx = parseVarIndex(evt.args?.vectorX ?? evt.args?.variable, currentActorNum);
             const op = String(evt.args?.operation || "set");
             const other = String(evt.args?.other || "val");
 
@@ -2957,7 +2969,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
               const range = Math.max(1, maxVal - minVal + 1);
               rhsExpr = `(${minVal} + (rand() % ${range}))`;
             } else if (other === "var") {
-              const otherIdx = parseVarIndex(evt.args?.vectorY ?? evt.args?.variable);
+              const otherIdx = parseVarIndex(evt.args?.vectorY ?? evt.args?.variable, currentActorNum);
               rhsExpr = `vm_get_var(${otherIdx})`;
             } else if (other === "true") {
               rhsExpr = "1";
@@ -2991,30 +3003,30 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             evt.command === "EVENT_VARIABLE_SET_TO_VALUE" ||
             evt.command === "EVENT_SET_VARIABLE"
           ) {
-            const varIdx = parseVarIndex(evt.args?.variable);
-            const valExpr = parseValueExpr(evt.args?.value);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
+            const valExpr = parseValueExpr(evt.args?.value, currentActorNum, scene);
             stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, ${valExpr});\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (
             evt.command === "EVENT_SET_TRUE" ||
             evt.command === "EVENT_VARIABLE_SET_TO_TRUE"
           ) {
-            const varIdx = parseVarIndex(evt.args?.variable);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
             stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, 1);\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (
             evt.command === "EVENT_SET_FALSE" ||
             evt.command === "EVENT_VARIABLE_SET_TO_FALSE"
           ) {
-            const varIdx = parseVarIndex(evt.args?.variable);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
             stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, 0);\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (
             evt.command === "EVENT_COPY_VALUE" ||
             evt.command === "EVENT_VARIABLE_COPY"
           ) {
-            const varIdx = parseVarIndex(evt.args?.variable);
-            const otherIdx = parseVarIndex(evt.args?.otherVariable);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
+            const otherIdx = parseVarIndex(evt.args?.otherVariable, currentActorNum);
             stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${otherIdx}));\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (
@@ -3024,27 +3036,27 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             stepCases += `      case ${stepIndex}:\n        vm_init();\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_INC_VALUE" || evt.command === "EVENT_VARIABLE_INC") {
-            const varIdx = parseVarIndex(evt.args?.variable);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
             stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) + 1);\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_DEC_VALUE" || evt.command === "EVENT_VARIABLE_DEC") {
-            const varIdx = parseVarIndex(evt.args?.variable);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
             stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) - 1);\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_SET_RANDOM_VALUE") {
-            const varIdx = parseVarIndex(evt.args?.variable);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
             const minVal = Number(evt.args?.minValue) || 0;
             const maxVal = Number(evt.args?.maxValue ?? 255) || 255;
             const range = Math.max(1, maxVal - minVal + 1);
             stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, (${minVal} + (rand() % ${range})));\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_ADD_FLAGS" || evt.command === "EVENT_SET_FLAGS") {
-            const varIdx = parseVarIndex(evt.args?.variable);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
             const mask = parseNumber(evt.args?.flag ?? evt.args?.mask, 0);
             stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) | ${mask});\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_CLEAR_FLAGS") {
-            const varIdx = parseVarIndex(evt.args?.variable);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
             const mask = parseNumber(evt.args?.flag ?? evt.args?.mask, 0);
             stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) & ~${mask});\n        return ${stepIndex + 1};\n`;
             stepIndex++;
@@ -3052,7 +3064,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             stepCases += `      case ${stepIndex}:\n        srand(g_wait_timer + pce_sys_read_joy(0));\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_SWITCH") {
-            const varIdx = parseVarIndex(evt.args?.variable);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
             let choicesCount = Number(evt.args?.choices);
             if (isNaN(choicesCount) || choicesCount <= 0) {
               choicesCount = 0;
@@ -3134,7 +3146,7 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             evt.command === "EVENT_IF_ENGINE_FIELD_COMPARE" ||
             evt.command === "EVENT_IF_FLAGS_COMPARE"
           ) {
-            const condExpr = parseConditionExpr(evt);
+            const condExpr = parseConditionExpr(evt, currentActorNum, scene);
 
             const trueList = (evt.true && Array.isArray(evt.true)) ? evt.true : (evt.children?.true && Array.isArray(evt.children.true) ? evt.children.true : []);
             const falseList = (evt.false && Array.isArray(evt.false)) ? evt.false : (evt.children?.false && Array.isArray(evt.children.false) ? evt.children.false : []);
@@ -3208,13 +3220,13 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             stepCases += `      case ${stepIndex}:\n        pce_music_stop();\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_MATH_ADD" || evt.command === "EVENT_MATH_ADD_VALUE") {
-            const varIdx = parseVarIndex(evt.args?.variable);
-            const valExpr = parseValueExpr(evt.args?.value);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
+            const valExpr = parseValueExpr(evt.args?.value, currentActorNum, scene);
             stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) + ${valExpr});\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (evt.command === "EVENT_MATH_SUB" || evt.command === "EVENT_MATH_SUB_VALUE") {
-            const varIdx = parseVarIndex(evt.args?.variable);
-            const valExpr = parseValueExpr(evt.args?.value);
+            const varIdx = parseVarIndex(evt.args?.variable, currentActorNum);
+            const valExpr = parseValueExpr(evt.args?.value, currentActorNum, scene);
             stepCases += `      case ${stepIndex}:\n        vm_set_var(${varIdx}, vm_get_var(${varIdx}) - ${valExpr});\n        return ${stepIndex + 1};\n`;
             stepIndex++;
           } else if (
