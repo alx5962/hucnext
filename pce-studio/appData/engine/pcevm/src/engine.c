@@ -5595,12 +5595,35 @@ void show_dialogue(const char *msg) {
 }
 
 void copy_choice_opt(char *dst, const char *src, int max_len) {
+  int i;
+  for (i = 0; i < max_len; i++) {
+    dst[i] = '\0';
+  }
   pce_expand_dialogue(src, dst, max_len);
+}
+
+void format_choice_line(char *line_buf, int is_selected, const char *opt_text) {
+  int i;
+  int opt_i;
+  int end_reached;
+
+  line_buf[0] = is_selected ? '>' : ' ';
+  line_buf[1] = ' ';
+  end_reached = 0;
+  for (i = 2; i < 30; i++) {
+    opt_i = i - 2;
+    if (!end_reached && opt_text[opt_i] != '\0') {
+      line_buf[i] = opt_text[opt_i];
+    } else {
+      end_reached = 1;
+      line_buf[i] = ' ';
+    }
+  }
+  line_buf[30] = '\0';
 }
 
 void render_choice_dialogue(void) {
   int i;
-  int opt_i;
   int base_x;
   int base_y;
   char line_buf[31];
@@ -5624,54 +5647,26 @@ void render_choice_dialogue(void) {
   draw_ui_frame(base_x, base_y, 32, 5);
 
   /* Option 1 */
-  line_buf[0] = (g_choice_index == 0) ? '>' : ' ';
-  line_buf[1] = ' ';
-  for (i = 2; i < 30; i++) {
-    opt_i = i - 2;
-    if (g_choice_opt0[opt_i]) {
-      line_buf[i] = g_choice_opt0[opt_i];
-    } else {
-      line_buf[i] = ' ';
-    }
-  }
-  line_buf[30] = '\0';
+  format_choice_line(line_buf, (g_choice_index == 0), g_choice_opt0);
   put_string(line_buf, base_x + 1, base_y + 1);
 
   /* Option 2 */
-  line_buf[0] = (g_choice_index == 1) ? '>' : ' ';
-  line_buf[1] = ' ';
-  for (i = 2; i < 30; i++) {
-    opt_i = i - 2;
-    if (g_choice_opt1[opt_i]) {
-      line_buf[i] = g_choice_opt1[opt_i];
-    } else {
-      line_buf[i] = ' ';
-    }
-  }
-  line_buf[30] = '\0';
+  format_choice_line(line_buf, (g_choice_index == 1), g_choice_opt1);
   put_string(line_buf, base_x + 1, base_y + 2);
 
   /* Option 3 or blank */
   if (g_choice_count > 2) {
-    line_buf[0] = (g_choice_index == 2) ? '>' : ' ';
-    line_buf[1] = ' ';
-    for (i = 2; i < 30; i++) {
-      opt_i = i - 2;
-      if (g_choice_opt2[opt_i]) {
-        line_buf[i] = g_choice_opt2[opt_i];
-      } else {
-        line_buf[i] = ' ';
-      }
-    }
+    format_choice_line(line_buf, (g_choice_index == 2), g_choice_opt2);
   } else {
     for (i = 0; i < 30; i++)
       line_buf[i] = ' ';
+    line_buf[30] = '\0';
   }
-  line_buf[30] = '\0';
   put_string(line_buf, base_x + 1, base_y + 3);
 }
 
 void show_choice(int var_id, const char *opt1, const char *opt2) {
+  int i;
   g_dialogue_active = 1;
   g_dialogue_timer = 0;
   g_dialogue_cooldown = DIALOGUE_INPUT_COOLDOWN_FRAMES;
@@ -5682,10 +5677,14 @@ void show_choice(int var_id, const char *opt1, const char *opt2) {
   g_choice_index = 0;
   g_choice_count = 2;
   g_choice_cancel_b = 0;
+  for (i = 0; i < 28; i++) {
+    g_choice_opt0[i] = '\0';
+    g_choice_opt1[i] = '\0';
+    g_choice_opt2[i] = '\0';
+    g_choice_opt3[i] = '\0';
+  }
   copy_choice_opt(g_choice_opt0, opt1 ? opt1 : "Yes", 28);
   copy_choice_opt(g_choice_opt1, opt2 ? opt2 : "No", 28);
-  g_choice_opt2[0] = '\0';
-  g_choice_opt3[0] = '\0';
 
   actor_update_all();
   satb_update();
@@ -5694,6 +5693,7 @@ void show_choice(int var_id, const char *opt1, const char *opt2) {
 
 void show_menu(int var_id, int count, const char *opt1, const char *opt2,
                const char *opt3, const char *opt4, int cancel_b) {
+  int i;
   g_dialogue_active = 1;
   g_dialogue_timer = 0;
   g_dialogue_cooldown = DIALOGUE_INPUT_COOLDOWN_FRAMES;
@@ -5704,6 +5704,12 @@ void show_menu(int var_id, int count, const char *opt1, const char *opt2,
   g_choice_index = 0;
   g_choice_count = (count >= 2 && count <= 4) ? count : 2;
   g_choice_cancel_b = cancel_b;
+  for (i = 0; i < 28; i++) {
+    g_choice_opt0[i] = '\0';
+    g_choice_opt1[i] = '\0';
+    g_choice_opt2[i] = '\0';
+    g_choice_opt3[i] = '\0';
+  }
   copy_choice_opt(g_choice_opt0, opt1 ? opt1 : "Item 1", 28);
   copy_choice_opt(g_choice_opt1, opt2 ? opt2 : "Item 2", 28);
   copy_choice_opt(g_choice_opt2, opt3 ? opt3 : "Item 3", 28);
