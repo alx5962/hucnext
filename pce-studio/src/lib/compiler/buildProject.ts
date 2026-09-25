@@ -176,7 +176,46 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
       }
     }
     str = str.replace(/!S\d!/g, "");
-    return str.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n");
+
+    // French typographic quotes & spaces
+    str = str.replace(/[’‘]/g, "'");
+    str = str.replace(/[“”«»]/g, '"');
+    str = str.replace(/[\u00A0\u202F]/g, " ");
+
+    // Map accented French characters to custom font glyph slots:
+    // '{' (123) -> é
+    // '|' (124) -> è
+    // '}' (125) -> à
+    // '~' (126) -> ç
+    // '`' (96)  -> ê
+    str = str.replace(/é/g, "{");
+    str = str.replace(/è/g, "|");
+    str = str.replace(/à/g, "}");
+    str = str.replace(/ç/g, "~");
+    str = str.replace(/ê/g, "`");
+    str = str.replace(/Ç/g, "~");
+
+    // Fallback unaccenting for other accented characters
+    str = str.replace(/[âä]/g, "a");
+    str = str.replace(/[ë]/g, "e");
+    str = str.replace(/[îï]/g, "i");
+    str = str.replace(/[ôö]/g, "o");
+    str = str.replace(/[ùûü]/g, "u");
+    str = str.replace(/[ÂÄÀ]/g, "A");
+    str = str.replace(/[ÈÊË]/g, "E");
+    str = str.replace(/[ÎÏ]/g, "I");
+    str = str.replace(/[ÔÖ]/g, "O");
+    str = str.replace(/[ÙÛÜ]/g, "U");
+    str = str.replace(/œ/g, "oe").replace(/Œ/g, "OE");
+    str = str.replace(/æ/g, "ae").replace(/Æ/g, "AE");
+
+    // Standard C string escaping
+    str = str.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n");
+
+    // Map uppercase É to HuC octal escape \177 (ASCII 127)
+    str = str.replace(/É/g, "\\177");
+
+    return str;
   };
 
   // Load gbsres files if present
