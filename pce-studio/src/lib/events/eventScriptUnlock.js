@@ -1,8 +1,9 @@
 const l10n = require("../helpers/l10n").default;
 
 const id = "EVENT_SCRIPT_UNLOCK";
-const groups = ["EVENT_GROUP_CONTROL_FLOW", "EVENT_GROUP_MISC"];
+const groups = ["EVENT_GROUP_INPUT", "EVENT_GROUP_CONTROL_FLOW", "EVENT_GROUP_MISC"];
 const subGroups = {
+  EVENT_GROUP_INPUT: "EVENT_GROUP_INPUT",
   EVENT_GROUP_CONTROL_FLOW: "EVENT_GROUP_THREADS",
   EVENT_GROUP_MISC: "EVENT_GROUP_THREADS",
 };

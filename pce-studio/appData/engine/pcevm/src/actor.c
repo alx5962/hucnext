@@ -366,6 +366,14 @@ int actor_move_step(int id, int target_x, int target_y) {
     }
   }
 
+  if (id == 0) {
+    if (dx != 0 || dy != 0) {
+      g_player_moved_by_script = 1;
+      update_player_anim(1);
+    }
+    camera_update(g_actor_x[0], g_actor_y[0]);
+  }
+
   if (g_actor_x[id] == target_x && g_actor_y[id] == target_y) return 1;
   if (blocked && dy == 0) return 1;
 

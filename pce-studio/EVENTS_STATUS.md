@@ -173,8 +173,8 @@ These 78 events are caught by explicit `else if (evt.command === ...)` clauses i
 | `EVENT_SCENE_RESET_STATE` | Scene | Scene stack stubbed |
 | `EVENT_SCENE_UPDATE_PAUSE` | Scene | Scene actor loop pause stubbed |
 | `EVENT_SCENE_UPDATE_RESUME` | Scene | Scene actor loop resume stubbed |
-| `EVENT_SCRIPT_LOCK` | Script | Script input lock stubbed (PCE VM locks input while running) |
-| `EVENT_SCRIPT_UNLOCK` | Script | Script input unlock stubbed |
+| `EVENT_SCRIPT_LOCK` | Script | **Implemented** (`g_input_locked = 1`, freeze joypad input) |
+| `EVENT_SCRIPT_UNLOCK` | Script | **Implemented** (`g_input_locked = 0`, restore joypad input) |
 | `EVENT_SET_ADVENTURE_CALLBACK_SCRIPT` | Mode | Adventure callback hook stubbed |
 | `EVENT_SET_DIALOGUE_FRAME` | Dialogue | Dialogue frame border styling stubbed |
 | `EVENT_SET_FONT` | Dialogue | Dynamic font switching stubbed |
@@ -398,8 +398,8 @@ These items are UI taxonomy categories used in the GB Studio / PCE Studio event 
 | 156 | `EVENT_SCENE_RESET_STATE` | Scene | **Explicit No-Op** (`return step + 1`) |
 | 157 | `EVENT_SCENE_UPDATE_PAUSE` | Scene | **Explicit No-Op** (`return step + 1`) |
 | 158 | `EVENT_SCENE_UPDATE_RESUME` | Scene | **Explicit No-Op** (`return step + 1`) |
-| 159 | `EVENT_SCRIPT_LOCK` | Script | **Explicit No-Op** (`return step + 1`) |
-| 160 | `EVENT_SCRIPT_UNLOCK` | Script | **Explicit No-Op** (`return step + 1`) |
+| 159 | `EVENT_SCRIPT_LOCK` | Script | **Implemented** (`g_input_locked = 1`) |
+| 160 | `EVENT_SCRIPT_UNLOCK` | Script | **Implemented** (`g_input_locked = 0`) |
 | 161 | `EVENT_SET_ADVENTURE_CALLBACK_SCRIPT` | Mode | **Explicit No-Op** (`return step + 1`) |
 | 162 | `EVENT_SET_DIALOGUE_FRAME` | Dialogue | **Explicit No-Op** (`return step + 1`) |
 | 163 | `EVENT_SET_FALSE` | Variable | **Implemented** (`vm_set_var = 0`) |

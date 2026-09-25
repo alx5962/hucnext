@@ -37,7 +37,11 @@ int g_script_step = -1;
 int g_script_type = 0;
 int g_script_target = 0;
 int g_wait_timer = 0;
+int g_input_locked = 0;
+int g_player_moved_by_script = 0;
 unsigned int g_await_input_mask = 0;
+
+void update_player_anim(int is_moving);
 
 #ifndef DIALOGUE_INPUT_COOLDOWN_FRAMES
 #define DIALOGUE_INPUT_COOLDOWN_FRAMES 15

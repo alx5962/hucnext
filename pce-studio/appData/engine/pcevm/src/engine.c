@@ -5237,6 +5237,8 @@ void load_scene(int scene_num, int player_x, int player_y) {
   g_dialogue_cooldown = 0;
   g_actor_interact_cooldown = 0;
   g_actor_state[0] = 0;
+  g_input_locked = 0;
+  g_player_moved_by_script = 0;
   g_input_script_disabled_mask = 0;
   g_inside_trigger = 0;
   g_current_trigger_hit = -1;
@@ -5780,7 +5782,7 @@ void check_actor_interaction(unsigned int input) {
     return;
   }
 
-  if (g_script_step >= 0) {
+  if (g_script_step >= 0 || g_input_locked) {
     return;
   }
 
@@ -6006,6 +6008,14 @@ void update_topdown(void) {
     actor_update_all();
     return;
   }
+  if (g_script_step >= 0 || g_input_locked) {
+    if (!g_player_moved_by_script) {
+      update_player_anim(0);
+    }
+    g_player_moved_by_script = 0;
+    actor_update_all();
+    return;
+  }
   if (g_actor_count > 0 && g_actor_active[0]) {
     dx = 0;
     dy = 0;
@@ -6058,6 +6068,9 @@ void update_platform(void) {
     actor_update_all();
     return;
   }
+  if (g_script_step >= 0 || g_input_locked) {
+    input = 0;
+  }
   if (g_actor_count > 0 && g_actor_active[0]) {
     dx_sub = 0;
     if (input & JOY_LEFT) {
@@ -6069,7 +6082,8 @@ void update_platform(void) {
       g_actor_dir[0] = 0;
     }
 
-    update_player_anim(dx_sub != 0 || !g_plat_on_ground);
+    update_player_anim(g_player_moved_by_script || dx_sub != 0 || !g_plat_on_ground);
+    g_player_moved_by_script = 0;
 
     if (dx_sub != 0) {
       new_sub_x = g_plat_sub_x + dx_sub;
@@ -6122,6 +6136,14 @@ void update_adventure(void) {
   check_actor_interaction(input);
   if (g_dialogue_active) {
     update_player_anim(0);
+    actor_update_all();
+    return;
+  }
+  if (g_script_step >= 0 || g_input_locked) {
+    if (!g_player_moved_by_script) {
+      update_player_anim(0);
+    }
+    g_player_moved_by_script = 0;
     actor_update_all();
     return;
   }
@@ -6207,6 +6229,9 @@ void update_shmup(void) {
 
   input = pce_sys_read_joy(0);
   check_actor_interaction(input);
+  if (g_dialogue_active || g_script_step >= 0 || g_input_locked) {
+    input = 0;
+  }
   if (g_actor_count > 0 && g_actor_active[0]) {
     dy = 0;
     if (input & JOY_UP)
@@ -6293,7 +6318,7 @@ void update_pointnclick(void) {
     return;
   }
 
-  if (g_dialogue_active) {
+  if (g_dialogue_active || g_script_step >= 0 || g_input_locked) {
     if (g_dialogue_cooldown > 0) {
       return;
     }
@@ -6392,6 +6417,9 @@ void update_pointnclick(void) {
 
 void update_logo(void) {
   unsigned int input;
+  if (g_script_step >= 0 || g_input_locked) {
+    return;
+  }
   input = pce_sys_read_joy(0);
   check_actor_interaction(input);
 }

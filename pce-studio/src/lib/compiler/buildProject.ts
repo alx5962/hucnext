@@ -3533,6 +3533,12 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             }
             stepCases += `      case ${stepIndex}:\n        fade_out(${speed});\n        return ${stepIndex + 1};\n`;
             stepIndex++;
+          } else if (evt.command === "EVENT_SCRIPT_LOCK") {
+            stepCases += `      case ${stepIndex}:\n        g_input_locked = 1;\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
+          } else if (evt.command === "EVENT_SCRIPT_UNLOCK") {
+            stepCases += `      case ${stepIndex}:\n        g_input_locked = 0;\n        return ${stepIndex + 1};\n`;
+            stepIndex++;
           } else if (
             evt.command === "EVENT_ACTOR_EFFECTS" ||
             evt.command === "EVENT_ACTOR_MOVE_CANCEL" ||
@@ -3563,8 +3569,6 @@ export async function buildProject(projectDirPath: string | any, outputBuildDir:
             evt.command === "EVENT_SCENE_RESET_STATE" ||
             evt.command === "EVENT_SCENE_UPDATE_PAUSE" ||
             evt.command === "EVENT_SCENE_UPDATE_RESUME" ||
-            evt.command === "EVENT_SCRIPT_LOCK" ||
-            evt.command === "EVENT_SCRIPT_UNLOCK" ||
             evt.command === "EVENT_SET_ADVENTURE_CALLBACK_SCRIPT" ||
             evt.command === "EVENT_SET_DIALOGUE_FRAME" ||
             evt.command === "EVENT_SET_FONT" ||
